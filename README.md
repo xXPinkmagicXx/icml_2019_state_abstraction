@@ -1,7 +1,7 @@
 # Bachelor Project 
 This repo is a fork of https://github.com/anonicml2019/icml_2019_state_abstraction
 
-The work done in this repo will be used as a submodule in this repo https://github.com/borchand/Bachelor-Project
+The work done in this repo will be used as a submodule in this repo https://github.com/borchand/Bachelor-Project ( currently private )
 
 
 # icml_2019_state_abstraction
