@@ -8,7 +8,7 @@ import gym
 from simple_rl.tasks import CartPoleMDP, GymMDP
 from simple_rl.abstraction.AbstractionWrapperClass import AbstractionWrapper
 from simple_rl.agents import QLearningAgent, LinearQAgent, FixedPolicyAgent, RMaxAgent, RandomAgent
-from simple_rl.tasks import PuddleMDP
+# from simple_rl.tasks import PuddleMDP
 from simple_rl.run_experiments import run_agents_on_mdp, run_agents_lifelong, evaluate_agent, run_single_agent_on_mdp
 from simple_rl.mdp import MDPDistribution
 
@@ -56,7 +56,7 @@ def diff_sampling_distr_experiment():
     sess = tf.Session()
     for epsilon in sampling_params:
         with tf.variable_scope('nn_sa' + str(epsilon), reuse=False) as scope:
-            print "epsilon", epsilon
+            print("epsilon", epsilon)
             # tf.reset_default_graph()
             params["epsilon"] = epsilon
             abstraction_net = make_nn_sa(mdp_demo_policy_dict, sess, params, verbose=False)

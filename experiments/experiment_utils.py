@@ -13,7 +13,7 @@ import gym
 import tensorflow as tf
 parent_dir = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
 sys.path.insert(0, parent_dir)
-from simple_rl.tasks import PuddleMDP
+# from simple_rl.tasks import PuddleMDP
 
 # Local imports.
 import lunar_pi_d as lpd
@@ -209,7 +209,7 @@ def collect_unif_random_samples_demo_policy_cartpole(mdp_demo_policy_dict, num_s
 
     num_mdps = len(mdp_demo_policy_dict)
     samples = []
-    mdp = mdp_demo_policy_dict.keys()[0]
+    mdp = list(mdp_demo_policy_dict.keys())[0]
     demo_policy = mdp_demo_policy_dict[mdp]
 
     for _ in range(num_samples):
@@ -246,7 +246,7 @@ def make_nn_sa(mdp_demo_policy_dict, sess, params, verbose=True, sample_type="ra
 
     # MDP Specific parameters.
     num_mdps = len(mdp_demo_policy_dict)
-    size_a = len(mdp_demo_policy_dict.keys()[0].get_actions())
+    size_a = len(list(mdp_demo_policy_dict.keys())[0].get_actions())
     if num_mdps == 1:
         size_z = size_a
         a_in_z = np.array([x for x in range(size_z)]).reshape(size_z,num_mdps)
