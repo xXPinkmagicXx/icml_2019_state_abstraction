@@ -334,7 +334,6 @@ def run_single_agent_on_mdp(agent, mdp, episodes, steps, experiment=None, verbos
             print()
             sys.stdout.flush()
             prog_bar_len = _make_step_progress_bar()
-
         for step in range(1, steps + 1):
             if verbose and int(prog_bar_len*float(step) / steps) > int(prog_bar_len*float(step-1) / steps):
                 _increment_bar()
@@ -349,8 +348,8 @@ def run_single_agent_on_mdp(agent, mdp, episodes, steps, experiment=None, verbos
             if state.is_terminal():
 
                 if verbose:
-                    sys.stdout.write("x")
-
+                    sys.stdout.write(str(step))
+                    # sys.stdout.write("x")
                 if episodes == 1 and not reset_at_terminal and experiment is not None and action != "terminate":
                     # Self loop if we're not episodic or resetting and in a terminal state.
                     experiment.add_experience(agent, state, action, 0, state, time_taken=time.clock()-step_start)

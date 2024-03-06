@@ -89,7 +89,7 @@ def main():
     ## TODO: Train policy with nn abstraction 
     ## TODO: Do we have a demonstrator policy? No
     ## TODO: initialize random weights? --> to predict and train
-    
+
     # ======================
     # == Make Environment ==
     # ======================
@@ -120,7 +120,6 @@ def main():
     # Get actions and features
     actions = mdp.get_actions()
     actions =list(actions)
-    print("this is the actions:",actions)
     #num_features = test_mdp.get_num_state_feats()
     # Make agents
     # linear_agent = LinearQAgent(actions=actions, num_features=num_features)

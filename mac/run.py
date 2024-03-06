@@ -54,20 +54,25 @@ if meta_params['env_name']=='LunarLander-v2':
 	alg_params['critic_train_type']='model_free_critic_TD'#or model_free_critic_monte_carlo
 
 if meta_params['env_name'] == 'Acrobot-v1':
-	meta_params['max_learning_episodes']=1000
+	
+	meta_params['max_learning_episodes']=3000
+	alg_params['max_buffer_size']=5000
 	alg_params['state_|dimension|']=len(meta_params['env'].reset())
+
+	# Actor
+	alg_params['actor_num_h']=2
+	alg_params['actor_|h|']=128
+	alg_params['actor_lr']=0.00025
+	
+	## critic
 	alg_params['|A|']= meta_params['env'].action_space.n
 	alg_params['critic_num_h']=2
 	alg_params['critic_|h|']=128
 	alg_params['critic_lr']=0.005
-	alg_params['actor_num_h']=2
-	alg_params['actor_|h|']=128
-	alg_params['actor_lr']=0.00025
-	alg_params['critic_batch_size']=64
+	alg_params['critic_batch_size']=32
 	alg_params['critic_num_epochs']=10
 	alg_params['critic_target_net_freq']=1
-	alg_params['max_buffer_size']=5000
-	alg_params['critic_train_type']='model_free_critic_monte_carlo'
+	alg_params['critic_train_type']='model_free_critic_TD'
 
 if meta_params['env_name']=='MountainCar-v0':
 	

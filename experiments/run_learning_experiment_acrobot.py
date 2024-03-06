@@ -31,7 +31,7 @@ def diff_sampling_distr_experiment():
     env = GymMDP(env_name='CartPole-v0')
     
     # obs_size = env.get_num_state_feats()
-    mdp_demo_policy_dict[env] = apd.expert_acrobot_policy
+    mdp_demo_policy_dict[env] = cpd.expert_acrobot_policy
     demo_agent = FixedPolicyAgent(cpd.expert_cartpole_policy)
     
     params = GridWorldMDP.get_parameters()
@@ -62,10 +62,11 @@ def diff_sampling_distr_experiment():
 
     sess.close()
 
-def get_params(env_name = "MountainCar-v0"):
+def get_params(env_name: str):
     params={}
-    steps = 1000
-    learning_rate = 0.01
+    ## steps in acrobot above 500 is truncated
+    steps = 500
+    learning_rate = 0.005
     ## Env
     params['env_name']= env_name
     params['multitask']=False
@@ -75,9 +76,9 @@ def get_params(env_name = "MountainCar-v0"):
     params['learning_rate_for_abstraction_learning']=learning_rate
     params['abstraction_network_hidden_layers']=2
     params['abstraction_network_hidden_nodes']=200
-    params['num_samples_from_demonstrator']=10000
+    params['num_samples_from_demonstrator']=15000
     
-    params['episodes'] = 200
+    params['episodes'] = 250
     params['steps']=steps
     params['num_instances']=1
     params['rl_learning_rate']=learning_rate
@@ -86,7 +87,6 @@ def get_params(env_name = "MountainCar-v0"):
 
 def main():
     ## TODO: add mountain car sampling to make nn_state_abstraction work
-    ## TODO: Make a random network and train that?
     ## TODO: Make a random network and train that?
     ## TODO: Given a random network, sample from that
     
@@ -125,13 +125,14 @@ def main():
     
     # Get actions and features
     actions = mdp.get_actions()
+    num_features = mdp.get_num_state_feats()
     actions =list(actions)
     #num_features = test_mdp.get_num_state_feats()
     # Make agents
     # linear_agent = LinearQAgent(actions=actions, num_features=num_features)
     params["explore"] = True
 
-    ql_agent = QLearningAgent(actions)
+    ql_agent = LinearQAgent(actions, num_features=num_features, alpha=params['rl_learning_rate'])
     
     agent_list= [ql_agent]
 
@@ -139,7 +140,7 @@ def main():
     if DO_STATE_ABSTRACTION:
         abstraction_net = make_nn_sa(mdp_demo_policy_dict, sess, params)
         nn_sa = NNStateAbstr(abstraction_net)
-        sa_agent = AbstractionWrapper(QLearningAgent, agent_params={"alpha":params['rl_learning_rate'],"epsilon":0.2,"actions": actions}, state_abstr=nn_sa)
+        sa_agent = AbstractionWrapper(LinearQAgent, agent_params={"alpha":params['rl_learning_rate'],"epsilon":0.2,"actions": actions, "num_features":num_features}, state_abstr=nn_sa)
         agent_list.append(sa_agent)
     # ====================
     # == Run Experiment ==
@@ -150,7 +151,6 @@ def main():
     # else:
     #     # demo_agent = FixedPolicyAgent(cpd.expert_cartpole_policy)
     #     run_agents_on_mdp([sa_agent, linear_agent], test_mdp, instances=params['num_instances'], episodes=params['episodes'], steps=params['steps'], verbose=False)
-
     run_agents_on_mdp(agent_list, mdp, instances=params['num_instances'], episodes=params['episodes'], steps=params['steps'], verbose=True)
 
 
