@@ -40,6 +40,8 @@ class State(object):
         elif self.data.__hash__ is None:
             return hash(tuple(self.data))
         else:
+            print(type(self.data))
+            print(self.data)
             return hash(self.data)
 
     def __str__(self):
