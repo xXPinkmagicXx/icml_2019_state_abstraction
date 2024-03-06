@@ -240,12 +240,43 @@ def collect_unif_random_samples_demo_policy_mountaincar(mdp_demo_policy_dict, nu
 
     num_mdps = len(mdp_demo_policy_dict)
     samples = []
+    # mdp = list(mdp_demo_policy_dict.keys())[0]
+    # demo_policy = mdp_demo_policy_dict[mdp]
+
+    # for _ in range(num_samples):
+    #     cur_state = mdp.env.reset()
+    #     cur_state = mdp.env.obseration.sample(1)
+    #     mdp.env.state = cur_state
+
+    #     # Get demo action.
+    #     best_action = demo_policy(cur_state)
+    #     action_index = mdp.get_actions().index(best_action)
+    #     samples.append((cur_state, best_action, 0))
+
+    return samples
+
+# -------------
+# -- Acrobot --
+# -------------
+def collect_unif_random_samples_demo_policy_acrobot(mdp_demo_policy_dict, num_samples):
+    '''
+    Args:
+        mdp (simple_rl.MDP)
+        num_samples (int)
+        epsilon (float)
+
+    Returns:
+        (list): A collection of (s, a, mdp_id) tuples.
+    '''
+
+    num_mdps = len(mdp_demo_policy_dict)
+    samples = []
     mdp = list(mdp_demo_policy_dict.keys())[0]
     demo_policy = mdp_demo_policy_dict[mdp]
 
     for _ in range(num_samples):
         cur_state = mdp.env.reset()
-        cur_state = mdp.env.obseration.sample(1)
+        cur_state = mdp.env.observation_space.sample()
         mdp.env.state = cur_state
 
         # Get demo action.
@@ -253,7 +284,7 @@ def collect_unif_random_samples_demo_policy_mountaincar(mdp_demo_policy_dict, nu
         action_index = mdp.get_actions().index(best_action)
         samples.append((cur_state, best_action, 0))
 
-    return samples
+    return samples 
 
 # ===============================
 # == Make NN State Abstraction ==
@@ -278,6 +309,7 @@ def make_nn_sa(mdp_demo_policy_dict, sess, params, verbose=True, sample_type="ra
     # MDP Specific parameters.
     num_mdps = len(mdp_demo_policy_dict)
     size_a = len(list(mdp_demo_policy_dict.keys())[0].get_actions())
+    print("this is the size of a", size_a)
     if num_mdps == 1:
         size_z = size_a
         a_in_z = np.array([x for x in range(size_z)]).reshape(size_z,num_mdps)
@@ -290,7 +322,7 @@ def make_nn_sa(mdp_demo_policy_dict, sess, params, verbose=True, sample_type="ra
     abstraction_net = abstraction_network.abstraction_network(sess, params,num_abstract_states)
     sess.run(tf.global_variables_initializer())
     saver = tf.train.Saver()
-
+    print("env_name:", params['env_name'])
     if params['env_name']=='PuddleMDP':
         if sample_type == "demo":
             # Sample from demo policy.
@@ -310,6 +342,8 @@ def make_nn_sa(mdp_demo_policy_dict, sess, params, verbose=True, sample_type="ra
     elif params['env_name'] == 'MountainCar-v0':
         
         samples_batch = collect_unif_random_samples_demo_policy_mountaincar(mdp_demo_policy_dict, params['num_samples_from_demonstrator'] )
+    elif params['env_name'] == 'Acrobot-v1':
+        samples_batch = collect_unif_random_samples_demo_policy_acrobot(mdp_demo_policy_dict, params['num_samples_from_demonstrator'])
     else:
         raise ValueError("(experiment_utils.py): make_nn_sa doesn't recognize given environment: `" + params["env_name"] + "'.")
 

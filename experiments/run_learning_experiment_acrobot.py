@@ -17,7 +17,7 @@ from NNStateAbstrClass import NNStateAbstr
 from experiment_utils import make_nn_sa
 import cartpole_pi_d as cpd
 import mountaincar_pi_d as mpd
-import acrobot_pi_d_pi_d as apd
+import acrobot_pi_d as apd
 
 
 def diff_sampling_distr_experiment():
@@ -31,7 +31,7 @@ def diff_sampling_distr_experiment():
     env = GymMDP(env_name='CartPole-v0')
     
     # obs_size = env.get_num_state_feats()
-    mdp_demo_policy_dict[env] = cpd.expert_cartpole_policy
+    mdp_demo_policy_dict[env] = apd.expert_acrobot_policy
     demo_agent = FixedPolicyAgent(cpd.expert_cartpole_policy)
     
     params = GridWorldMDP.get_parameters()
@@ -65,7 +65,7 @@ def diff_sampling_distr_experiment():
 def get_params(env_name = "MountainCar-v0"):
     params={}
     params['multitask']=False
-    params['obs_size']=4
+    params['obs_size']=6
     params['num_iterations_for_abstraction_learning']=500
     params['learning_rate_for_abstraction_learning']=0.001
     params['abstraction_network_hidden_layers']=2
@@ -94,15 +94,16 @@ def main():
     # ======================
     # == Make Environment ==
     # ======================
-    env_name = "MountainCar-v0"
+    env_name = "Acrobot-v1"
     env = GymMDP(env_name)
     # env = gym.make(env_name)
-    params = get_params()
+    params = get_params(env_name)
     # num_test_mdps = 6 # 6 is max.
     mdp_demo_policy_dict = {}
     # obs_size = env.get_num_state_feats()
-    mdp_demo_policy_dict[env] = mpd.expert_mountaincar_policy
+    mdp_demo_policy_dict[env] = apd.expert_acrobot_policy
     mdp = env 
+    print("this is the observations space ", env.env.observation_space.sample())
     # ============================
     # == Make State Abstraction ==
     # ============================

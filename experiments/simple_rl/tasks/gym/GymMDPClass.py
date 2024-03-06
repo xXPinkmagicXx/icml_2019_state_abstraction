@@ -55,7 +55,7 @@ class GymMDP(MDP):
         Returns
             (float)
         '''
-        obs, reward, is_terminal, _, info = self.env.step(action)
+        obs, reward, is_terminal, info = self.env.step(action)
 
         if self.render and (self.render_every_n_episodes == 0 or self.episode % self.render_every_n_episodes == 0):
             self.env.render()
