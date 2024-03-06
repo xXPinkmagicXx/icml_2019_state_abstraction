@@ -64,18 +64,23 @@ def diff_sampling_distr_experiment():
 
 def get_params(env_name = "MountainCar-v0"):
     params={}
+    steps = 1000
+    learning_rate = 0.01
+    ## Env
+    params['env_name']= env_name
     params['multitask']=False
     params['obs_size']=6
-    params['num_iterations_for_abstraction_learning']=500
-    params['learning_rate_for_abstraction_learning']=0.001
+    ## Abstraction
+    params['num_iterations_for_abstraction_learning']= steps
+    params['learning_rate_for_abstraction_learning']=learning_rate
     params['abstraction_network_hidden_layers']=2
-    params['abstraction_network_hidden_nodes']=40
-    params['num_samples_from_demonstrator']=5000
-    params['episodes'] = 50
-    params['env_name']= env_name
-    params['steps']=10
-    params['num_instances']=20
-    params['rl_learning_rate']=0.001
+    params['abstraction_network_hidden_nodes']=200
+    params['num_samples_from_demonstrator']=10000
+    
+    params['episodes'] = 200
+    params['steps']=steps
+    params['num_instances']=1
+    params['rl_learning_rate']=learning_rate
 
     return params
 
@@ -109,8 +114,7 @@ def main():
     # ============================
     #nn_sa_file_name = "cartpole_nn_sa"
     sess = tf.Session()
-    abstraction_net = make_nn_sa(mdp_demo_policy_dict, sess, params)
-    nn_sa = NNStateAbstr(abstraction_net)
+    
 
     # def get_discrete_state(state):
     #     discrete_state = (state - env.observation_space.low) / discrete_os_win_size
@@ -122,15 +126,21 @@ def main():
     # Get actions and features
     actions = mdp.get_actions()
     actions =list(actions)
-    print("this is the actions:",actions)
     #num_features = test_mdp.get_num_state_feats()
     # Make agents
     # linear_agent = LinearQAgent(actions=actions, num_features=num_features)
     params["explore"] = True
+
     ql_agent = QLearningAgent(actions)
+    
+    agent_list= [ql_agent]
 
-    sa_agent = AbstractionWrapper(QLearningAgent, agent_params={"alpha":params['rl_learning_rate'],"epsilon":0.2,"actions":mdp.get_actions()}, state_abstr=nn_sa, name_ext="$-\\phi$")
-
+    DO_STATE_ABSTRACTION = True
+    if DO_STATE_ABSTRACTION:
+        abstraction_net = make_nn_sa(mdp_demo_policy_dict, sess, params)
+        nn_sa = NNStateAbstr(abstraction_net)
+        sa_agent = AbstractionWrapper(QLearningAgent, agent_params={"alpha":params['rl_learning_rate'],"epsilon":0.2,"actions": actions}, state_abstr=nn_sa)
+        agent_list.append(sa_agent)
     # ====================
     # == Run Experiment ==
     # ====================
@@ -141,7 +151,7 @@ def main():
     #     # demo_agent = FixedPolicyAgent(cpd.expert_cartpole_policy)
     #     run_agents_on_mdp([sa_agent, linear_agent], test_mdp, instances=params['num_instances'], episodes=params['episodes'], steps=params['steps'], verbose=False)
 
-    run_agents_on_mdp([sa_agent], mdp, instances=5, episodes=params['episodes'], steps=params['steps'], verbose=True)
+    run_agents_on_mdp(agent_list, mdp, instances=params['num_instances'], episodes=params['episodes'], steps=params['steps'], verbose=True)
 
 
 if __name__ == "__main__":
