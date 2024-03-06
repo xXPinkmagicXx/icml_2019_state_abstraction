@@ -6,11 +6,13 @@ import utils
 meta_params,alg_params={},{}
 try:
 	meta_params['env_name']=sys.argv[1]
-	meta_params['seed_number']=int(sys.argv[2])
+	meta_params['seed_number']= 1
+	print("the env is set to", meta_params['env_name'])
 except:
 	print("default environment is Lunar Lander ...")
 	meta_params['env_name']='LunarLander-v2'
 	meta_params['seed_number']=0
+meta_params['seed_number']= 1
 
 # Params for all environments.
 meta_params['env']=gym.make(meta_params['env_name'])
@@ -66,6 +68,27 @@ if meta_params['env_name'] == 'Acrobot-v1':
 	alg_params['critic_target_net_freq']=1
 	alg_params['max_buffer_size']=5000
 	alg_params['critic_train_type']='model_free_critic_monte_carlo'
+
+if meta_params['env_name']=='MountainCar-v0':
+	
+	meta_params['max_learning_episodes']=3000
+	alg_params['state_|dimension|']=len(meta_params['env'].reset())
+	alg_params['|A|']=meta_params['env'].action_space.n
+	alg_params['max_buffer_size']=5000
+	
+	## Actor
+	alg_params['actor_num_h']=2
+	alg_params['actor_|h|']=40
+	alg_params['actor_lr']=0.00025
+	alg_params['actor_activation'] = ""
+	## Critic
+	alg_params['critic_num_h']=2
+	alg_params['critic_|h|']=40
+	alg_params['critic_lr']=0.005
+	alg_params['critic_batch_size']=32
+	alg_params['critic_num_epochs']=10
+	alg_params['critic_target_net_freq']=1
+	alg_params['critic_train_type']='model_free_critic_monte_carlo'#or model_free_critic_monte_carlo
 
 
 #ensure results are reproducible

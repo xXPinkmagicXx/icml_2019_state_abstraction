@@ -17,6 +17,7 @@ from NNStateAbstrClass import NNStateAbstr
 from experiment_utils import make_nn_sa
 import cartpole_pi_d as cpd
 import mountaincar_pi_d as mpd
+import acrobot_pi_d_pi_d as apd
 
 
 def diff_sampling_distr_experiment():

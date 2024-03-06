@@ -224,6 +224,37 @@ def collect_unif_random_samples_demo_policy_cartpole(mdp_demo_policy_dict, num_s
 
     return samples
 
+# -----------------
+# -- Mountaincar --
+# -----------------
+def collect_unif_random_samples_demo_policy_mountaincar(mdp_demo_policy_dict, num_samples):
+    '''
+    Args:
+        mdp (simple_rl.MDP)
+        num_samples (int)
+        epsilon (float)
+
+    Returns:
+        (list): A collection of (s, a, mdp_id) tuples.
+    '''
+
+    num_mdps = len(mdp_demo_policy_dict)
+    samples = []
+    mdp = list(mdp_demo_policy_dict.keys())[0]
+    demo_policy = mdp_demo_policy_dict[mdp]
+
+    for _ in range(num_samples):
+        cur_state = mdp.env.reset()
+        cur_state = mdp.env.obseration.sample(1)
+        mdp.env.state = cur_state
+
+        # Get demo action.
+        best_action = demo_policy(cur_state)
+        action_index = mdp.get_actions().index(best_action)
+        samples.append((cur_state, best_action, 0))
+
+    return samples
+
 # ===============================
 # == Make NN State Abstraction ==
 # ===============================
@@ -276,6 +307,9 @@ def make_nn_sa(mdp_demo_policy_dict, sess, params, verbose=True, sample_type="ra
         else:
             # Uniform random sampling.
             samples_batch = collect_unif_random_samples_demo_policy_cartpole(mdp_demo_policy_dict, params['num_samples_from_demonstrator'])
+    elif params['env_name'] == 'MountainCar-v0':
+        
+        samples_batch = collect_unif_random_samples_demo_policy_mountaincar(mdp_demo_policy_dict, params['num_samples_from_demonstrator'] )
     else:
         raise ValueError("(experiment_utils.py): make_nn_sa doesn't recognize given environment: `" + params["env_name"] + "'.")
 
