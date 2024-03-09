@@ -2,8 +2,8 @@
 *.DS_Store
 *.csv
 *.pdf
-*.txt
 *.meta
+*data.txt
 *.index
 sa_models/*
 puddle
