@@ -1,4 +1,11 @@
-# icml_2019_state_abstraction
+# Bachelor Project 
+This repo is a fork of https://github.com/anonicml2019/icml_2019_state_abstraction
+
+The work done in this repo will be used as a submodule in this repo https://github.com/borchand/Bachelor-Project ( currently private )
+
+
+
+# README for icml_2019_state_abstraction
 Code for the 2019 ICML submission, "Learning State Abstractions for Transfer in Continuous Control".
 
 To run experiments:
