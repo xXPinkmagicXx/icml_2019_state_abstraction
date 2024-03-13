@@ -12,9 +12,9 @@ from simple_rl.tasks import PuddleMDP
 from simple_rl.run_experiments import run_agents_on_mdp, evaluate_agent
 
 # Local imports.
-from NNStateAbstrClass import NNStateAbstr
+from icml_2019_state_abstraction.experiments.abstraction.NNStateAbstrClass import NNStateAbstr
 import icml_2019_state_abstraction.experiments.policies.lunar_pi_d as lpd
-from experiment_utils import make_nn_sa
+from icml_2019_state_abstraction.experiments.utils.experiment_utils import make_nn_sa
 
 def main():
 

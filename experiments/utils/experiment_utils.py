@@ -20,10 +20,10 @@ sys.path.append("./policies")
 # Import policies.
 import policies.Policy as Policy
 import policies.lunar_pi_d as lpd
-import icml_2019_state_abstraction.experiments.policies.CartPolePolicy as cpd
+import policies.CartPolePolicy as cpd
 
 import Lunar_dqn.lunar_demonstrator as ld
-import alg2_utils, abstraction_network
+import utils.alg2_utils as alg2_utils, abstraction.abstraction_network as abstraction_network
 
 colors = dict(mcolors.BASE_COLORS, **mcolors.CSS4_COLORS)
 # Sort colors by hue, saturation, value and name.
@@ -312,7 +312,8 @@ def make_nn_sa(mdp_demo_policy_dict, sess, params, verbose=True, sample_type="ra
     # MDP Specific parameters.
     num_mdps = len(mdp_demo_policy_dict)
     size_a = len(list(mdp_demo_policy_dict.keys())[0].get_actions())
-    print("this is the size of a", size_a)
+    if verbose:
+        print("this is the size of a", size_a)
     if num_mdps == 1:
         size_z = size_a
         a_in_z = np.array([x for x in range(size_z)]).reshape(size_z,num_mdps)
@@ -325,7 +326,8 @@ def make_nn_sa(mdp_demo_policy_dict, sess, params, verbose=True, sample_type="ra
     abstraction_net = abstraction_network.abstraction_network(sess, params,num_abstract_states)
     sess.run(tf.global_variables_initializer())
     saver = tf.train.Saver()
-    print("env_name:", params['env_name'])
+    if verbose:
+        print("env_name:", params['env_name'])
     if params['env_name']=='PuddleMDP':
         if sample_type == "demo":
             # Sample from demo policy.

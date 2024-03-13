@@ -13,11 +13,15 @@ from simple_rl.run_experiments import run_agents_on_mdp, run_agents_lifelong, ev
 from simple_rl.mdp import MDPDistribution
 
 # Local imports.
-from NNStateAbstrClass import NNStateAbstr
-from experiment_utils import make_nn_sa, make_nn_sa_2
+# Import policies
+import policies.Policy as Policy
 import policies.CartPolePolicy as cpp
 import policies.mountaincar_pi_d as mpd
+import policies.AcrobotPolicy as abp
 
+# abstraction
+from abstraction.NNStateAbstrClass import NNStateAbstr
+from utils.experiment_utils import make_nn_sa, make_nn_sa_2
 
 def diff_sampling_distr_experiment():
     '''
@@ -64,17 +68,26 @@ def diff_sampling_distr_experiment():
 
 
 
-
+def get_policy(gym_env: GymMDP):
+    
+    if gym_env.env_name == "CartPole-v0":
+        return cpp.CartPolePolicy(gym_env)
+    
+    if gym_env.env_name == "Acrobot-v1":
+        return abp.AcrobotPolicy(gym_env)
+    
+    return NotImplementedError("Policy not implemented for this environment")
 
 def main(env_name, abstraction=True):
 
     ## get parameters
     gym_env = GymMDP(env_name)
+    
     ## Get actions and features
     actions = list(gym_env.get_actions())
     
     ## Get policy
-    policy = cpd.CartPolePolicy(gym_env)
+    policy = get_policy(gym_env)
     policy.params["num_mdps"] = 1
     policy.params["size_a"] = len(actions)
     

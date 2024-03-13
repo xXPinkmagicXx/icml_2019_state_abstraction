@@ -13,11 +13,11 @@ from simple_rl.run_experiments import run_agents_on_mdp, run_agents_lifelong, ev
 from simple_rl.mdp import MDPDistribution
 
 # Local imports.
-from NNStateAbstrClass import NNStateAbstr
-from experiment_utils import make_nn_sa
+from icml_2019_state_abstraction.experiments.abstraction.NNStateAbstrClass import NNStateAbstr
+from icml_2019_state_abstraction.experiments.utils.experiment_utils import make_nn_sa
 import icml_2019_state_abstraction.experiments.policies.CartPolePolicy as cpd
 import icml_2019_state_abstraction.experiments.policies.mountaincar_pi_d as mpd
-import acrobot_pi_d as apd
+import icml_2019_state_abstraction.experiments.policies.acrobot_pi_d as apd
 
 
 def diff_sampling_distr_experiment():

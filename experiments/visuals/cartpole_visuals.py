@@ -11,10 +11,10 @@ from simple_rl.agents import QLearningAgent
 
 # Local imports.
 import run_learning_experiment_cartpole as rlec
-from NNStateAbstrClass import NNStateAbstr
-from experiment_utils import make_nn_sa,collect_samples_from_demo_policy_random_s0_cartpole
-import icml_2019_state_abstraction.experiments.policies.CartPolePolicy as cpd
-import visual_utils as vu
+from abstraction.NNStateAbstrClass import NNStateAbstr
+from utils.experiment_utils import make_nn_sa
+import policies.CartPolePolicy as cpd
+import visuals.visual_utils as vu
 
 def get_feature_dicts():
     '''
@@ -34,7 +34,7 @@ def main():
     # ======================
     # == Make Environment ==
     # ======================
-    params = rlec.get_cartpole_params()
+    params = rlec.get_params()
     num_test_mdps = 6 # 6 is max.
     mdp_demo_policy_dict = {}
     env = GymMDP(env_name='CartPole-v0')
@@ -47,7 +47,6 @@ def main():
     # ============================
     sess = tf.Session()
     nn_sa_file_name = "cartpole_nn_sa"
-    params['num_iterations_for_abstraction_learning']=500
     abstraction_net = make_nn_sa(mdp_demo_policy_dict, sess, params)
     nn_sa = NNStateAbstr(abstraction_net)
 
@@ -57,14 +56,13 @@ def main():
 
     # Collect dataset based on learner.
     sa_agent = AbstractionWrapper(QLearningAgent, agent_params={"alpha":params['rl_learning_rate'],"epsilon":0.2,"actions":test_mdp.get_actions()}, state_abstr=nn_sa, name_ext="$-\\phi$")
-    #visited_states = vu.collect_dataset(test_mdp, samples=2000) #, learning_agent=sa_agent)
-    visited_states = collect_samples_from_demo_policy_random_s0_cartpole(mdp_demo_policy_dict, num_samples=2000)
+    visited_states = vu.collect_dataset(test_mdp, samples=5000) #, learning_agent=sa_agent)
 
     # Get feature indices.
     features = get_feature_dicts()
 
     # Visualize.
-    vu.visualize_state_abstrs3D(visited_states, features, nn_sa)
+    vu.visualize_state_abstrs(visited_states, features, nn_sa)
 
 
 if __name__ == "__main__":

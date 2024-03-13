@@ -1,7 +1,6 @@
 # Python imports.
 import sys, os
 import numpy as np
-
 # Other imports.
 import tensorflow as tf
 from simple_rl.mdp import State

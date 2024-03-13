@@ -5,7 +5,7 @@ import sys
 import numpy as np
 
 # Other imports.
-import puddle_info as pi
+import icml_2019_state_abstraction.experiments.utils.puddle_info as pi
 from simple_rl.agents import LinearQAgent, QLearningAgent, FixedPolicyAgent, Agent
 from simple_rl.tasks import PuddleMDP
 from simple_rl.run_experiments import run_agents_on_mdp
