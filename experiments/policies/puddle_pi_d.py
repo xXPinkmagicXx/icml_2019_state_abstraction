@@ -178,27 +178,27 @@ def expert_puddle_policy_bot_right(state):
         action = "down"
     return action
 
-def stochastic_expert_policy(state, beta=1.0):
-    '''
-    Args:
-        state (simple_rl.State)
-        beta (float)
+# def stochastic_expert_policy(state, beta=1.0):
+#     '''
+#     Args:
+#         state (simple_rl.State)
+#         beta (float)
 
-    Returns:
-        (str)
-    '''
+#     Returns:
+#         (str)
+#     '''
 
-    q_vals = []
-    for a in actions:
-        # Get Q Value for that action.
-        next_agent = ActThenPiAgent(a, expert_puddle_policy)
-        q_vals.append(evaluate_agent(next_agent, mdp))
+#     q_vals = []
+#     for a in actions:
+#         # Get Q Value for that action.
+#         next_agent = ActThenPiAgent(a, expert_puddle_policy)
+#         q_vals.append(evaluate_agent(next_agent, mdp))
 
-    # Softmax distribution.
-    total = sum([np.exp(beta * qv) for qv in q_vals])
-    softmax = [np.exp(beta * qv) / total for qv in q_vals]
+#     # Softmax distribution.
+#     total = sum([np.exp(beta * qv) for qv in q_vals])
+#     softmax = [np.exp(beta * qv) / total for qv in q_vals]
 
-    return np.random.choice(actions, 1, p=softmax)[0]
+#     return np.random.choice(actions, 1, p=softmax)[0]
 '''
 def main(open_plot=True):
 
