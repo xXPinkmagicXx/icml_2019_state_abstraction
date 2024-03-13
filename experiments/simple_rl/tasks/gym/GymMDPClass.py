@@ -30,8 +30,12 @@ class GymMDP(MDP):
         self.env_name = env_name
         self.env = gym.make(env_name)
         self.render = render
-        MDP.__init__(self, range(self.env.action_space.n), self._transition_func, self._reward_func, init_state=GymState(self.env.reset()))
-    
+        print("this is the reset", self.env.reset())
+        if env_name == "MountainCar-v0":
+            MDP.__init__(self, range(self.env.action_space.n), self._transition_func, self._reward_func, init_state=GymState(self.env.reset()[0]))
+        else: 
+            MDP.__init__(self, range(self.env.action_space.n), self._transition_func, self._reward_func, init_state=GymState(self.env.reset()))
+
     def get_parameters(self):
         '''
         Returns:
