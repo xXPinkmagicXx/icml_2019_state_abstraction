@@ -16,7 +16,7 @@ from simple_rl.mdp import MDPDistribution
 from icml_2019_state_abstraction.experiments.abstraction.NNStateAbstrClass import NNStateAbstr
 from icml_2019_state_abstraction.experiments.utils.experiment_utils import make_nn_sa
 import icml_2019_state_abstraction.experiments.policies.CartPolePolicy as cpd
-import icml_2019_state_abstraction.experiments.policies.mountaincar_pi_d as mpd
+import policies.MountainCarPolicy as mpd
 import icml_2019_state_abstraction.experiments.policies.acrobot_pi_d as apd
 
 

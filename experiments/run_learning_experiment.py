@@ -5,7 +5,7 @@ import tensorflow as tf
 import gym
 
 # simple_rl imports.
-from simple_rl.tasks import GridWorldMDP, GymMDP
+from simple_rl.tasks import GymMDP
 from simple_rl.abstraction.AbstractionWrapperClass import AbstractionWrapper
 from simple_rl.agents import QLearningAgent, LinearQAgent, FixedPolicyAgent, RMaxAgent, RandomAgent
 # from simple_rl.tasks import PuddleMDP
@@ -16,54 +16,12 @@ from simple_rl.mdp import MDPDistribution
 # Import policies
 import policies.Policy as Policy
 import policies.CartPolePolicy as cpp
-import policies.mountaincar_pi_d as mpd
+import policies.MountainCarPolicy as mpd
 import policies.AcrobotPolicy as abp
 
 # abstraction
 from abstraction.NNStateAbstrClass import NNStateAbstr
 from utils.experiment_utils import make_nn_sa, make_nn_sa_2
-
-def diff_sampling_distr_experiment():
-    '''
-    Summary:
-        Runs
-    '''
-    # Make MDP and Demo Policy.
-    mdp_demo_policy_dict = {}
-
-    env = GymMDP(env_name='CartPole-v0')
-
-    # obs_size = env.get_num_state_feats()
-    mdp_demo_policy_dict[env] = cpp.expert_cartpole_policy
-    demo_agent = FixedPolicyAgent(cpp.expert_cartpole_policy)
-
-    params = GridWorldMDP.get_parameters()
-
-    # Make a NN for each sampling param.
-    sampling_params = [0.0, 0.5, 1.0]
-
-    test_mdp = GridWorldMDP() #
-    agents = {"demo":demo_agent}
-    sess = tf.Session()
-    for epsilon in sampling_params:
-        with tf.variable_scope('nn_sa' + str(epsilon), reuse=False) as scope:
-            print("epsilon", epsilon)
-            # tf.reset_default_graph()
-            params["epsilon"] = epsilon
-            abstraction_net = make_nn_sa(mdp_demo_policy_dict, sess, params, verbose=False)
-            nn_sa = NNStateAbstr(abstraction_net)
-            sa_agent = AbstractionWrapper(QLearningAgent, agent_params={"actions":env.get_actions(), "name":"$QL_\\phi-\\epsilon=" + str(epsilon) + "$"}, state_abstr=nn_sa)
-            agents[epsilon] = sa_agent
-
-    with tf.variable_scope('demo') as scope:
-        abstraction_net_rand = make_nn_sa(mdp_demo_policy_dict, sess, params, verbose=False, sample_type="rand")
-        nn_sa_rand = NNStateAbstr(abstraction_net_rand)
-        sa_agent_rand = AbstractionWrapper(QLearningAgent, agent_params={"actions":env.get_actions(), "name":"$D \\sim U(S)$"}, state_abstr=nn_sa_rand, name_ext="")
-        agents["rand"] = sa_agent_rand
-
-    run_agents_on_mdp(agents.values(), test_mdp, instances=params['num_instances'], episodes=params['episodes'], steps=params['steps'], verbose=False)
-
-    sess.close()
 
 
 
@@ -75,14 +33,19 @@ def get_policy(gym_env: GymMDP):
     
     if gym_env.env_name == "Acrobot-v1":
         return abp.AcrobotPolicy(gym_env)
-    
+
+    if gym_env.env_name == "MountainCar-v0":
+        return mpd.MountainCarPolicy(gym_env)
+
     return NotImplementedError("Policy not implemented for this environment")
 
-def main(env_name, abstraction=True):
+
+def main(env_name, abstraction=True, verbose=False):
 
     ## get parameters
     gym_env = GymMDP(env_name)
-    
+    if verbose:
+        print("this is the environment: ", gym_env.env_name)
     ## Get actions and features
     actions = list(gym_env.get_actions())
     
@@ -95,13 +58,14 @@ def main(env_name, abstraction=True):
     if abstraction:
         sess = tf.Session()
         sample_batch = policy.sample_unif_random()
-        print("This is the sample batch", sample_batch)
         abstraction_net = make_nn_sa_2(sess, policy.params, sample_batch)
         nn_sa = NNStateAbstr(abstraction_net)
 
     # Make agents
+    ## TODO: LinearQagent and number of features does not wor
     num_features = gym_env.get_num_state_feats()
-    linear_agent = LinearQAgent(actions=actions, num_features=num_features)
+    print("this is the number of features: ", num_features)
+    linear_agent = QLearningAgent(actions=actions)
     # ql_agent = QLearningAgent(actions)
     agent_params = {"alpha":policy.params['rl_learning_rate'],"epsilon":0.2,"actions":actions}
     sa_agent = AbstractionWrapper(QLearningAgent,

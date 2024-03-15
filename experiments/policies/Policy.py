@@ -8,13 +8,13 @@ import abc
 class Policy:
     __metaclass__ = abc.ABCMeta
 	
-    def __init__(self, gym_env: GymMDP):
+    def __init__(self, gym_env: GymMDP, path_to_learned_policy="./learned_policy/"):
 		
         self.gym_env = gym_env
         self.params = self.get_params()
         self.env_name = self.params['env_name']
 		
-        self.loaded_model = self._load_model()
+        self.loaded_model = self._load_model(path_to_learned_policy)
         self.demo_policy = self.expert_policy
         self.num_mdps = 1
     
@@ -22,7 +22,7 @@ class Policy:
         return len(list(self.gym_env.get_actions()))
 
     @abc.abstractmethod
-    def _load_model(self):
+    def _load_model(self, path_to_learned_policy):
         return
 	
     @abc.abstractmethod
