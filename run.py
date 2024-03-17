@@ -13,7 +13,7 @@ def main():
     gym_env = sys.argv[1]
 
     ## run training of policy
-    ## run.main()
+    run.main(gym_env)
 
     ## run learning experiment
     run_learning_experiment.main(gym_env, abstraction=True)
