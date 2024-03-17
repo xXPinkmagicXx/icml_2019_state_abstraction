@@ -31,7 +31,7 @@ pip install -r requirements.txt
 |   |-- run_learning_experiment.py
 |-- lunar_variants/
 |-- mac/
-|   |-- learned_policy
+|   |-- learned_policy/
 |   |-- actor_network.py
 |   |-- critic_network.py
 |   |-- mac.py
