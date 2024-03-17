@@ -16,7 +16,7 @@ pip install -r requirements.txt
 ```
 ## Train policy and run learning experiment (run.py)
 ```
-	python run.py "MountainCar-v0"
+python run.py "MountainCar-v0"
 ```
 Where "MountainCar-v0" can be switched out with other implemented gym_envs
 Currently implemented gym environments {"MountainCar-v0", "CartPole-v0"}
