@@ -37,7 +37,7 @@ pip install -r requirements.txt
 |   |-- mac.py
 |   |-- run.py
 |   |-- utils.py
-|-- lunar_demonstrator.py
+|-- run.py
 |-- README.md
 |-- requirements.txt
 ```
