@@ -14,6 +14,12 @@ conda install tensorflow=1.15.0
 ```
 pip install -r requirements.txt
 ```
+## Train policy and run learning experiment (run.py)
+```
+	python run.py "MountainCar-v0"
+```
+Where "MountainCar-v0" can be switched out with other implemented gym_envs
+Currently implemented gym environments {"MountainCar-v0", "CartPole-v0"}
 
 ## Directory Structure
 ```
@@ -48,7 +54,7 @@ pip install -r requirements.txt
 - experiments/simple_rl : this is the simple_rl repo https://github.com/david-abel/simple_rl
 - mac/ : This contains the mean actor critic implementation
 - requirements.txt : the requirements for running the code
-
+- run.py : this file trains a policy and run learning experiment 
 
 
 # README for icml_2019_state_abstraction
