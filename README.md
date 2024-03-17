@@ -16,7 +16,7 @@ pip install -r requirements.txt
 ```
 
 ## Directory Structure
-
+```
 |-- experiments/
 |   |-- abstraction/
 |   |   |-- abstraction_network.py
@@ -40,7 +40,7 @@ pip install -r requirements.txt
 |-- lunar_demonstrator.py
 |-- README.md
 |-- requirements.txt
-
+```
 - experiments/run_learning_experiment.py: main file for running experiments
 - experiments/abstraction : Contains the abstraction implementation
 - experiments/policies : The implemented task specific policy classes  
