@@ -19,7 +19,6 @@ sys.path.append("./policies")
 # Local imports.
 # Import policies.
 import policies.Policy as Policy
-import policies.lunar_pi_d as lpd
 import policies.CartPolePolicy as cpd
 
 import Lunar_dqn.lunar_demonstrator as ld
