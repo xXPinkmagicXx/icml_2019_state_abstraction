@@ -10,13 +10,7 @@ class MountainCarPolicy(Policy.Policy):
 	
 	def __init__(self, gym_env: GymMDP):
 		
-		cwd = os.getcwd().split('\\')[-1]
-		print("this is the current working dir",cwd)
-		## . if called as submodule or .. if called from experiments/
-		path_to_learned_policy = './mac/learned_policy/' if "icml_2019_state_abstraction" == cwd else '../mac/learned_policy/'
-		super().__init__(gym_env, path_to_learned_policy)
-
-		print("this is the current working dir",cwd)
+		super().__init__(gym_env)
 		
 	def get_params(self):
 		
@@ -44,7 +38,6 @@ class MountainCarPolicy(Policy.Policy):
 		s_size=len(state)
 		s_array=np.array(state).reshape(1,s_size)
 		temp=self.loaded_model.predict(s_array)
-		
 		return np.argmax(temp[0])
 
 	def sample_unif_random(self, num_samples = 5000):
@@ -63,7 +56,6 @@ class MountainCarPolicy(Policy.Policy):
 		for _ in range(num_samples):
 			cur_state = self.gym_env.env.reset()
 			cur_state = self.gym_env.env.observation_space.sample()
-			print("this is the current state", cur_state)
 			self.gym_env.env.state = cur_state
 
 			# Get demo action.

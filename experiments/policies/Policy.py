@@ -2,18 +2,24 @@ import keras
 import sys
 from simple_rl.tasks import GymMDP
 import abc
+import os
 # load json and create model
 # load weights into new model
 
 class Policy:
     __metaclass__ = abc.ABCMeta
 	
-    def __init__(self, gym_env: GymMDP, path_to_learned_policy="./learned_policy/"):
+    def __init__(self, gym_env: GymMDP):
 		
         self.gym_env = gym_env
         self.params = self.get_params()
         self.env_name = self.params['env_name']
-		
+		## Get current working directory
+        cwd = os.getcwd().split('\\')[-1]
+        print("this is the current working dir",cwd)
+		## . if called as submodule or .. if called from experiments/
+        path_to_learned_policy = './mac/learned_policy/' if "icml_2019_state_abstraction" == cwd else '../mac/learned_policy/'
+        
         self.loaded_model = self._load_model(path_to_learned_policy)
         self.demo_policy = self.expert_policy
         self.num_mdps = 1
