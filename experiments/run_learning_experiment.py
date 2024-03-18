@@ -23,7 +23,12 @@ import policies.AcrobotPolicy as abp
 from abstraction.NNStateAbstrClass import NNStateAbstr
 from utils.experiment_utils import make_nn_sa, make_nn_sa_2
 
+import tensorflow as tf
+tf.disable_v2_behavior()
+tf.compat.v1.disable_eager_execution()
 
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 
 def get_policy(gym_env: GymMDP):
@@ -77,7 +82,7 @@ def main(env_name, abstraction=True, verbose=False):
     agent_list = [linear_agent, sa_agent]
 
     # Run the experiment
-    run_agents_on_mdp(agent_list, gym_env, instances=5, episodes=policy.params['episodes'], steps=policy.params['steps'], verbose=True)
+    run_agents_on_mdp(agent_list, gym_env, instances=20, episodes=policy.params['episodes'], steps=policy.params['steps'], verbose=True)
 
 
 if __name__ == "__main__":

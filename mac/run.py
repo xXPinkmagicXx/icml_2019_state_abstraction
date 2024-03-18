@@ -3,6 +3,12 @@ import numpy
 import gym,sys,random
 import tensorflow as tf
 
+tf.disable_v2_behavior()
+tf.compat.v1.disable_eager_execution()
+
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+
 def main(gym_env):
 	#get and set hyper-parameters
 	meta_params,alg_params={},{}
@@ -52,7 +58,7 @@ def main(gym_env):
 		alg_params['critic_batch_size']=32
 		alg_params['critic_num_epochs']=10
 		alg_params['critic_target_net_freq']=1
-		alg_params['max_buffer_size']=5000
+		alg_params['max_buffer_size']=10000
 		alg_params['critic_train_type']='model_free_critic_TD'#or model_free_critic_monte_carlo
 
 	if meta_params['env_name'] == 'Acrobot-v1':
@@ -81,21 +87,22 @@ def main(gym_env):
 		meta_params['max_learning_episodes']=3000
 		alg_params['state_|dimension|']=len(meta_params['env'].reset())
 		alg_params['|A|']=meta_params['env'].action_space.n
+		print("this is the action space", alg_params['|A|'])
+		print("this is the state space", alg_params['state_|dimension|'])
 		alg_params['max_buffer_size']=10000
 		
 		## Actor
 		alg_params['actor_num_h']=2
-		alg_params['actor_|h|']=128
-		alg_params['actor_lr']=0.00025
+		alg_params['actor_|h|']=40
+		alg_params['actor_lr']=0.01
 		## Critic
 		alg_params['critic_num_h']=2
-		alg_params['critic_|h|']=128
-		alg_params['critic_lr']=0.005
+		alg_params['critic_|h|']=40
+		alg_params['critic_lr']=0.01
 		alg_params['critic_batch_size']=64
 		alg_params['critic_num_epochs']=10
 		alg_params['critic_target_net_freq']=1
-		alg_params['critic_train_type']='model_free_critic_TD'#or model_free_critic_monte_carlo
-
+		alg_params['critic_train_type']='model_free_critic_monte_carlo' #'model_free_critic_TD'
 
 	#ensure results are reproducible
 	numpy.random.seed(meta_params['seed_number'])
