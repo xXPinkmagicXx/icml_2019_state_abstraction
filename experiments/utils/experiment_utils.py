@@ -13,14 +13,17 @@ import gym
 import tensorflow as tf
 parent_dir = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
 sys.path.insert(0, parent_dir)
+sys.path.append("./policies")
 # from simple_rl.tasks import PuddleMDP
 
 # Local imports.
-import lunar_pi_d as lpd
-import Lunar_dqn.lunar_demonstrator as ld
-import cartpole_pi_d as cpd
-import alg2_utils, abstraction_network
+# Import policies.
+import policies.Policy as Policy
+import policies.lunar_pi_d as lpd
+import policies.CartPolePolicy as cpd
 
+import Lunar_dqn.lunar_demonstrator as ld
+import utils.alg2_utils as alg2_utils, abstraction.abstraction_network as abstraction_network
 
 colors = dict(mcolors.BASE_COLORS, **mcolors.CSS4_COLORS)
 # Sort colors by hue, saturation, value and name.
@@ -219,7 +222,7 @@ def collect_unif_random_samples_demo_policy_cartpole(mdp_demo_policy_dict, num_s
 
         # Get demo action.
         best_action = demo_policy(cur_state)
-        action_index = mdp.get_actions().index(best_action)
+        #action_index = mdp.get_actions().index(best_action)
         samples.append((cur_state, best_action, 0))
 
     return samples
@@ -309,7 +312,8 @@ def make_nn_sa(mdp_demo_policy_dict, sess, params, verbose=True, sample_type="ra
     # MDP Specific parameters.
     num_mdps = len(mdp_demo_policy_dict)
     size_a = len(list(mdp_demo_policy_dict.keys())[0].get_actions())
-    print("this is the size of a", size_a)
+    if verbose:
+        print("this is the size of a", size_a)
     if num_mdps == 1:
         size_z = size_a
         a_in_z = np.array([x for x in range(size_z)]).reshape(size_z,num_mdps)
@@ -322,7 +326,8 @@ def make_nn_sa(mdp_demo_policy_dict, sess, params, verbose=True, sample_type="ra
     abstraction_net = abstraction_network.abstraction_network(sess, params,num_abstract_states)
     sess.run(tf.global_variables_initializer())
     saver = tf.train.Saver()
-    print("env_name:", params['env_name'])
+    if verbose:
+        print("env_name:", params['env_name'])
     if params['env_name']=='PuddleMDP':
         if sample_type == "demo":
             # Sample from demo policy.
@@ -353,4 +358,57 @@ def make_nn_sa(mdp_demo_policy_dict, sess, params, verbose=True, sample_type="ra
             print("iteration number {} , obj {}".format(iteration_number,-loss))
         if iteration_number % 100 == 0 and params['env_name'] == 'PuddleMDP':
             plot_learned_abstraction(abstraction_net,size_z,iteration_number)
+    return abstraction_net
+
+        
+        
+def make_nn_sa_2(sess, params, samples_batch=None, verbose=True):
+    '''
+    Args:
+        mdp_demo_policy_dict (dict):
+            Key: (simple_rl.MDP)
+            Val: (lambda : simple_rl.State --> str)
+        sess (tf.session)
+        params (dict)
+        verbose (bool)
+        sample_type (str): one of {"rand","demo"}
+
+    Summary:
+        Traing and saves a neural network state abstraction for the given
+        @environment and @demo_policy.
+    '''
+
+    # MDP Specific parameters.
+    num_mdps = params["num_mdps"]
+    size_a = params["size_a"]
+    
+    if verbose:
+        print("this is the size of a", size_a)
+    
+    if num_mdps == 1:
+        size_z = size_a
+        a_in_z = np.array([x for x in range(size_z)]).reshape(size_z,num_mdps)
+    else:
+        size_z = np.power(size_a,num_mdps)
+        a_in_z = enumeration_policy(size_z,size_a,num_mdps)
+
+    num_abstract_states = size_z
+    
+    ## Create abstraction network
+    abstraction_net = abstraction_network.abstraction_network(sess, params,num_abstract_states)
+    sess.run(tf.global_variables_initializer())
+    
+    ## print
+    if verbose:
+        print("env_name:", params['env_name'])
+
+    ## Do training
+    for iteration_number in range(params['num_iterations_for_abstraction_learning']):
+        
+        loss=abstraction_net.train(samples_batch, a_in_z)
+        
+        ## Print loss
+        if verbose and iteration_number % 10 == 0:
+            print("iteration number {} , obj {}".format(iteration_number,-loss))
+    
     return abstraction_net

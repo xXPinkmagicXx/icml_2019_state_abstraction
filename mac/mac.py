@@ -1,6 +1,9 @@
 import numpy
-import critic_network,actor_network
-import gym,sys,utils, os
+from .critic_network import critic
+from .actor_network import actor
+import gym
+import sys
+import os
 from collections import deque
 
 class mac:
@@ -15,8 +18,8 @@ class mac:
 		'''
 		self.params=params
 		self.memory = deque(maxlen=self.params['max_buffer_size'])
-		self.actor=actor_network.actor(self.params)
-		self.critic=critic_network.critic(self.params)
+		self.actor=actor(self.params)
+		self.critic=critic(self.params)
 
 	def add_2_memory(self,states,actions,rewards):
 		T=len(states)
@@ -77,14 +80,21 @@ class mac:
 				a=self.actor.select_action(s_p)
 				actions.append(a),rewards.append(0)
 				break
-		returns=utils.rewardToReturn(rewards,meta_params['gamma'])
+		returns=self.rewardToReturn(rewards,meta_params['gamma'])
 
 		if episode%50==0:
 			model_json = self.actor.network.to_json()
-			with open("learned_policy/"+meta_params['env_name']+".json", "w") as json_file:
+			with open("./mac/learned_policy/"+meta_params['env_name']+".json", "w") as json_file:
 				json_file.write(model_json)
 			# serialize weights to HDF5
-			self.actor.network.save_weights("learned_policy/"+meta_params['env_name']+".h5")
+			self.actor.network.save_weights("./mac/learned_policy/"+meta_params['env_name']+".h5")
 			print("Saved latest policy network to disk")
 
 		return states,actions,returns,rewards
+	def rewardToReturn(self, rewards,gamma):
+		T=len(rewards)
+		returns=T*[0]
+		returns[T-1]=rewards[T-1] 
+		for t in range(T-2,-1,-1):
+			returns[t]=rewards[t]+gamma*returns[t+1]
+		return returns

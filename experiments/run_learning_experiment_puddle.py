@@ -14,10 +14,10 @@ from simple_rl.run_experiments import run_agents_on_mdp, evaluate_agent
 from simple_rl.utils import chart_utils as cu
 
 # Local imports.
-from NNStateAbstrClass import NNStateAbstr
+from icml_2019_state_abstraction.experiments.abstraction.NNStateAbstrClass import NNStateAbstr
 import puddle_pi_d as ppd
-import puddle_info as pi
-from experiment_utils import make_nn_sa,plot_learned_abstraction
+import icml_2019_state_abstraction.experiments.utils.puddle_info as pi
+from icml_2019_state_abstraction.experiments.utils.experiment_utils import make_nn_sa,plot_learned_abstraction
 
 def get_params(default_params=None):
     '''

@@ -13,9 +13,9 @@ from simple_rl.run_experiments import run_agents_on_mdp, run_agents_lifelong, ev
 from simple_rl.mdp import MDPDistribution
 
 # Local imports.
-from NNStateAbstrClass import NNStateAbstr
-from experiment_utils import make_nn_sa
-import cartpole_pi_d as cpd
+from icml_2019_state_abstraction.experiments.abstraction.NNStateAbstrClass import NNStateAbstr
+from icml_2019_state_abstraction.experiments.utils.experiment_utils import make_nn_sa
+import icml_2019_state_abstraction.experiments.policies.CartPolePolicy as cpd
 
 def get_params():
     params={}

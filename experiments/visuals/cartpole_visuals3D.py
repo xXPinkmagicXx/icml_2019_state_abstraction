@@ -11,10 +11,10 @@ from simple_rl.agents import QLearningAgent
 
 # Local imports.
 import run_learning_experiment_cartpole as rlec
-from NNStateAbstrClass import NNStateAbstr
-from experiment_utils import make_nn_sa,collect_samples_from_demo_policy_random_s0_cartpole
-import cartpole_pi_d as cpd
-import visual_utils as vu
+from icml_2019_state_abstraction.experiments.abstraction.NNStateAbstrClass import NNStateAbstr
+from icml_2019_state_abstraction.experiments.utils.experiment_utils import make_nn_sa,collect_samples_from_demo_policy_random_s0_cartpole
+import icml_2019_state_abstraction.experiments.policies.CartPolePolicy as cpd
+import icml_2019_state_abstraction.experiments.visuals.visual_utils as vu
 
 def get_feature_dicts():
     '''
