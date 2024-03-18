@@ -1,4 +1,4 @@
-from mac.mac import mac
+from .mac import mac 
 import numpy
 import gym,sys,random
 import tensorflow as tf

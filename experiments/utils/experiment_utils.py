@@ -14,6 +14,7 @@ import tensorflow as tf
 parent_dir = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
 sys.path.insert(0, parent_dir)
 sys.path.append("./policies")
+sys.path.append("./abstraction")
 # from simple_rl.tasks import PuddleMDP
 
 # Local imports.
@@ -22,7 +23,7 @@ import policies.Policy as Policy
 import policies.CartPolePolicy as cpd
 
 import Lunar_dqn.lunar_demonstrator as ld
-import utils.alg2_utils as alg2_utils, abstraction.abstraction_network as abstraction_network
+from ..abstraction.abstraction_network import abstraction_network 
 
 colors = dict(mcolors.BASE_COLORS, **mcolors.CSS4_COLORS)
 # Sort colors by hue, saturation, value and name.

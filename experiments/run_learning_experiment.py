@@ -20,8 +20,8 @@ import policies.MountainCarPolicy as mpd
 import policies.AcrobotPolicy as abp
 
 # abstraction
-from abstraction.NNStateAbstrClass import NNStateAbstr
-from utils.experiment_utils import make_nn_sa, make_nn_sa_2
+from .abstraction.NNStateAbstrClass import NNStateAbstr
+from .utils.experiment_utils import make_nn_sa, make_nn_sa_2
 
 import tensorflow as tf
 tf.disable_v2_behavior()
