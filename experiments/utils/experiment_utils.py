@@ -395,7 +395,7 @@ def make_nn_sa_2(sess, params, samples_batch=None, verbose=True):
     num_abstract_states = size_z
     
     ## Create abstraction network
-    abstraction_net = abstraction_network.abstraction_network(sess, params,num_abstract_states)
+    abstraction_net = abstraction_network(sess, params,num_abstract_states)
     sess.run(tf.global_variables_initializer())
     
     ## print
