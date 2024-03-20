@@ -22,4 +22,5 @@ swig==4.2.1
 termcolor==1.1.0
 webencodings==0.5.1
 Werkzeug==0.16.1
+Box2D==2.3.10
 matplotlib
