@@ -69,7 +69,7 @@ class AcrobotPolicy(Policy.Policy):
 		return samples 
 
 	
-	def _load_model(self):
+	def _load_model(self, path_to_learned):
 		json_file = open('../mac/learned_policy/Acrobot-v1.json', 'r')
 		loaded_model_json = json_file.read()
 		json_file.close()
