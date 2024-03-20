@@ -19,8 +19,13 @@ class Policy:
         ## Get current working directory
         cwd = os.getcwd().split('\\')[-1]
 		
+        path_to_learned_policy = './mac/learned_policy/'
+		# If called as submodule or .. if called from experiments/
+        if cwd == "icml_2019_state_abstraction":
+            path_to_learned_policy = './mac/learned_policy/'
+        elif cwd == "Bachelor-Project":
+            path_to_learned_policy = './icml_2019_state_abstraction/mac/learned_policy/'	
         ## . if called as submodule or .. if called from experiments/
-        path_to_learned_policy = './mac/learned_policy/' if "icml_2019_state_abstraction" == cwd else '../mac/learned_policy/'
         
         self.loaded_model = self._load_model(path_to_learned_policy)
         self.demo_policy = self.expert_policy
