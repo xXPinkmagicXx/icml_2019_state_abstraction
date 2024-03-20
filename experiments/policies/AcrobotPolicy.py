@@ -66,12 +66,4 @@ class AcrobotPolicy(Policy.Policy):
 			best_action = self.demo_policy(cur_state)
 			samples.append((cur_state, best_action, 0))
 
-		return samples 
-
-	
-	def _load_model(self, path_to_learned):
-		json_file = open('../mac/learned_policy/Acrobot-v1.json', 'r')
-		loaded_model_json = json_file.read()
-		json_file.close()
-		loaded_model = model_from_json(loaded_model_json)
-		return loaded_model
+		return samples

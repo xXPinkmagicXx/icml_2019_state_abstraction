@@ -29,7 +29,6 @@ class Policy:
     def get_num_actions(self):
         return len(list(self.gym_env.get_actions()))
 
-    @abc.abstractmethod
     def _load_model(self, path_to_learned_policy):
         """
         Args:
@@ -44,8 +43,13 @@ class Policy:
         # Load Model
         loaded_model_json = json_file.read()
         json_file.close()
-        # Load model
+
+        # Load weights into new model
         loaded_model = model_from_json(loaded_model_json)
+        weights_file_name = path_to_learned_policy + self.env_name + '.h5'
+        loaded_model.load_weights(weights_file_name)
+        
+        # return the loaded model
         return loaded_model
 	
     @abc.abstractmethod
