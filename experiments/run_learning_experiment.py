@@ -18,7 +18,7 @@ import policies.Policy as Policy
 import policies.CartPolePolicy as cpp
 import policies.MountainCarPolicy as mpd
 import policies.AcrobotPolicy as abp
-
+import policies.LunarLanderPolicy as llps
 # abstraction
 from .abstraction.NNStateAbstrClass import NNStateAbstr
 from .utils.experiment_utils import make_nn_sa, make_nn_sa_2
@@ -32,7 +32,18 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 
 def get_policy(gym_env: GymMDP):
-    
+    """
+    Args:
+        gym_env (GymMDP)
+    Returns:
+        Policy
+
+    Implemeted policies for the environments are
+    1. CartPole-v0
+    2. Acrobot-v1
+    3. MountainCar-v0
+    4. LunarLander-v2
+    """
     if gym_env.env_name == "CartPole-v0":
         return cpp.CartPolePolicy(gym_env)
     
@@ -41,6 +52,9 @@ def get_policy(gym_env: GymMDP):
 
     if gym_env.env_name == "MountainCar-v0":
         return mpd.MountainCarPolicy(gym_env)
+    
+    if gym_env.env_name == "LunarLander-v2":
+        return llps.LunarLanderPolicy(gym_env)
 
     return NotImplementedError("Policy not implemented for this environment")
 
@@ -68,8 +82,8 @@ def main(env_name, abstraction=True, verbose=False):
 
     # Make agents
     ## TODO: LinearQagent and number of features does not wor
-    num_features = gym_env.get_num_state_feats()
-    print("this is the number of features: ", num_features)
+    # num_features = gym_env.get_num_state_feats()
+    # print("this is the number of features: ", num_features)
     linear_agent = QLearningAgent(actions=actions)
     # ql_agent = QLearningAgent(actions)
     agent_params = {"alpha":policy.params['rl_learning_rate'],"epsilon":0.2,"actions":actions}
@@ -82,7 +96,14 @@ def main(env_name, abstraction=True, verbose=False):
     agent_list = [linear_agent, sa_agent]
 
     # Run the experiment
-    run_agents_on_mdp(agent_list, gym_env, instances=20, episodes=policy.params['episodes'], steps=policy.params['steps'], verbose=True)
+    run_agents_on_mdp(agent_list,
+                      gym_env,
+                      instances=20,
+                      episodes=policy.params['episodes'],
+                      steps=policy.params['steps'],
+                      verbose=True,
+                      track_success=True,
+                      success_reward=1)
 
 
 if __name__ == "__main__":
