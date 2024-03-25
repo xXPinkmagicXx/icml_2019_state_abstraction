@@ -20,12 +20,13 @@ class GymMDP(MDP):
     ''' Class for Gym MDPs '''
 
 
-    def __init__(self, env_name='CartPole-v0', render=False, render_every_n_episodes=0):
+    def __init__(self, env_name='CartPole-v0', render=False, render_every_n_episodes=0, k=20):
         '''
         Args:
             env_name (str)
             render (bool): If True, renders the screen every time step.
             render_every_n_epsiodes (int): @render must be True, then renders the screen every n episodes.
+            k (int): Number of bins to discretize the action space into. Only used if the action space is continuous.
         '''
         # self.render_every_n_steps = render_every_n_steps
         self.render_every_n_episodes = render_every_n_episodes
@@ -33,7 +34,7 @@ class GymMDP(MDP):
         self.env_name = env_name
         env = gym.make(env_name)
         if isinstance(env.action_space, gym.spaces.Box):
-            env = self.discretizing_wrapper(env, 20)
+            env = self.discretizing_wrapper(env, k)
         self.env = env
         self.render = render
         print("this is the reset", self.env.reset())

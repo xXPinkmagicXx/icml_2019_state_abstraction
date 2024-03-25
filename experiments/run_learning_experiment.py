@@ -76,6 +76,8 @@ def main(env_name, abstraction=True, verbose=False):
     policy = get_policy(gym_env)
     policy.params["num_mdps"] = 1
     policy.params["size_a"] = len(actions)
+    policy.params["num_iterations_for_abstraction_learning"] = 10
+    policy.params["steps"] = 20
     
     ## Make Abstraction
     if abstraction:
@@ -104,7 +106,7 @@ def main(env_name, abstraction=True, verbose=False):
 
     ## Agents in experiment
     agent_list = [sa_agent]
-    experiment_name_prefix = str(datetime.now().time())
+    experiment_name_prefix = str(datetime.now().time()).replace(":", "_").replace(".", "_")
     print("this is the experiment name prefix", experiment_name_prefix, type(experiment_name_prefix))
     # Run the experiment
     run_agents_on_mdp(agent_list,
@@ -115,8 +117,7 @@ def main(env_name, abstraction=True, verbose=False):
                       verbose=True,
                       track_success=True,
                       success_reward=1,
-                      experiment_name_prefix=experiment_name_prefix,
-                      dir_for_plot="new")
+                      dir_for_plot=experiment_name_prefix)
 
 
 if __name__ == "__main__":
