@@ -14,16 +14,16 @@ import tensorflow as tf
 parent_dir = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
 sys.path.insert(0, parent_dir)
 sys.path.append("./policies")
+sys.path.append("./abstraction")
 # from simple_rl.tasks import PuddleMDP
 
 # Local imports.
 # Import policies.
 import policies.Policy as Policy
-import policies.lunar_pi_d as lpd
 import policies.CartPolePolicy as cpd
 
 import Lunar_dqn.lunar_demonstrator as ld
-import utils.alg2_utils as alg2_utils, abstraction.abstraction_network as abstraction_network
+from ..abstraction.abstraction_network import abstraction_network 
 
 colors = dict(mcolors.BASE_COLORS, **mcolors.CSS4_COLORS)
 # Sort colors by hue, saturation, value and name.
@@ -395,7 +395,7 @@ def make_nn_sa_2(sess, params, samples_batch=None, verbose=True):
     num_abstract_states = size_z
     
     ## Create abstraction network
-    abstraction_net = abstraction_network.abstraction_network(sess, params,num_abstract_states)
+    abstraction_net = abstraction_network(sess, params,num_abstract_states)
     sess.run(tf.global_variables_initializer())
     
     ## print

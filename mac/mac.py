@@ -20,6 +20,15 @@ class mac:
 		self.memory = deque(maxlen=self.params['max_buffer_size'])
 		self.actor=actor(self.params)
 		self.critic=critic(self.params)
+		# get current working directory
+		cwd = os.getcwd().split('\\')[-1]
+		learned_policy_path = "./learned_policy/"
+		# If called as submodule or .. if called from experiments/
+		if cwd == "icml_2019_state_abstraction":
+			learned_policy_path = './mac/learned_policy/'
+		elif cwd == "Bachelor-Project":
+			learned_policy_path = './icml_2019_state_abstraction/mac/learned_policy/'	
+		self.learned_policy_path = learned_policy_path
 
 	def add_2_memory(self,states,actions,rewards):
 		T=len(states)
@@ -84,10 +93,10 @@ class mac:
 
 		if episode%50==0:
 			model_json = self.actor.network.to_json()
-			with open("./mac/learned_policy/"+meta_params['env_name']+".json", "w") as json_file:
+			with open(self.learned_policy_path+meta_params['env_name']+".json", "w") as json_file:
 				json_file.write(model_json)
 			# serialize weights to HDF5
-			self.actor.network.save_weights("./mac/learned_policy/"+meta_params['env_name']+".h5")
+			self.actor.network.save_weights(self.learned_policy_path+meta_params['env_name']+".h5")
 			print("Saved latest policy network to disk")
 
 		return states,actions,returns,rewards

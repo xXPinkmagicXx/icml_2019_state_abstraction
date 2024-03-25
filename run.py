@@ -1,6 +1,7 @@
 import sys
 import os
 sys.path.append("./experiments")
+sys.path.append("./experiments/simple_rl")
 import mac.utils
 from mac.mac import mac
 import mac.run as run

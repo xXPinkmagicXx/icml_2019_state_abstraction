@@ -65,11 +65,3 @@ class CartPolePolicy(Policy.Policy):
 			samples.append((cur_state, best_action, 0))
 
 		return samples
-	
-	def _load_model(self):
-		json_file = open('../mac/learned_policy/CartPole-v0.json', 'r')
-		loaded_model_json = json_file.read()
-		json_file.close()
-		loaded_model = model_from_json(loaded_model_json)
-		loaded_model.load_weights('../mac/learned_policy/CartPole-v0.h5')
-		return loaded_model
