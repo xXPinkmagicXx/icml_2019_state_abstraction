@@ -8,6 +8,10 @@ import os
 
 class LunarLanderPolicy(Policy.Policy):
 	
+	"""
+	This class loads the pre-trained model for LunarLander-v2 environment.
+	"""
+
 	def __init__(self, gym_env: GymMDP):
 		
 		super().__init__(gym_env)

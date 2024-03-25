@@ -63,14 +63,29 @@ def get_policy(gym_env: GymMDP):
     return NotImplementedError("Policy not implemented for this environment")
 
 
-def main(env_name, abstraction=True, verbose=False):
-
+def main(env_name, abstraction=True, verbose=False, seed=42):
+    """
+    Args:
+        env_name (str): Name of the environment
+        abstraction = True (bool): If True, use state abstraction
+        verbose = False (bool) : If True, print the environment name
+        seed = 42 (int) :Seed for reproducibility
+    Returns:
+        None 
+    This function runs the learning experiment for the given environment.
+    """
     ## get parameters
     gym_env = GymMDP(env_name)
+    
+    ## Set seed
+    gym_env.env.seed(seed)
+    random.seed(seed)
+
     if verbose:
         print("this is the environment: ", gym_env.env_name)
     ## Get actions and features
     actions = list(gym_env.get_actions())
+    
     
     ## Get policy
     policy = get_policy(gym_env)
@@ -102,12 +117,15 @@ def main(env_name, abstraction=True, verbose=False):
     sa_agent = AbstractionWrapper(QLearningAgent,
                                   agent_params=agent_params,
                                   state_abstr=nn_sa,
-                                  name_ext="-phi")
+                                  name_ext="_phi"+ "_" + str(seed))
 
     ## Agents in experiment
     agent_list = [sa_agent]
-    experiment_name_prefix = str(datetime.now().time()).replace(":", "_").replace(".", "_")
-    print("this is the experiment name prefix", experiment_name_prefix, type(experiment_name_prefix))
+
+    # Timestamp for saving the experiment
+    dir_for_plot = str(datetime.now().time()).replace(":", "_").replace(".", "_")
+    
+    # mode
     # Run the experiment
     run_agents_on_mdp(agent_list,
                       gym_env,
@@ -117,7 +135,7 @@ def main(env_name, abstraction=True, verbose=False):
                       verbose=True,
                       track_success=True,
                       success_reward=1,
-                      dir_for_plot=experiment_name_prefix)
+                      dir_for_plot=dir_for_plot)
 
 
 if __name__ == "__main__":
