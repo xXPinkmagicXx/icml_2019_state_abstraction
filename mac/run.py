@@ -3,6 +3,9 @@ import numpy
 import gym,sys,random
 import tensorflow as tf
 
+# Import action wrapper
+from .ActionWrapper import discretizing_wrapper
+
 tf.disable_v2_behavior()
 tf.compat.v1.disable_eager_execution()
 
@@ -23,10 +26,19 @@ def main(gym_env):
 	meta_params['seed_number']= 1
 
 	# Params for all environments.
-	meta_params['env']=gym.make(meta_params['env_name'])
+	env = gym.make(meta_params['env_name'])
+	# How to discretize the action space for the environment
+	k = 20
+	## Discretize the action space for Pendulum-v0
+	if meta_params['env_name']=='Pendulum-v1':
+
+		env = discretizing_wrapper(env, k)
+
+	meta_params['env'] = env
 	meta_params['gamma']=0.9999
 	meta_params['plot']=False
 	alg_params={}
+	alg_params["epsilon"] = 0.3
 	alg_params['state_|dimension|']=len(meta_params['env'].reset())
 
 	# Params for specific environments.
@@ -95,6 +107,7 @@ def main(gym_env):
 		alg_params['actor_num_h']=2
 		alg_params['actor_|h|']=40
 		alg_params['actor_lr']=0.01
+		alg_params['epsilon'] = 0.6
 		## Critic
 		alg_params['critic_num_h']=2
 		alg_params['critic_|h|']=40
@@ -103,6 +116,24 @@ def main(gym_env):
 		alg_params['critic_num_epochs']=10
 		alg_params['critic_target_net_freq']=1
 		alg_params['critic_train_type']='model_free_critic_monte_carlo' #'model_free_critic_TD'
+
+	if meta_params['env_name'] == "Pendulum-v1":
+		# The episode truncates at 200 time steps.
+		meta_params['max_learning_episodes']=3000
+		alg_params['state_|dimension|']=len(meta_params['env'].reset())
+		alg_params['|A|']= k
+		alg_params['max_buffer_size']=10000
+		alg_params['actor_num_h']=2
+		alg_params['actor_|h|']=64
+		alg_params['actor_lr']=0.0001
+		alg_params['critic_num_h']=2
+		alg_params['critic_|h|']=64
+		alg_params['critic_lr']=0.001
+		alg_params['critic_batch_size']=32
+		alg_params['critic_num_epochs']=10
+		alg_params['critic_target_net_freq']=1
+		alg_params['critic_train_type']='model_free_critic_TD'
+
 
 	#ensure results are reproducible
 	numpy.random.seed(meta_params['seed_number'])
