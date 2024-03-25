@@ -3,7 +3,7 @@ import sys
 import random
 import tensorflow as tf
 import gym
-
+from datetime import datetime
 # simple_rl imports.
 from simple_rl.tasks import GymMDP
 from simple_rl.abstraction.AbstractionWrapperClass import AbstractionWrapper, ActionAbstraction
@@ -104,7 +104,8 @@ def main(env_name, abstraction=True, verbose=False):
 
     ## Agents in experiment
     agent_list = [sa_agent]
-
+    experiment_name_prefix = str(datetime.now().time())
+    print("this is the experiment name prefix", experiment_name_prefix, type(experiment_name_prefix))
     # Run the experiment
     run_agents_on_mdp(agent_list,
                       gym_env,
@@ -113,7 +114,9 @@ def main(env_name, abstraction=True, verbose=False):
                       steps=policy.params['steps'],
                       verbose=True,
                       track_success=True,
-                      success_reward=1)
+                      success_reward=1,
+                      experiment_name_prefix=experiment_name_prefix,
+                      dir_for_plot="new")
 
 
 if __name__ == "__main__":
