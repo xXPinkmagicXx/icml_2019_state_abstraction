@@ -6,7 +6,7 @@ import gym
 
 # simple_rl imports.
 from simple_rl.tasks import GymMDP
-from simple_rl.abstraction.AbstractionWrapperClass import AbstractionWrapper
+from simple_rl.abstraction.AbstractionWrapperClass import AbstractionWrapper, ActionAbstraction
 from simple_rl.agents import QLearningAgent, LinearQAgent, FixedPolicyAgent, RMaxAgent, RandomAgent
 # from simple_rl.tasks import PuddleMDP
 from simple_rl.run_experiments import run_agents_on_mdp, run_agents_lifelong, evaluate_agent, run_single_agent_on_mdp
@@ -19,6 +19,7 @@ import policies.CartPolePolicy as cpp
 import policies.MountainCarPolicy as mpd
 import policies.AcrobotPolicy as abp
 import policies.LunarLanderPolicy as llps
+import policies.PendulumPolicy as pp
 # abstraction
 from .abstraction.NNStateAbstrClass import NNStateAbstr
 from .utils.experiment_utils import make_nn_sa, make_nn_sa_2
@@ -56,6 +57,9 @@ def get_policy(gym_env: GymMDP):
     if gym_env.env_name == "LunarLander-v2":
         return llps.LunarLanderPolicy(gym_env)
 
+    if gym_env.env_name == "Pendulum-v1":
+        return pp.PendulumPolicy(gym_env)
+
     return NotImplementedError("Policy not implemented for this environment")
 
 
@@ -80,6 +84,12 @@ def main(env_name, abstraction=True, verbose=False):
         abstraction_net = make_nn_sa_2(sess, policy.params, sample_batch)
         nn_sa = NNStateAbstr(abstraction_net)
 
+    # If the action space is continuous
+    # if isinstance(gym_env.env.action_space, gym.spaces.Box):
+    #     k = 20
+    #     discretized_actions = gym.spaces.Discrete(k)
+    #     action_abstraction = ActionAbstraction(discretized_actions)
+
     # Make agents
     ## TODO: LinearQagent and number of features does not wor
     # num_features = gym_env.get_num_state_feats()
@@ -93,12 +103,12 @@ def main(env_name, abstraction=True, verbose=False):
                                   name_ext="-phi")
 
     ## Agents in experiment
-    agent_list = [linear_agent, sa_agent]
+    agent_list = [sa_agent]
 
     # Run the experiment
     run_agents_on_mdp(agent_list,
                       gym_env,
-                      instances=20,
+                      instances=1,
                       episodes=policy.params['episodes'],
                       steps=policy.params['steps'],
                       verbose=True,
