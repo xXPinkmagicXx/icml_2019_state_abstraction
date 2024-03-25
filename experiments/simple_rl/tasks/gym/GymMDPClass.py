@@ -6,6 +6,7 @@ GymMDPClass.py: Contains implementation for MDPs of the Gym Environments.
 import random
 import sys
 import os
+import numpy as np
 import random
 from collections import defaultdict
 
@@ -13,9 +14,11 @@ from collections import defaultdict
 import gym
 from simple_rl.mdp.MDPClass import MDP
 from simple_rl.tasks.gym.GymStateClass import GymState
+from gym import spaces
 
 class GymMDP(MDP):
     ''' Class for Gym MDPs '''
+
 
     def __init__(self, env_name='CartPole-v0', render=False, render_every_n_episodes=0):
         '''
@@ -28,7 +31,10 @@ class GymMDP(MDP):
         self.render_every_n_episodes = render_every_n_episodes
         self.episode = 0
         self.env_name = env_name
-        self.env = gym.make(env_name)
+        env = gym.make(env_name)
+        if isinstance(env.action_space, gym.spaces.Box):
+            env = self.discretizing_wrapper(env, 20)
+        self.env = env
         self.render = render
         print("this is the reset", self.env.reset())
         if env_name == "MountainCar-v0":
@@ -81,3 +87,39 @@ class GymMDP(MDP):
 
     def __str__(self):
         return "gym-" + str(self.env_name)
+
+    def discretizing_wrapper(self, env, K):
+        """
+        # discretize each action dimension to K bins
+        """
+        unwrapped_env = env.unwrapped
+        unwrapped_env.orig_step_ = unwrapped_env.step
+        unwrapped_env.orig_reset_ = unwrapped_env.reset
+        
+        action_low, action_high = env.action_space.low, env.action_space.high
+        naction = action_low.size
+        action_table = np.reshape([np.linspace(action_low[i], action_high[i], K) for i in range(naction)], [naction, K])
+        assert action_table.shape == (naction, K)
+
+        def discretizing_reset():
+            obs = unwrapped_env.orig_reset_()
+            return obs
+
+        def discretizing_step(action):
+            # action is a sequence of discrete indices
+            action_cont = action_table[np.arange(naction), action]
+            obs, rew, terminated, truncated, info, = unwrapped_env.orig_step_(action_cont)
+            
+            return (obs, rew, terminated, info)
+
+        # change observation space
+        # In the case where the action space is a single value
+        if naction == 1:
+            env.action_space = spaces.Discrete(K)
+        else:
+            env.action_space = spaces.MultiDiscrete([[0, K-1] for _ in range(naction)])
+
+        unwrapped_env.step = discretizing_step
+        unwrapped_env.reset = discretizing_reset
+
+        return env
