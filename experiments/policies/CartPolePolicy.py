@@ -55,7 +55,6 @@ class CartPolePolicy(Policy.Policy):
 
 		for _ in range(num_samples):
 			cur_state = self.gym_env.env.reset()
-			print("this is the current state", cur_state)
 			cur_state = np.random.uniform(low=-4, high=4, size=(4,))
 			self.gym_env.env.state = cur_state
 

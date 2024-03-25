@@ -56,7 +56,6 @@ class LunarLanderPolicy(Policy.Policy):
 		for _ in range(num_samples):
 			cur_state = self.gym_env.env.reset()
 			cur_state = self.gym_env.env.observation_space.sample()
-			print("this is the current state", cur_state)
 			self.gym_env.env.state = cur_state
 
 			# Get demo action.
