@@ -44,6 +44,7 @@ def get_policy(gym_env: GymMDP):
     2. Acrobot-v1
     3. MountainCar-v0
     4. LunarLander-v2
+    5. Pendulum-v1
     """
     if gym_env.env_name == "CartPole-v0":
         return cpp.CartPolePolicy(gym_env)
