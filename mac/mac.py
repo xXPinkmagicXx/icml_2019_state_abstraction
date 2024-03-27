@@ -46,6 +46,7 @@ class mac:
 		print("training has begun...")
 		li_episode_length=[]
 		li_returns=[]
+		accumulated_rewards= 0
 		for episode in range(1,meta_params['max_learning_episodes']):
 			states,actions,returns,rewards=self.interactOneEpisode(meta_params,episode)
 			
@@ -54,8 +55,9 @@ class mac:
 			#log performance
 			li_episode_length.append(len(states))
 			if episode % 10 == 0:
-				print(episode,"return in last 10 episodes",numpy.mean(li_returns[-10:]))
+				print(episode,"return in last 10 episodes",numpy.mean(li_returns[-10:]), "with accumulated rewards", accumulated_rewards)
 			li_returns.append(returns[0])
+			accumulated_rewards += numpy.sum(rewards)
 			sys.stdout.flush()
 			#log performance
 

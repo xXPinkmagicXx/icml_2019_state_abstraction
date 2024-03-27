@@ -23,7 +23,7 @@ class MetaParameters:
 
         return meta_params
 
-def make_parameters(action_space: int, state_dimension: int, actor_lr : list, critic_lr : list, critic_batch_size : list, critic_train_type : list, epsilon : list, max_buffer_size : list):
+def make_parameters(action_space: int, state_dimension: int, actor_h: list, critic_h: list, actor_lr : list, critic_lr : list, critic_batch_size : list, critic_train_type : list, epsilon : list, max_buffer_size : list):
     
     actor_h = 40
     actor_num_h = 2
@@ -57,6 +57,9 @@ def make_parameters(action_space: int, state_dimension: int, actor_lr : list, cr
 
 class AlgorithmParameters:
     
+    def __str__(self) -> str:
+        return f"\nWith Parameters:\n\tmax_buffer_size: {self.max_buffer_size}, action_space: {self.action_space}, state_dimension: {self.state_dimension}, epsilon: {self.epsilon},\nActor Params:\n\tactor_num_h: {self.actor_num_h}, actor_h: {self.actor_h}, actor_lr: {self.actor_lr},\nCritic Params:\n\tcritic_num_h: {self.critic_num_h}, critic_h: {self.critic_h}, critic_lr: {self.critic_lr}, critic_batch_size: {self.critic_batch_size}, critic_num_epochs: {self.critic_num_epochs}, critic_target_net_freq: {self.critic_target_net_freq}, critic_train_type: {self.critic_train_type}"
+
     def __init__(
                 self,
                 max_buffer_size,
