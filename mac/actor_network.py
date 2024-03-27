@@ -25,15 +25,15 @@ class actor:
         '''
         model = Sequential()
         
-        model.add(Dense(units=self.params['actor_|h|'],
+        model.add(Dense(units=self.params['actor_h'],
                         activation='relu',
-                        input_dim=self.params['state_|dimension|'])
+                        input_dim=self.params['state_dimension'])
                  )
         
         for _ in range(self.params['actor_num_h']-1):
-            model.add(Dense(units=self.params['actor_|h|'], activation='relu'))
+            model.add(Dense(units=self.params['actor_h'], activation='relu'))
 
-        model.add(Dense(units=self.params['|A|'], activation='softmax'))
+        model.add(Dense(units=self.params['A'], activation='softmax'))
         model.compile(loss=objective,
                       optimizer=Adam(lr=self.params['actor_lr'])
                      )
@@ -44,12 +44,12 @@ class actor:
             selects an action given a state. First computes \pi(.|s)
             using the neural net, and then draws an action a~\pi(.|s)
         '''
-        pr=self.network.predict(numpy.array(state).reshape(1,self.params['state_|dimension|']))[0]
+        pr=self.network.predict(numpy.array(state).reshape(1,self.params['state_dimension']))[0]
         
         ## Implement \epsilon greedy exploration
         epsilon = self.params['epsilon']
         if numpy.random.random() > epsilon:
-            a =  np.random.choice(range(self.params['|A|']))
+            a =  np.random.choice(range(self.params['A']))
         else:
             a = np.argmax(pr)
         

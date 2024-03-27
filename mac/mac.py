@@ -41,12 +41,15 @@ class mac:
 		This function trains a MAC agent for max_learning_episodes episodes.
 		It proceeds with interaction for one episode, followed by critic
 		and actor updates.
+		
 		'''
 		print("training has begun...")
 		li_episode_length=[]
 		li_returns=[]
 		for episode in range(1,meta_params['max_learning_episodes']):
 			states,actions,returns,rewards=self.interactOneEpisode(meta_params,episode)
+			
+			
 			self.add_2_memory(states,actions,rewards)
 			#log performance
 			li_episode_length.append(len(states))
@@ -65,7 +68,7 @@ class mac:
 			#train the Q network
 			
 		print("training is finished successfully!")
-		return
+		return returns
 
 	def interactOneEpisode(self,meta_params,episode):
 		'''

@@ -3,17 +3,21 @@
 
 
 class MetaParameters:
-    def __init__(self, env, max_learning_episodes) -> None:
+    def __init__(self, env, env_name, max_learning_episodes, gamma, seed = 42) -> None:
         
         self.env = env
-        self.env_name = env.env_name 
+        self.env_name = env_name
         self.max_learning_episodes = max_learning_episodes
+        self.seed = seed
+        self.gamma = gamma
     
     def to_Dictionary(self):
         
         meta_params = {}
         meta_params['env'] = self.env
         meta_params['env_name'] = self.env_name
+        meta_params['seed'] = self.seed
+        meta_params['gamma'] = self.gamma
         meta_params['max_learning_episodes'] = self.max_learning_episodes
 
         return meta_params
@@ -25,6 +29,7 @@ class AlgorithmParameters:
                 max_buffer_size,
                 state_dimension,
                 action_space,
+                epsilon,
                 actor_num_h,
                 actor_h,
                 actor_lr,
@@ -40,6 +45,7 @@ class AlgorithmParameters:
         self.max_buffer_size = max_buffer_size
         self.state_dimension = state_dimension
         self.action_space = action_space
+        self.epsilon = epsilon
         ## actor
         self.actor_num_h = actor_num_h
         self.actor_h = actor_h
@@ -59,6 +65,8 @@ class AlgorithmParameters:
             alg_params['max_buffer_size'] = self.max_buffer_size
             alg_params['state_dimension'] = self.state_dimension
             alg_params['action_space'] = self.action_space
+            alg_params['A'] = self.action_space
+            alg_params['epsilon'] = self.epsilon
             alg_params['actor_num_h'] = self.actor_num_h
             alg_params['actor_h'] = self.actor_h
             alg_params['actor_lr'] = self.actor_lr

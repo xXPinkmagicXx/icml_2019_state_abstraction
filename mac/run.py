@@ -14,21 +14,15 @@ tf.compat.v1.disable_eager_execution()
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-def main(gym_env):
+def main(gym_env, seed=42):
 	#get and set hyper-parameters
 	meta_params,alg_params={},{}
-	try:
-		meta_params['env_name']=gym_env
-		meta_params['seed_number']= 1
-		print("the env is set to", meta_params['env_name'])
-	except:
-		print("default environment is Lunar Lander ...")
-		meta_params['env_name']='LunarLander-v2'
-		meta_params['seed_number']=0
-	meta_params['seed_number']= 1
+	print("default environment is Lunar Lander ...")
+	meta_params['env_name']=gym_env
 
 	# Params for all environments.
 	env = gym.make(meta_params['env_name'])
+	
 	# How to discretize the action space for the environment
 	k = 20
 	## Discretize the action space for Pendulum-v0
@@ -121,12 +115,18 @@ def main(gym_env):
 
 	if meta_params['env_name'] == "Pendulum-v1":
 		# The episode truncates at 200 time steps.
-		meta_parameters = MetaParameters(env, 3000)
+		meta_params = MetaParameters(
+			env=env,
+			env_name="Pendulum-v1",
+			max_learning_episodes=3000,
+			gamma=0.99,
+			seed=seed)
 		
 		alg_params = AlgorithmParameters(
 			max_buffer_size=10000,
 			state_dimension=3,
 			action_space=k,
+			epsilon=0.3,
 			actor_num_h=2,
 			actor_h=64,
 			actor_lr=0.0001,
@@ -137,30 +137,16 @@ def main(gym_env):
 			critic_num_epochs=10,
 			critic_target_net_freq=1,
 			critic_train_type='model_free_critic_TD')
-		
-		# meta_params['max_learning_episodes']=3000
-		# alg_params['state_|dimension|']=len(meta_params['env'].reset())
-		# alg_params['|A|']= k
-		# alg_params['max_buffer_size']=10000
-		# alg_params['actor_num_h']=2
-		# alg_params['actor_|h|']=64
-		# alg_params['actor_lr']=0.0001
-		# alg_params['critic_num_h']=2
-		# alg_params['critic_|h|']=64
-		# alg_params['critic_lr']=0.001
-		# alg_params['critic_batch_size']=32
-		# alg_params['critic_num_epochs']=10
-		# alg_params['critic_target_net_freq']=1
-		# alg_params['critic_train_type']='model_free_critic_TD'
 
 
 	## ensure results are reproducible
 	
 	# set seeds
-	numpy.random.seed(meta_params['seed_number'])
-	random.seed(meta_params['seed_number'])
-	meta_params['env'].seed(meta_params['seed_number'])
-	tf.set_random_seed(meta_params['seed_number'])
+	numpy.random.seed(seed)
+	random.seed(seed)
+	if not isinstance(meta_params, MetaParameters):
+		meta_params['env'].seed(seed)
+	tf.set_random_seed(seed)
 
 	# set session
 	session_conf = tf.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1)
@@ -170,9 +156,10 @@ def main(gym_env):
 
 	#create a MAC agent and run
 	
-	if isinstance(alg_params, hp.AlgorithmParameters):
+	if isinstance(alg_params, AlgorithmParameters):
 		agent = mac(alg_params.to_Dictionary())
-		agent.train(meta_params.to_Dictionary())
+		returns = agent.train(meta_params.to_Dictionary())
+		print(returns)
 	else:
 		agent = mac(alg_params)
 		agent.train(meta_params)

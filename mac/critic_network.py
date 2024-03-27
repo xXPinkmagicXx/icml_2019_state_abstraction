@@ -23,15 +23,15 @@ class critic:
 
         model = Sequential()
         
-        model.add(Dense(units=self.params['critic_|h|'],
+        model.add(Dense(units=self.params['critic_h'],
                         activation='relu',
-                        input_dim=self.params['state_|dimension|'])
+                        input_dim=self.params['state_dimension'])
                  )
         
         for _ in range(self.params['critic_num_h']-1):
-            model.add(Dense(units=self.params['critic_|h|'], activation='relu'))
+            model.add(Dense(units=self.params['critic_h'], activation='relu'))
 
-        model.add(Dense(units=self.params['|A|'], activation='linear'))
+        model.add(Dense(units=self.params['A'], activation='linear'))
         model.compile(loss='mse',
                       optimizer=Adam(lr=self.params['critic_lr'])
                      )
