@@ -1,6 +1,6 @@
 import numpy as np
 from keras.models import Sequential
-from keras.layers import Dense
+from keras.layers import Dense, Reshape
 from keras.optimizers import Adam
 import sys
 import tensorflow as tf
@@ -45,7 +45,7 @@ class actor:
             using the neural net, and then draws an action a~\pi(.|s)
         '''
         pr=self.network.predict(numpy.array(state).reshape(1,self.params['state_dimension']))[0]
-        
+        print("this is the pr: ", pr)
         ## Implement \epsilon greedy exploration
         epsilon = self.params['epsilon']
         if numpy.random.random() > epsilon:

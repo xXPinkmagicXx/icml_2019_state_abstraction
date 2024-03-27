@@ -24,18 +24,11 @@ def main(env_name, seed=42):
 	env = gym.make(env_name)
 	
 	# How to discretize the action space for the environment
-	k = 20
+	k = 100
 	## Discretize the action space for Pendulum-v0
-	if env_name =='Pendulum-v1':
+	if isinstance(env.action_space, gym.spaces.Box):
 
 		env = discretizing_wrapper(env, k)
-
-	meta_params['env'] = env
-	meta_params['gamma']=0.9999
-	meta_params['plot']=False
-	alg_params={}
-	alg_params["epsilon"] = 0.3
-	alg_params['state_dimension']=len(meta_params['env'].reset())
 
 	# Params for specific environments.
 	if env_name =='CartPole-v0':
@@ -141,7 +134,54 @@ def main(env_name, seed=42):
 			critic_target_net_freq=1,
 			critic_train_type='model_free_critic_TD')
 
+	if env_name == "MountainCarContinuous-v0":
+		meta_params = MetaParameters(
+			env=env,
+			env_name="MountainCarContinuous-v0",
+			max_learning_episodes=600,
+			gamma=0.8,
+			seed=seed)
 
+		alg_params = AlgorithmParameters(
+			max_buffer_size=10000,
+			state_dimension=len(env.reset()),
+			action_space= k,
+			epsilon=0.6,
+			actor_num_h=2,
+			actor_h=40,
+			actor_lr=0.01,
+			critic_num_h=2,
+			critic_h=40,
+			critic_lr=0.01,
+			critic_batch_size=64,
+			critic_num_epochs=10,
+			critic_target_net_freq=1,
+			critic_train_type='model_free_critic_monte_carlo')
+
+	if env_name == "Swimmer-v4":
+		meta_params = MetaParameters(
+			env=env,
+			env_name="Swimmer-v4",
+			max_learning_episodes=550,
+			gamma=0.99,
+			seed=seed)
+
+		alg_params = AlgorithmParameters(
+			max_buffer_size=10000,
+			state_dimension=8,
+			action_space= 2,
+			k=k,
+			epsilon=0.3,
+			actor_num_h=2,
+			actor_h=64,
+			actor_lr=0.0001,
+			critic_num_h=2,
+			critic_h=64,
+			critic_lr=0.001,
+			critic_batch_size=32,
+			critic_num_epochs=10,
+			critic_target_net_freq=1,
+			critic_train_type='model_free_critic_TD')
 	## ensure results are reproducible
 	
 	# set seeds
@@ -157,8 +197,10 @@ def main(env_name, seed=42):
 	K.set_session(sess)
 
 
+	print("this is the action space", env.action_space)
 	#create a MAC agent and run
-	action_space = env.action_space.n
+	action_space = 2
+	print("this is the action space", action_space)
 	state_dimension = len(env.reset())
 	actor_lr = [0.01]
 	critic_lr = [0.01]
@@ -167,10 +209,21 @@ def main(env_name, seed=42):
 	epsilon = [0.3, 0.1, 0.5]
 	max_buffer_size = [10000]
 
-	actor_h = [40, 128]
-	critic_h = [40, 128]
+	actor_h = [128]
+	critic_h = [128]
 
-	algo_parameter_list = make_parameters(action_space,state_dimension, actor_h, critic_h, actor_lr, critic_lr, critic_batch_size, critic_train_type, epsilon, max_buffer_size)
+	algo_parameter_list = make_parameters(
+							action_space,
+							state_dimension,
+							k,
+							actor_h,
+							critic_h,
+							actor_lr,
+							critic_lr,
+							critic_batch_size,
+							critic_train_type,
+							epsilon,
+							max_buffer_size)
 
 	DO_PARAMETER_SEARCH = True
 
