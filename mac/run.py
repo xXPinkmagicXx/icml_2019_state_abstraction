@@ -2,9 +2,11 @@ from .mac import mac
 import numpy
 import gym,sys,random
 import tensorflow as tf
+from keras import backend as K
 
 # Import action wrapper
 from .ActionWrapper import discretizing_wrapper
+from .HyperParameters import AlgorithmParameters, MetaParameters, HyperParameters as hp
 
 tf.disable_v2_behavior()
 tf.compat.v1.disable_eager_execution()
@@ -119,37 +121,62 @@ def main(gym_env):
 
 	if meta_params['env_name'] == "Pendulum-v1":
 		# The episode truncates at 200 time steps.
-		meta_params['max_learning_episodes']=3000
-		alg_params['state_|dimension|']=len(meta_params['env'].reset())
-		alg_params['|A|']= k
-		alg_params['max_buffer_size']=10000
-		alg_params['actor_num_h']=2
-		alg_params['actor_|h|']=64
-		alg_params['actor_lr']=0.0001
-		alg_params['critic_num_h']=2
-		alg_params['critic_|h|']=64
-		alg_params['critic_lr']=0.001
-		alg_params['critic_batch_size']=32
-		alg_params['critic_num_epochs']=10
-		alg_params['critic_target_net_freq']=1
-		alg_params['critic_train_type']='model_free_critic_TD'
+		meta_parameters = MetaParameters(env, 3000)
+		
+		alg_params = AlgorithmParameters(
+			max_buffer_size=10000,
+			state_dimension=3,
+			action_space=k,
+			actor_num_h=2,
+			actor_h=64,
+			actor_lr=0.0001,
+			critic_num_h=2,
+			critic_h=64,
+			critic_lr=0.001,
+			critic_batch_size=32,
+			critic_num_epochs=10,
+			critic_target_net_freq=1,
+			critic_train_type='model_free_critic_TD')
+		
+		# meta_params['max_learning_episodes']=3000
+		# alg_params['state_|dimension|']=len(meta_params['env'].reset())
+		# alg_params['|A|']= k
+		# alg_params['max_buffer_size']=10000
+		# alg_params['actor_num_h']=2
+		# alg_params['actor_|h|']=64
+		# alg_params['actor_lr']=0.0001
+		# alg_params['critic_num_h']=2
+		# alg_params['critic_|h|']=64
+		# alg_params['critic_lr']=0.001
+		# alg_params['critic_batch_size']=32
+		# alg_params['critic_num_epochs']=10
+		# alg_params['critic_target_net_freq']=1
+		# alg_params['critic_train_type']='model_free_critic_TD'
 
 
-	#ensure results are reproducible
+	## ensure results are reproducible
+	
+	# set seeds
 	numpy.random.seed(meta_params['seed_number'])
 	random.seed(meta_params['seed_number'])
-	session_conf = tf.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1)
-	from keras import backend as K
+	meta_params['env'].seed(meta_params['seed_number'])
 	tf.set_random_seed(meta_params['seed_number'])
+
+	# set session
+	session_conf = tf.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1)
 	sess = tf.Session(graph=tf.get_default_graph(), config=session_conf)
 	K.set_session(sess)
 
-	meta_params['env'].seed(meta_params['seed_number'])
-	#ensure results are reproducible
 
 	#create a MAC agent and run
-	agent=mac(alg_params)
-	agent.train(meta_params)
+	
+	if isinstance(alg_params, hp.AlgorithmParameters):
+		agent = mac(alg_params.to_Dictionary())
+		agent.train(meta_params.to_Dictionary())
+	else:
+		agent = mac(alg_params)
+		agent.train(meta_params)
+	
 	#create a MAC agent and run
 
 if __name__ == "__main__":
