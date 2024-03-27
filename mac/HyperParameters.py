@@ -10,6 +10,7 @@ class MetaParameters:
         self.max_learning_episodes = max_learning_episodes
         self.seed = seed
         self.gamma = gamma
+        self.state_dimension = len(env.reset())
     
     def to_Dictionary(self):
         
@@ -22,13 +23,45 @@ class MetaParameters:
 
         return meta_params
 
+def make_parameters(action_space: int, state_dimension: int, actor_lr : list, critic_lr : list, critic_batch_size : list, critic_train_type : list, epsilon : list, max_buffer_size : list):
+    
+    actor_h = 40
+    actor_num_h = 2
+    critic_h = 40
+    critic_num_h = 2
+    critic_num_epochs = 10
+    critic_target_net_freq = 1
+
+    for ep in epsilon:
+        for a_lr in actor_lr:
+            for c_lr in critic_lr:
+                for c_bs in critic_batch_size:
+                    for c_tt in critic_train_type:
+                        for mbs in max_buffer_size:
+                                yield AlgorithmParameters(
+                                                            max_buffer_size=mbs,
+                                                            action_space=action_space,
+                                                            state_dimension=state_dimension,
+                                                            epsilon=ep,
+                                                            actor_num_h=actor_num_h,
+                                                            actor_h=actor_h,
+                                                            actor_lr=a_lr,
+                                                            critic_num_h=critic_num_h,
+                                                            critic_h=critic_h,
+                                                            critic_lr=c_lr,
+                                                            critic_batch_size=c_bs,
+                                                            critic_num_epochs=critic_num_epochs,
+                                                            critic_target_net_freq=critic_target_net_freq,
+                                                            critic_train_type=c_tt)     
+
+
 class AlgorithmParameters:
     
     def __init__(
                 self,
                 max_buffer_size,
-                state_dimension,
                 action_space,
+                state_dimension,
                 epsilon,
                 actor_num_h,
                 actor_h,
@@ -43,8 +76,8 @@ class AlgorithmParameters:
         
         ## General
         self.max_buffer_size = max_buffer_size
-        self.state_dimension = state_dimension
         self.action_space = action_space
+        self.state_dimension = state_dimension
         self.epsilon = epsilon
         ## actor
         self.actor_num_h = actor_num_h
@@ -63,8 +96,8 @@ class AlgorithmParameters:
             
             alg_params = {}
             alg_params['max_buffer_size'] = self.max_buffer_size
-            alg_params['state_dimension'] = self.state_dimension
             alg_params['action_space'] = self.action_space
+            alg_params['state_dimension'] = self.state_dimension
             alg_params['A'] = self.action_space
             alg_params['epsilon'] = self.epsilon
             alg_params['actor_num_h'] = self.actor_num_h

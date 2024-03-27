@@ -6,7 +6,7 @@ from keras import backend as K
 
 # Import action wrapper
 from .ActionWrapper import discretizing_wrapper
-from .HyperParameters import AlgorithmParameters, MetaParameters, HyperParameters as hp
+from .HyperParameters import AlgorithmParameters, MetaParameters, make_parameters
 
 tf.disable_v2_behavior()
 tf.compat.v1.disable_eager_execution()
@@ -121,7 +121,7 @@ def main(gym_env, seed=42):
 			max_learning_episodes=3000,
 			gamma=0.99,
 			seed=seed)
-		
+
 		alg_params = AlgorithmParameters(
 			max_buffer_size=10000,
 			state_dimension=3,
@@ -155,7 +155,17 @@ def main(gym_env, seed=42):
 
 
 	#create a MAC agent and run
-	
+	action_space = env.action_space.n
+	state_dimension = len(env.reset())
+	actor_lr = [0.0001, 0.001, 0.01]
+	critic_lr = [0.0001, 0.001, 0.01]
+	critic_batch_size = [32, 64, 128]
+	critic_train_type = ['model_free_critic_TD', 'model_free_critic_monte_carlo']
+	epsilon = [0.1, 0.3, 0.5]
+	max_buffer_size = [1000, 5000, 10000]
+
+	algo_parameter_list = make_parameters(action_space,state_dimension, actor_lr, critic_lr, critic_batch_size, critic_train_type, epsilon, max_buffer_size)
+
 	if isinstance(alg_params, AlgorithmParameters):
 		agent = mac(alg_params.to_Dictionary())
 		returns = agent.train(meta_params.to_Dictionary())
