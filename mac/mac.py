@@ -5,6 +5,7 @@ import gym
 import sys
 import os
 from collections import deque
+import time
 
 class mac:
 	'''
@@ -44,19 +45,25 @@ class mac:
 		
 		'''
 		print("training has begun...")
+		
+		# init arrays for logging
 		li_episode_length=[]
 		li_returns=[]
 		li_actions=[]
+		li_time = []
 		accumulated_rewards= 0
+		
 		for episode in range(1,meta_params['max_learning_episodes']):
+			start_time = time.time()
 			states,actions,returns,rewards=self.interactOneEpisode(meta_params,episode)
-			
-			
+			end_time = time.time()
 			self.add_2_memory(states,actions,rewards)
+			episode_time = end_time - start_time
+			li_time.append(episode_time)
 			#log performance
 			li_episode_length.append(len(states))
 			if episode % 10 == 0:
-				print(episode,"return in last 10 episodes",numpy.mean(li_returns[-10:]), "with accumulated rewards", accumulated_rewards)
+				print(episode,"return in last 10 episodes",numpy.mean(li_returns[-10:]), "with accumulated rewards", accumulated_rewards, "this was the last 10 epiode time", numpy.sum(li_time[-10:]))
 				li_actions =[]
 			li_returns.append(returns[0])
 			# li_actions.append(numpy.unique(actions))
@@ -74,7 +81,7 @@ class mac:
 			#train the Q network
 			
 		print("training is finished successfully!")
-		return returns
+		return
 
 	def interactOneEpisode(self,meta_params,episode):
 		'''
@@ -82,25 +89,37 @@ class mac:
 			interaction for an episode, and then returns important information
 			used for training.
 		'''
-		s0,rewards,states,actions,t=meta_params['env'].reset(),[],[],[],0
+
+		s0 = meta_params['env'].reset()
+		rewards = [] 
+		states = []
+		actions = []
+		t = 0
 		s=s0
 		while True:
-			a=self.actor.select_action(s)
-			s_p,r,done,_= meta_params['env'].step(a)
+			a = self.actor.select_action(s)
+			s_p , r , done , _ = meta_params['env'].step(a)
 			
 			if episode%250==0:
 				meta_params['env'].render()
 			
-			states.append(s),actions.append(a),rewards.append(r)
-			s,t=(s_p,t+1)
+			states.append(s)
+			actions.append(a)
+			rewards.append(r)
+			s , t = (s_p,t+1)
+			
+			# when done 
 			if done==True:
 				states.append(s_p)#we actually store the terminal state!
 				a=self.actor.select_action(s_p)
-				actions.append(a),rewards.append(0)
+				actions.append(a),
+				rewards.append(0)
 				break
-		returns=self.rewardToReturn(rewards,meta_params['gamma'])
-
-		if episode%50==0:
+		
+		returns = self.rewardToReturn(rewards,meta_params['gamma'])
+		
+		## Save to disk every 200 episodes
+		if episode%200==0:
 			model_json = self.actor.network.to_json()
 			with open(self.learned_policy_path+meta_params['env_name']+".json", "w") as json_file:
 				json_file.write(model_json)

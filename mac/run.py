@@ -27,7 +27,7 @@ def main(env_name, seed=42, verbose=False):
 	## Discretize the action space for Pendulum-v0
 	k = 1
 	if isinstance(env.action_space, gym.spaces.Box):
-		k = 20
+		k = 100
 
 		env = discretizing_wrapper(env, k)
 
@@ -170,7 +170,7 @@ def main(env_name, seed=42, verbose=False):
 		meta_params = MetaParameters(
 			env=env,
 			env_name="Swimmer-v4",
-			max_learning_episodes=550,
+			max_learning_episodes=2000,
 			gamma=0.99,
 			seed=seed)
 
@@ -181,10 +181,10 @@ def main(env_name, seed=42, verbose=False):
 			k=k,
 			epsilon=0.3,
 			actor_num_h=2,
-			actor_h=64,
+			actor_h=128,
 			actor_lr=0.0001,
 			critic_num_h=2,
-			critic_h=64,
+			critic_h=128,
 			critic_lr=0.001,
 			critic_batch_size=32,
 			critic_num_epochs=10,
