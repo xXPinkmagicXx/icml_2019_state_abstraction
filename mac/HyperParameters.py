@@ -66,7 +66,7 @@ class AlgorithmParameters:
                 self,
                 max_buffer_size,
                 action_space,
-                k = 20,
+                k = 1,
                 state_dimension = 3,
                 epsilon = 0.3,
                 actor_num_h = 2,
@@ -78,7 +78,9 @@ class AlgorithmParameters:
                 critic_batch_size = 32,
                 critic_num_epochs = 10,
                 critic_target_net_freq = 1,
-                critic_train_type = "model_free_critic_TD"):
+                critic_train_type = "model_free_critic_TD",
+                verbose = False
+                ):
         """
         """
         
@@ -89,6 +91,7 @@ class AlgorithmParameters:
         self.a = action_space * k
         self.state_dimension = state_dimension
         self.epsilon = epsilon
+        self.verbose = verbose
         ## actor
         self.actor_num_h = actor_num_h
         self.actor_h = actor_h
@@ -105,14 +108,18 @@ class AlgorithmParameters:
     def to_Dictionary(self):
             
             alg_params = {}
+            # General
             alg_params['max_buffer_size'] = self.max_buffer_size
             alg_params['A'] = self.a
             alg_params['action_space'] = self.action_space
             alg_params['state_dimension'] = self.state_dimension
             alg_params['epsilon'] = self.epsilon
+            alg_params['verbose'] = self.verbose
+            # Actor
             alg_params['actor_num_h'] = self.actor_num_h
             alg_params['actor_h'] = self.actor_h
             alg_params['actor_lr'] = self.actor_lr
+            # Critic 
             alg_params['critic_num_h'] = self.critic_num_h
             alg_params['critic_h'] = self.critic_h
             alg_params['critic_lr'] = self.critic_lr
@@ -120,7 +127,6 @@ class AlgorithmParameters:
             alg_params['critic_num_epochs'] = self.critic_num_epochs
             alg_params['critic_target_net_freq'] = self.critic_target_net_freq
             alg_params['critic_train_type'] = self.critic_train_type
-            
             return alg_params
 
 class HyperParameters:

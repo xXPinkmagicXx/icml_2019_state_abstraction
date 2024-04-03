@@ -38,7 +38,17 @@ def discretizing_wrapper(env, K):
     if naction == 1:
         env.action_space = spaces.Discrete(K)
     else:
-        env.action_space = spaces.MultiDiscrete([K for _ in range(naction)])
+        action_space = [K for _ in range(naction)]
+        print("This is the action space", action_space)
+        a = []
+        for _ in range(naction):
+            a.append(K)
+        action_space = spaces.MultiDiscrete(a) 
+        action_space.sample()
+
+        print("This is a sample", action_space.sample())
+
+        env.action_space = spaces.MultiDiscrete(a)
 
     unwrapped_env.step = discretizing_step
     unwrapped_env.reset = discretizing_reset

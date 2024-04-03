@@ -14,7 +14,7 @@ tf.compat.v1.disable_eager_execution()
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-def main(env_name, seed=42):
+def main(env_name, seed=42, verbose=False):
 	
 	#get and set hyper-parameters
 	meta_params,alg_params={},{}
@@ -24,9 +24,10 @@ def main(env_name, seed=42):
 	env = gym.make(env_name)
 	
 	# How to discretize the action space for the environment
-	k = 100
 	## Discretize the action space for Pendulum-v0
+	k = 1
 	if isinstance(env.action_space, gym.spaces.Box):
+		k = 20
 
 		env = discretizing_wrapper(env, k)
 
@@ -64,24 +65,31 @@ def main(env_name, seed=42):
 
 	if env_name == 'Acrobot-v1':
 		
-		meta_params['max_learning_episodes']=3000
-		alg_params['max_buffer_size']=5000
-		alg_params['state_|dimension|']=len(meta_params['env'].reset())
-
-		# Actor
-		alg_params['actor_num_h']=2
-		alg_params['actor_|h|']=128
-		alg_params['actor_lr']=0.00025
+		meta_params = MetaParameters(
+			env=env,
+			env_name="Acrobot-v1",
+			max_learning_episodes=3000,
+			gamma=0.99,
+			seed=seed)
 		
-		## critic
-		alg_params['|A|']= meta_params['env'].action_space.n
-		alg_params['critic_num_h']=2
-		alg_params['critic_|h|']=128
-		alg_params['critic_lr']=0.005
-		alg_params['critic_batch_size']=32
-		alg_params['critic_num_epochs']=10
-		alg_params['critic_target_net_freq']=1
-		alg_params['critic_train_type']='model_free_critic_TD'
+		alg_params = AlgorithmParameters(
+			max_buffer_size=10000,
+			state_dimension=len(env.reset()),
+			action_space=env.action_space.n,
+			k=k,
+			epsilon=0.3,
+			actor_num_h=2,
+			actor_h=128,
+			actor_lr=0.00025,
+			critic_num_h=2,
+			critic_h=128,
+			critic_lr=0.005,
+			critic_batch_size=32,
+			critic_num_epochs=10,
+			critic_target_net_freq=1,
+			critic_train_type='model_free_critic_TD',
+			verbose=verbose)
+		
 
 	if env_name =='MountainCar-v0':
 		
@@ -181,7 +189,9 @@ def main(env_name, seed=42):
 			critic_batch_size=32,
 			critic_num_epochs=10,
 			critic_target_net_freq=1,
-			critic_train_type='model_free_critic_TD')
+			critic_train_type='model_free_critic_TD',
+			verbose=verbose)
+		
 	## ensure results are reproducible
 	
 	# set seeds
@@ -225,7 +235,7 @@ def main(env_name, seed=42):
 							epsilon,
 							max_buffer_size)
 
-	DO_PARAMETER_SEARCH = True
+	DO_PARAMETER_SEARCH = False
 
 
 	if isinstance(alg_params, AlgorithmParameters):
@@ -237,10 +247,12 @@ def main(env_name, seed=42):
 				agent = mac(alg_param.to_Dictionary())
 				agent.train(meta_params.to_Dictionary())
 		else:
+			print("Starting normal training...")
 			agent = mac(alg_params.to_Dictionary())
 			returns = agent.train(meta_params.to_Dictionary())
 			print(returns)
 	else:
+		print("This is the normal traning")
 		agent = mac(alg_params)
 		agent.train(meta_params)
 	
