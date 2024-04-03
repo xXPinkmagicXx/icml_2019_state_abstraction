@@ -111,6 +111,7 @@ class AlgorithmParameters:
             # General
             alg_params['max_buffer_size'] = self.max_buffer_size
             alg_params['A'] = self.a
+            alg_params['k'] = self.k
             alg_params['action_space'] = self.action_space
             alg_params['state_dimension'] = self.state_dimension
             alg_params['epsilon'] = self.epsilon

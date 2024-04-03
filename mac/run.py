@@ -237,7 +237,7 @@ def main(env_name, seed=42, verbose=False):
 
 	DO_PARAMETER_SEARCH = False
 
-
+	# alg_params.verbose = True
 	if isinstance(alg_params, AlgorithmParameters):
 
 		if DO_PARAMETER_SEARCH:
