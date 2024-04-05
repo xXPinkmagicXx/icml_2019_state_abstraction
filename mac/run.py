@@ -33,19 +33,31 @@ def main(env_name, seed=42, verbose=False):
 
 	# Params for specific environments.
 	if env_name =='CartPole-v0':
-		meta_params['max_learning_episodes']=400
-		alg_params['A']=meta_params['env'].action_space.n
-		alg_params['critic_num_h']=1
-		alg_params['critic_h']=64
-		alg_params['critic_lr']=0.01
-		alg_params['actor_num_h']=1
-		alg_params['actor_h']=64
-		alg_params['actor_lr']=0.001
-		alg_params['critic_batch_size']=32
-		alg_params['critic_num_epochs']=40
-		alg_params['critic_target_net_freq']=1
-		alg_params['max_buffer_size']=10000
-		alg_params['critic_train_type']='model_free_critic_TD'#or model_free_critic_monte_carlo
+
+		meta_params = MetaParameters(
+			env=env,
+			env_name="CartPole-v0",
+			max_learning_episodes=400,
+			gamma=0.99,
+			seed=seed)
+		
+		alg_params = AlgorithmParameters(
+			max_buffer_size=10000,
+			state_dimension=len(env.reset()),
+			action_space=env.action_space.n,
+			k=k,
+			epsilon=0.3,
+			actor_num_h=1,
+			actor_h=64,
+			actor_lr=0.001,
+			critic_num_h=1,
+			critic_h=64,
+			critic_lr=0.01,
+			critic_batch_size=32,
+			critic_num_epochs=40,
+			critic_target_net_freq=1,
+			critic_train_type='model_free_critic_TD',
+			verbose=verbose)
 
 	if  env_name =='LunarLander-v2':
 
@@ -55,6 +67,7 @@ def main(env_name, seed=42, verbose=False):
 			max_learning_episodes=3000,
 			gamma=0.99,
 			seed=seed)
+		
 		alg_params = AlgorithmParameters(
 			max_buffer_size=10000,
 			state_dimension=len(env.reset()),
