@@ -48,20 +48,30 @@ def main(env_name, seed=42, verbose=False):
 		alg_params['critic_train_type']='model_free_critic_TD'#or model_free_critic_monte_carlo
 
 	if  env_name =='LunarLander-v2':
-		meta_params['max_learning_episodes']=3000
-		alg_params['state_dimension']=len(meta_params['env'].reset())
-		alg_params['A']=meta_params['env'].action_space.n
-		alg_params['critic_num_h']=2
-		alg_params['critic_h']=128
-		alg_params['critic_lr']=0.005
-		alg_params['actor_num_h']=2
-		alg_params['actor_h']=128
-		alg_params['actor_lr']=0.00025
-		alg_params['critic_batch_size']=32
-		alg_params['critic_num_epochs']=10
-		alg_params['critic_target_net_freq']=1
-		alg_params['max_buffer_size']=10000
-		alg_params['critic_train_type']='model_free_critic_TD'#or model_free_critic_monte_carlo
+
+		meta_params = MetaParameters(
+			env=env,
+			env_name="LunarLander-v2",
+			max_learning_episodes=3000,
+			gamma=0.99,
+			seed=seed)
+		alg_params = AlgorithmParameters(
+			max_buffer_size=10000,
+			state_dimension=len(env.reset()),
+			action_space=env.action_space.n,
+			k=k,
+			epsilon=0.3,
+			actor_num_h=2,
+			actor_h=128,
+			actor_lr=0.00025,
+			critic_num_h=2,
+			critic_h=128,
+			critic_lr=0.005,
+			critic_batch_size=32,
+			critic_num_epochs=10,
+			critic_target_net_freq=1,
+			critic_train_type='model_free_critic_TD',
+			verbose=verbose)
 
 	if env_name == 'Acrobot-v1':
 		
