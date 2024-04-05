@@ -54,31 +54,35 @@ class mac:
 		accumulated_rewards= 0
 		
 		for episode in range(1,meta_params['max_learning_episodes']):
+			# Do one episode of interaction
 			start_time = time.time()
-			states,actions,returns,rewards=self.interactOneEpisode(meta_params,episode)
+			states, actions, returns, rewards = self.interactOneEpisode(meta_params,episode)
 			end_time = time.time()
-			self.add_2_memory(states,actions,rewards)
+			# Time
 			episode_time = end_time - start_time
 			li_time.append(episode_time)
+			
+			#add to memory
+			self.add_2_memory(states,actions,rewards)
+			
 			#log performance
 			li_episode_length.append(len(states))
 			if episode % 10 == 0:
 				print(episode,"return in last 10 episodes",numpy.mean(li_returns[-10:]), "with accumulated rewards", accumulated_rewards, "this was the last 10 epiode time", numpy.sum(li_time[-10:]))
 				li_actions =[]
+			
 			li_returns.append(returns[0])
-			# li_actions.append(numpy.unique(actions))
 			accumulated_rewards += numpy.sum(rewards)
-
 			sys.stdout.flush()
-			#log performance
 
 			#train the Q network
 			if self.params['critic_train_type']=='model_free_critic_monte_carlo':
 				self.critic.train_model_free_monte_carlo(states,actions,returns)
+			
 			elif self.params['critic_train_type']=='model_free_critic_TD':
 				self.critic.train_model_free_TD(self.memory,self.actor,meta_params,self.params,episode)
+			
 			self.actor.train(states,self.critic)
-			#train the Q network
 			
 		print("training is finished successfully!")
 		return
@@ -105,6 +109,8 @@ class mac:
 			
 			states.append(s)
 			actions.append(a)
+			if self.params["verbose"] and episode==1:
+				print("state: ",s,"action: ",a,"reward: ",r)
 			rewards.append(r)
 			s , t = (s_p,t+1)
 			

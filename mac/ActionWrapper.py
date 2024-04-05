@@ -18,7 +18,7 @@ def discretizing_wrapper(env, K, verbose=False):
     action_low, action_high = env.action_space.low, env.action_space.high
     naction = action_low.size
     action_table = np.reshape([np.linspace(action_low[i], action_high[i], K) for i in range(naction)], [naction, K])
-    print("This is the action table", action_table)
+    # print("This is the action table", action_table)
     assert action_table.shape == (naction, K)
 
     def discretizing_reset():
@@ -28,10 +28,10 @@ def discretizing_wrapper(env, K, verbose=False):
     def discretizing_step(action):
         # action is a sequence of discrete indices
         action_cont = action_table[np.arange(naction), action]
-        if verbose:
-            print("In discretizing_step - this is the action", action)
-            print("In discretizing_step - this is the action table", action_table)
-            print("In discretizing_step - this is the action cont", action_cont)
+        # if verbose:
+        #     print("In discretizing_step - this is the action", action)
+        #     print("In discretizing_step - this is the action table", action_table)
+        #     print("In discretizing_step - this is the action cont", action_cont)
         obs, rew, terminated, truncated, info, = unwrapped_env.orig_step_(action_cont)
         
         return (obs, rew, terminated, info)
@@ -42,14 +42,14 @@ def discretizing_wrapper(env, K, verbose=False):
         env.action_space = spaces.Discrete(K)
     else:
         action_space = [K for _ in range(naction)]
-        print("This is the action space", action_space)
+        # print("This is the action space", action_space)
         a = []
         for _ in range(naction):
             a.append(K)
         action_space = spaces.MultiDiscrete(a) 
         action_space.sample()
-        if verbose:
-            print("This is a sample", action_space.sample())
+        # if verbose:
+        #     print("This is a sample", action_space.sample())
 
         env.action_space = spaces.MultiDiscrete(a)
 

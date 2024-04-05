@@ -112,7 +112,6 @@ def main(env_name, seed=42, verbose=False):
 			critic_target_net_freq=1,
 			critic_train_type='model_free_critic_TD',
 			verbose=verbose)
-		
 
 	if env_name =='MountainCar-v0':
 		
@@ -229,11 +228,10 @@ def main(env_name, seed=42, verbose=False):
 	sess = tf.Session(graph=tf.get_default_graph(), config=session_conf)
 	K.set_session(sess)
 
-
-	print("this is the action space", env.action_space)
+	if verbose:
+		print("this is the action space", env.action_space)
 	#create a MAC agent and run
-	action_space = 2
-	print("this is the action space", action_space)
+	action_space = env.action_space.n
 	state_dimension = len(env.reset())
 	actor_lr = [0.01]
 	critic_lr = [0.01]
@@ -261,23 +259,22 @@ def main(env_name, seed=42, verbose=False):
 	DO_PARAMETER_SEARCH = False
 
 	# alg_params.verbose = True
-	if isinstance(alg_params, AlgorithmParameters):
 
-		if DO_PARAMETER_SEARCH:
-			print("Starting parameter search...")
-			for alg_param in algo_parameter_list:
-				print(str(alg_param))
-				agent = mac(alg_param.to_Dictionary())
-				agent.train(meta_params.to_Dictionary())
-		else:
-			print("Starting normal training...")
-			agent = mac(alg_params.to_Dictionary())
-			returns = agent.train(meta_params.to_Dictionary())
-			print(returns)
+	if DO_PARAMETER_SEARCH:
+		print("Starting parameter search...")
+		for alg_param in algo_parameter_list:
+			
+			print(str(alg_param))
+			
+			agent = mac(alg_param.to_Dictionary())
+			agent.train(meta_params.to_Dictionary())
 	else:
-		print("This is the normal traning")
-		agent = mac(alg_params)
-		agent.train(meta_params)
+		
+		print("Starting normal training...")
+		params = {**alg_params.to_Dictionary(), **meta_params.to_Dictionary()}
+		params["verbose"] = True
+		agent = mac(params)
+		agent.train(meta_params.to_Dictionary())
 	
 	#create a MAC agent and run
 
