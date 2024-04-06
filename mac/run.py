@@ -3,6 +3,8 @@ import numpy
 import gym,sys,random
 import tensorflow as tf
 from keras import backend as K
+import matplotlib.pyplot as plt
+
 
 # Import action wrapper
 from .ActionWrapper import discretizing_wrapper
@@ -16,6 +18,7 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 def main(env_name, seed=42, verbose=False):
 	
+	seed = numpy.random.randint(0, 1000)
 	#get and set hyper-parameters
 	meta_params,alg_params={},{}
 	print("default environment is Lunar Lander ...")
@@ -118,7 +121,7 @@ def main(env_name, seed=42, verbose=False):
 		meta_params = MetaParameters(
 			env=env,
 			env_name="MountainCar-v0",
-			max_learning_episodes=2000,
+			max_learning_episodes=1000,
 			gamma=0.99,
 			seed=seed)
 
@@ -126,17 +129,17 @@ def main(env_name, seed=42, verbose=False):
 			max_buffer_size=10000,
 			state_dimension=len(env.reset()),
 			action_space=env.action_space.n,
-			epsilon=0.3,
+			epsilon=0.5,
 			actor_num_h=2,
-			actor_h=40,
-			actor_lr=0.01,
+			actor_h=64,
+			actor_lr=0.001,
 			critic_num_h=2,
-			critic_h=40,
-			critic_lr=0.01,
+			critic_h=64,
+			critic_lr=0.001,
 			critic_batch_size=64,
 			critic_num_epochs=10,
 			critic_target_net_freq=1,
-			critic_train_type='model_free_critic_monte_carlo'
+			critic_train_type='model_free_critic_TD'
 		)
 
 	if env_name == "Pendulum-v1":
@@ -265,16 +268,22 @@ def main(env_name, seed=42, verbose=False):
 		for alg_param in algo_parameter_list:
 			
 			print(str(alg_param))
-			
+			params = {**alg_param.to_Dictionary(), **meta_params.to_Dictionary()}
 			agent = mac(alg_param.to_Dictionary())
-			agent.train(meta_params.to_Dictionary())
+			agent.train()
 	else:
 		
 		print("Starting normal training...")
 		params = {**alg_params.to_Dictionary(), **meta_params.to_Dictionary()}
 		params["verbose"] = True
 		agent = mac(params)
-		agent.train(meta_params.to_Dictionary())
+		returns, rewards = agent.train()
+
+		print("this is the returns: ", returns)
+		print("this is the rewards: ", rewards)
+		## make plot of returns pr time step
+		plt.plot([i for i in range(len(returns))], returns)
+		plt.show()
 	
 	#create a MAC agent and run
 
