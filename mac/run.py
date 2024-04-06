@@ -118,15 +118,15 @@ def main(env_name, seed=42, verbose=False):
 		meta_params = MetaParameters(
 			env=env,
 			env_name="MountainCar-v0",
-			max_learning_episodes=600,
-			gamma=0.8,
+			max_learning_episodes=2000,
+			gamma=0.99,
 			seed=seed)
 
 		alg_params = AlgorithmParameters(
 			max_buffer_size=10000,
 			state_dimension=len(env.reset()),
 			action_space=env.action_space.n,
-			epsilon=0.6,
+			epsilon=0.3,
 			actor_num_h=2,
 			actor_h=40,
 			actor_lr=0.01,

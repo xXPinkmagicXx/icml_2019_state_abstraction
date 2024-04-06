@@ -100,13 +100,24 @@ class mac:
 		actions = []
 		t = 0
 		s=s0
+		s_max = -0.5
+		s_min = -0.5
 		while True:
 			a = self.actor.select_action(s)
-			s_p , r , done , _ = meta_params['env'].step(a)
+			s_p , r , done , info = meta_params['env'].step(a)
 			
 			if episode%250==0:
 				meta_params['env'].render()
 			
+
+			
+			if self.params["env_name"] == "MountainCar-v0":
+				# position = s_p[0]**2
+				# velocity = s_p[1]**2
+				position= max(0, 0.5 - abs(s_p[0] - 0.5))  # Reward for being close to the goal position
+				velocity= max(0, 0.07 - abs(s_p[1]))
+				r = position + velocity
+
 			states.append(s)
 			actions.append(a)
 			if self.params["verbose"] and episode==1:
@@ -116,6 +127,8 @@ class mac:
 			
 			# when done 
 			if done==True:
+				if not "TimeLimit.truncated" in info:
+					rewards[-1]=100
 				states.append(s_p)#we actually store the terminal state!
 				a=self.actor.select_action(s_p)
 				actions.append(a),
