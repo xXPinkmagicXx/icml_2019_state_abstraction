@@ -25,6 +25,7 @@ def discretizing_wrapper(env, K):
         return obs
 
     def discretizing_step(action):
+        print("this is the action", action)
         # action is a sequence of discrete indices
         action_cont = action_table[np.arange(naction), action]
         obs, rew, terminated, truncated, info, = unwrapped_env.orig_step_(action_cont)
@@ -33,10 +34,11 @@ def discretizing_wrapper(env, K):
 
     # change observation space
     # In the case where the action space is a single value
+    print("naction: ", naction)
     if naction == 1:
         env.action_space = spaces.Discrete(K)
     else:
-        env.action_space = spaces.MultiDiscrete([[0, K-1] for _ in range(naction)])
+        env.action_space = spaces.MultiDiscrete([K for _ in range(naction)])
 
     unwrapped_env.step = discretizing_step
     unwrapped_env.reset = discretizing_reset
