@@ -5,12 +5,15 @@ The work done in this repo will be used as a submodule in this repo https://gith
 
 
 ## To run the environment
-
-1. First install tensorflow version 1.15.0 with conda
+1. First install python verion 3.8
+```
+conda install python=3.8
+``` python
+2. First install tensorflow version 1.15.0 with conda
 ```
 conda install tensorflow=1.15.0
 ```
-2. Then install the `requirements.txt`
+3. Then install the `requirements.txt`
 ```
 pip install -r requirements.txt
 ```
