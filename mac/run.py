@@ -121,7 +121,7 @@ def main(env_name, seed=42, verbose=False):
 		meta_params = MetaParameters(
 			env=env,
 			env_name="MountainCar-v0",
-			max_learning_episodes=1000,
+			max_learning_episodes=2000,
 			gamma=0.99,
 			seed=seed)
 
@@ -129,14 +129,14 @@ def main(env_name, seed=42, verbose=False):
 			max_buffer_size=10000,
 			state_dimension=len(env.reset()),
 			action_space=env.action_space.n,
-			epsilon=0.5,
+			epsilon=0.3,
 			actor_num_h=2,
 			actor_h=64,
 			actor_lr=0.001,
 			critic_num_h=2,
 			critic_h=64,
 			critic_lr=0.001,
-			critic_batch_size=64,
+			critic_batch_size=32,
 			critic_num_epochs=10,
 			critic_target_net_freq=1,
 			critic_train_type='model_free_critic_TD'

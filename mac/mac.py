@@ -21,6 +21,7 @@ class mac:
 		self.memory = deque(maxlen=self.params['max_buffer_size'])
 		self.actor=actor(self.params)
 		self.critic=critic(self.params)
+		self.epsilon = params['epsilon']
 		# get current working directory
 		cwd = os.getcwd().split('\\')[-1]
 		learned_policy_path = "./learned_policy/"
@@ -35,7 +36,7 @@ class mac:
 		T=len(states)
 		for index,(s,a,r) in enumerate(zip(states,actions,rewards)):
 			if index<T-1:
-				self.memory.append( (s,a,r,states[index+1],T-index-1) )
+				self.memory.append((s,a,r,states[index+1],T-index-1))
 
 	def train(self):
 		'''
@@ -60,8 +61,12 @@ class mac:
 			end_time = time.time()
 			
 			# Update epsilon for epsilon greedy policy
-			self.actor.params['epsilon'] = max(1 - episode/(self.params["max_learning_episodes"]*self.params['epsilon']), 0.01)
-			
+			# print("This is the epsilon in actor", self.actor.params['epsilon'], "this is the epsilon in mac", self.epsilon)
+			self.actor.params['epsilon'] = max(1 - episode/(self.params["max_learning_episodes"]*self.epsilon), 0.01)
+
+			# Accumulated rewards
+			accumulated_rewards += numpy.sum(rewards)
+
 			# Time
 			episode_time = end_time - start_time
 			li_time.append(episode_time)
@@ -112,11 +117,11 @@ class mac:
 			if episode%250==0:
 				self.params['env'].render()
 
-			r = self.rewardToMounainCar(s, s_p, r, a, episode)
-
+			ra = self.rewardToMounainCar(s, s_p, r, a, episode)
+			
 			states.append(s)
 			actions.append(a)
-			rewards.append(r)
+			rewards.append(ra)
 			# update for next iteration
 			s, t = (s_p,t+1)
 
@@ -157,49 +162,106 @@ class mac:
 		velocity_max = 0.07
 		velocity_min = -0.07
 		goal_position = 0.5
+		action_right = action == 2
+		no_action = action == 1
+		
+		## Simple reward reaching left hight 
+
+		## Exp reward for position
+
+		## Exp reward for velocity when crossing valley
+
+		## Potential energi reward
 
 		if self.params["env_name"] == "MountainCar-v0":
 			## moving right
-			pos_change = (next_state[0] - current_state[0])
-			moving_right = pos_change > 0
+			# pos_change = (next_state[0] - current_state[0])
+			# moving_right = pos_change > 0
 			
-			# # Penalize for stayin in the valley
-			if current_state[0] > valley - 0.1 and current_state[0] < valley + 0.1: 
-				reward -= 1
+			# reward for position
+			# pos_reward = self.rewardPositionMountainCar(next_state[0])
+			# vel_valley_reward = self.rewardVelocityWhenCrossingValley(current_state, next_state)
+			# vel_reward = self.rewardVelocityMountainCar(current_state[1])
+			# reward += pos_reward + vel_valley_reward + vel_reward
 
-
-			## if crossing valley
-			# if current_state[0] < valley and next_state[0] >= valley:
-			# 	r += 10
-			# elif current_state[0] > valley and next_state[0] <= valley:
-			# 	r += 10	
-			# reward for moving towards the goal
-			distance_to_goal_current = abs(current_state[0] - goal_position)
-			distance_to_goal_next = abs(next_state[0] - goal_position)
-			if distance_to_goal_next < distance_to_goal_current:
-				reward += 1
-			
-			## pushing right
-			action_right = action == 2
-			no_action = action == 1
-			
-			if moving_right and action_right:
-				reward += (1 * next_state[1])
-			elif not moving_right and not action_right:
-				reward += 1 * next_state[1]
-			elif no_action:
-				reward -= 10
+			# potential_energy = self.findPotentialEnergyMountainCar(current_state[0])
+			# kinetic_energy = self.findKineticEnergyMountainCar(current_state[1])
+			vel_reward = self.rewardVelocityMountainCar(current_state[1])
+			reward += vel_reward   
 
 			# Reward for reaching the goal
 			if next_state[0] >= 0.5:
-				reward += 100
+				reward = 1000
 
 			# r += position_reward + velocity_reward
 			if self.params["verbose"] and episode%100==0 or episode==1:
 				# print("posistion: ",corrected,"velocity",s_p[1],"action: ",a,"reward =",position_reward, "+", velocity_reward)
-				print("posistion: ",next_state, "pos_change:", pos_change, "velocity",next_state[1],"action: ",action,"reward: ",reward)
+				print("posistion: ",next_state, "velocity",next_state[1],"action: ",action,"reward: ",reward ,"velocity_reward:", vel_reward)
 			# position= max(0, 0.5 - abs(s_p[0] - 0.5))  # Reward for being close to the goal position
 			# velocity= max(0, 0.07 - abs(s_p[1]))
 		
 		return reward
+	def findPotentialEnergyMountainCar(self, pos):
+		m = 1000
+		g = 0.0025
+		# The funciton of the mountain road
+		h = numpy.sin(numpy.pi * pos) + 1
 
+		# Correct pos to be 0 in valley
+		potential_energy = m * g * (h *100)
+		# Reward for potential energy
+		
+		return potential_energy
+	def findKineticEnergyMountainCar(self, velocity):
+		m = 1000
+		velocity_ratio = abs(velocity) / 0.07
+		velocity_percentage = velocity_ratio * 100
+		kinetic_energy = 0.5 * m * abs(velocity_ratio)**2
+		# Reward for kinetik energy
+		return kinetic_energy
+
+	def rewardVelocityMountainCar(self, current_velocity):
+		valley = -0.5
+		velocity_max = 0.07
+		velocity_min = -0.07
+		velocity_reward = 0
+		
+		velocity_ratio = abs(current_velocity) / velocity_max
+		velocity_reward = (2+ velocity_ratio)**2
+
+		# Reward for velocity
+		return velocity_reward
+
+
+	def rewardVelocityWhenCrossingValley(self, current_state, next_state):
+		valley = -0.5
+		velocity_max = 0.07
+		velocity_min = -0.07
+		current_pos = current_state[0]
+		next_pos = next_state[0]
+		current_velocity = current_state[1]
+		next_velocity = next_state[1]
+		velocity_reward = 0
+		velocity_ratio = 0
+		# Reward for velocity when crossing valley
+		if current_pos < valley and next_pos >= valley:
+			
+			velocity_ratio = next_velocity / velocity_max
+			velocity_reward = 100 * velocity_ratio
+		
+		elif current_pos > valley and next_pos <= valley:
+			
+			velocity_ratio = next_velocity / velocity_min
+			velocity_reward = 100 * velocity_ratio
+
+		return velocity_reward
+	def rewardPositionMountainCar(self, pos):
+		valley = -0.5
+		# Correct pos to be 0 in valley
+		corrected_pos = pos - valley
+		
+		# Reward for being close to the goal position
+		pos_reward = (1 / (1-abs(corrected_pos)**2))
+		
+		return pos_reward
+		
