@@ -45,7 +45,16 @@ class actor:
             using the neural net, and then draws an action a~\pi(.|s)
         '''
         pr=self.network.predict(numpy.array(state).reshape(1,self.params['state_|dimension|']))[0]
-        a=numpy.random.choice([x for x in range(self.params['|A|'])],p=pr)
+        
+        ## Implement \epsilon greedy exploration
+        epsilon = self.params['epsilon']
+        if numpy.random.random() > epsilon:
+            a =  np.random.choice(range(self.params['|A|']))
+        else:
+            a = np.argmax(pr)
+        
+        #a = numpy.random.choice([x for x in range(self.params['|A|'])],p=pr)
+        
         return a
 
     def train(self,states,critic):

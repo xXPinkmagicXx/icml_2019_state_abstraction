@@ -77,6 +77,8 @@ class Experiment(object):
         self.times = defaultdict(list)
         if dir_for_plot == "":
             self.exp_directory = os.path.join(Experiment.RESULTS_DIR, self.name)
+        elif dir_for_plot != "":
+            self.exp_directory = os.path.join(os.getcwd(), "results", self.name, dir_for_plot)
         else:
             self.exp_directory = os.path.join(os.getcwd(), dir_for_plot, self.name)
 
