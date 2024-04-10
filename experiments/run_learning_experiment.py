@@ -107,7 +107,7 @@ def main(env_name, abstraction=True, verbose=False, seed=42):
 
     ## Make Abstraction
     if abstraction:
-        sess = tf.Session()
+        sess = tf.compat.v1.Session()
         sample_batch = policy.sample_unif_random()
         abstraction_net = make_nn_sa_2(sess, policy.params, sample_batch)
         nn_sa = NNStateAbstr(abstraction_net)

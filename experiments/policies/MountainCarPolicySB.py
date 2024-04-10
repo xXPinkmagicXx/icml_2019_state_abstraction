@@ -10,10 +10,12 @@ from stable_baselines3 import DQN
 
 class MountainCarPolicySB():
     
-    def __init__(self, checkpoint, gym_env):    
+    def __init__(self, checkpoint, gym_env: GymMDP):    
         self.checkpoint = checkpoint
         self.gym_env = gym_env
-        self.model = DQN.load(checkpoint, env=gym_env)
+        self.model = DQN.load(checkpoint, env=gym_env.env)
+        self.params = self.get_params()
+        self.demo_policy = self.expert_policy
     
     def get_params(self):
 		
@@ -34,7 +36,12 @@ class MountainCarPolicySB():
         return params
 
     def expert_policy(self, state):
-        pass
+        
+        s_size=len(state)
+        s_array=np.array(state).reshape(1,s_size)
+        temp = self.model.predict(s_array)
+		
+        return np.argmax(temp[0])
 
     def sample_unif_random(self, num_samples = 5000):
         '''
