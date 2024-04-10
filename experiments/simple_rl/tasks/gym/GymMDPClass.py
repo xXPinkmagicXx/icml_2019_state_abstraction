@@ -11,7 +11,7 @@ import random
 from collections import defaultdict
 
 # Other imports.
-import gym
+import gymnasium as gym
 from simple_rl.mdp.MDPClass import MDP
 from simple_rl.tasks.gym.GymStateClass import GymState
 from gym import spaces

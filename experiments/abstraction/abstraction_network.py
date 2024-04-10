@@ -9,8 +9,9 @@ class abstraction_network:
 		self.learning_rate=params['learning_rate_for_abstraction_learning']
 
 		with tf.compat.v1.variable_scope('abstraction_scope'):
+			## TODO: Params in
 			self.obs=tf.compat.v1.placeholder(tf.float32, [None, self.obs_size], name = 'obs')
-			self.Pr_a_given_z=tf.compat.v1.placeholder(tf.float32, [None,self.num_abstract_states], name = 'prob_of_all_a_given_z')
+			self.Pr_a_given_z=tf.compat.v1.placeholder(tf.float32, [100,self.num_abstract_states], name = 'prob_of_all_a_given_z')
 			h=self.obs
 			for _ in range(params['abstraction_network_hidden_layers']):
 				# h=tf.layers.dense(
@@ -40,6 +41,10 @@ class abstraction_network:
 
 			#self.optimizer = tf.train.GradientDescentOptimizer(learning_rate=self.learning_rate).minimize(self.loss)
 	def predict(self,samples):
+		# print("this is the samples:", samples)
+		print("this is the shape of," , len(samples))
+		print("this is the shape of," , len(samples[0]))
+		print("this is the shape of self.pr_z_given_s", self.Pr_z_given_s.shape)
 		li=self.sess.run(self.Pr_z_given_s,feed_dict={self.obs:samples})
 		return li
 

@@ -21,13 +21,13 @@ class MountainCarPolicySB():
 		
         params={}
         params['env_name']="MountainCar-v0"
-        params['multitask']=True
+        params['multitask']=False
         params['obs_size']=self.gym_env.env.observation_space.shape[0]
         params['num_iterations_for_abstraction_learning']=500
         params['learning_rate_for_abstraction_learning']=0.001
         params['abstraction_network_hidden_layers']=2
-        params['abstraction_network_hidden_nodes']=40
-        params['num_samples_from_demonstrator']=5000
+        params['abstraction_network_hidden_nodes']=64
+        params['num_samples_from_demonstrator']=100
         params['episodes'] = 50
         params['steps']=200
         params['num_instances']=100
@@ -56,12 +56,14 @@ class MountainCarPolicySB():
 
         samples = []
 
-        for _ in range(num_samples):
+        for _ in range(100):
             cur_state = self.gym_env.env.observation_space.sample()
+            # print("this is the current state", cur_state)
             self.gym_env.env.state = cur_state
 
             # Get demo action.
             best_action = self.demo_policy(cur_state)
+            # print("this is the best_action", best_action)
             #action_index = mdp.get_actions().index(best_action)
             samples.append((cur_state, best_action, 0))
 

@@ -87,10 +87,10 @@ def main(env_name, abstraction=True, verbose=False, seed=42):
     This function runs the learning experiment for the given environment.
     """
     ## get parameters
-    gym_env = GymMDP(env_name)
+    gym_env = GymMDP(env_name, render=True)
 
     ## Set seed
-    gym_env.env.seed(seed)
+    # gym_env.env.seed(seed)
     random.seed(seed)
 
     if verbose:
@@ -98,9 +98,10 @@ def main(env_name, abstraction=True, verbose=False, seed=42):
     ## Get actions and features
     actions = list(gym_env.get_actions())
 
+    GET_STABLE_BASELINES = True
 
     ## Get policy
-    policy = get_policy(gym_env, True)
+    policy = get_policy(gym_env, GET_STABLE_BASELINES)
     policy.params["num_mdps"] = 1
     policy.params["size_a"] = len(actions)
     policy.params["num_iterations_for_abstraction_learning"] = 10
@@ -110,6 +111,7 @@ def main(env_name, abstraction=True, verbose=False, seed=42):
     if abstraction:
         sess = tf.compat.v1.Session()
         sample_batch = policy.sample_unif_random()
+        print("this is the sample batch", sample_batch)
         abstraction_net = make_nn_sa_2(sess, policy.params, sample_batch)
         nn_sa = NNStateAbstr(abstraction_net)
 
@@ -136,6 +138,15 @@ def main(env_name, abstraction=True, verbose=False, seed=42):
 
     # Timestamp for saving the experiment
     dir_for_plot = str(datetime.now().time()).replace(":", "_").replace(".", "_")
+
+    # test if the new sb3 works
+    vec_env = policy.model.get_env()
+    obs = vec_env.reset()
+    for _ in range(1000):
+        # print("this is the observation", obs)
+        action, _states = policy.model.predict(obs, deterministic=True)
+        obs, rewards, done, info = vec_env.step(action)
+        vec_env.render("human")
 
     # mode
     # Run the experiment
