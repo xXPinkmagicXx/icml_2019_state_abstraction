@@ -8,8 +8,8 @@ from keras import backend as K
 from .ActionWrapper import discretizing_wrapper
 from .HyperParameters import AlgorithmParameters, MetaParameters, make_parameters
 
-tf.disable_v2_behavior()
-tf.compat.v1.disable_eager_execution()
+# tf.compat.v1.disable_v2_behavior()
+# tf.compat.v1.disable_eager_execution()
 
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
