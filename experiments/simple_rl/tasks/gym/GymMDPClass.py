@@ -38,10 +38,11 @@ class GymMDP(MDP):
         self.env = env
         self.render = render
         print("this is the reset", self.env.reset())
-        if env_name == "MountainCar-v0":
-            MDP.__init__(self, range(self.env.action_space.n), self._transition_func, self._reward_func, init_state=GymState(self.env.reset()))
-        else: 
-            MDP.__init__(self, range(self.env.action_space.n), self._transition_func, self._reward_func, init_state=GymState(self.env.reset()))
+        # if env_name == "MountainCar-v0":
+        #     MDP.__init__(self, range(self.env.action_space.n), self._transition_func, self._reward_func, init_state=GymState(self.env.reset()))
+        # else: 
+        obs, info = self.env.reset()
+        MDP.__init__(self, range(self.env.action_space.n), self._transition_func, self._reward_func, init_state=GymState(obs))
 
     def get_parameters(self):
         '''
@@ -62,12 +63,12 @@ class GymMDP(MDP):
         Returns
             (float)
         '''
-        obs, reward, is_terminal, info = self.env.step(action)
+        obs, reward, terminated, truncated, info = self.env.step(action)
 
         if self.render and (self.render_every_n_episodes == 0 or self.episode % self.render_every_n_episodes == 0):
             self.env.render()
 
-        self.next_state = GymState(obs, is_terminal=is_terminal)
+        self.next_state = GymState(obs, is_terminal=terminated)
 
         return reward
 

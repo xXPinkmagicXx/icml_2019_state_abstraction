@@ -87,7 +87,7 @@ def main(env_name, abstraction=True, verbose=False, seed=42):
     This function runs the learning experiment for the given environment.
     """
     ## get parameters
-    gym_env = GymMDP(env_name, render=True)
+    gym_env = GymMDP(env_name, render=True, render_every_n_episodes=2)
 
     ## Set seed
     # gym_env.env.seed(seed)
@@ -104,14 +104,14 @@ def main(env_name, abstraction=True, verbose=False, seed=42):
     policy = get_policy(gym_env, GET_STABLE_BASELINES)
     policy.params["num_mdps"] = 1
     policy.params["size_a"] = len(actions)
-    policy.params["num_iterations_for_abstraction_learning"] = 10
-    policy.params["steps"] = 20
+    policy.params["num_iterations_for_abstraction_learning"] = 500
+    policy.params["steps"] = 200
 
     ## Make Abstraction
     if abstraction:
+        policy.params["obs_size"] 
         sess = tf.compat.v1.Session()
         sample_batch = policy.sample_unif_random()
-        print("this is the sample batch", sample_batch)
         abstraction_net = make_nn_sa_2(sess, policy.params, sample_batch)
         nn_sa = NNStateAbstr(abstraction_net)
 
@@ -125,28 +125,30 @@ def main(env_name, abstraction=True, verbose=False, seed=42):
     ## TODO: LinearQagent and number of features does not wor
     # num_features = gym_env.get_num_state_feats()
     # print("this is the number of features: ", num_features)
+    demo_agent = FixedPolicyAgent(policy.demo_policy)
     linear_agent = QLearningAgent(actions=actions)
     # ql_agent = QLearningAgent(actions)
-    agent_params = {"alpha":policy.params['rl_learning_rate'],"epsilon":0.2,"actions":actions}
+    agent_params = {"alpha":policy.params['rl_learning_rate'],"epsilon":0.1,"actions":actions}
     sa_agent = AbstractionWrapper(QLearningAgent,
                                   agent_params=agent_params,
                                   state_abstr=nn_sa,
                                   name_ext="_phi"+ "_" + str(seed))
 
     ## Agents in experiment
-    agent_list = [sa_agent]
+    agent_list = [sa_agent,demo_agent]
 
     # Timestamp for saving the experiment
     dir_for_plot = str(datetime.now().time()).replace(":", "_").replace(".", "_")
 
     # test if the new sb3 works
-    vec_env = policy.model.get_env()
-    obs = vec_env.reset()
-    for _ in range(1000):
-        # print("this is the observation", obs)
-        action, _states = policy.model.predict(obs, deterministic=True)
-        obs, rewards, done, info = vec_env.step(action)
-        vec_env.render("human")
+    # if GET_STABLE_BASELINES:
+    #     vec_env = policy.model.get_env()
+    #     obs = vec_env.reset()
+    #     for _ in range(1000):
+    #         # print("this is the observation", obs)
+    #         action, _states = policy.model.predict(obs, deterministic=True)
+    #         obs, rewards, done, info = vec_env.step(action)
+    #         vec_env.render("human")
 
     # mode
     # Run the experiment

@@ -393,6 +393,8 @@ def make_nn_sa_2(sess, params, samples_batch=None, verbose=True):
 
     num_abstract_states = size_z
     
+    print("this is the number of abstract states", num_abstract_states)
+
     ## Create abstraction network
     abstraction_net = abstraction_network(sess, params,num_abstract_states)
     sess.run(tf.compat.v1.global_variables_initializer())
@@ -403,7 +405,6 @@ def make_nn_sa_2(sess, params, samples_batch=None, verbose=True):
 
     ## Do training
     for iteration_number in range(params['num_iterations_for_abstraction_learning']):
-        
         loss=abstraction_net.train(samples_batch, a_in_z)
         
         ## Print loss

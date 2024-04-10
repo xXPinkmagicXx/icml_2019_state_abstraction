@@ -56,15 +56,12 @@ class MountainCarPolicySB():
 
         samples = []
 
-        for _ in range(100):
+        for _ in range(num_samples):
             cur_state = self.gym_env.env.observation_space.sample()
-            # print("this is the current state", cur_state)
             self.gym_env.env.state = cur_state
 
             # Get demo action.
             best_action = self.demo_policy(cur_state)
-            # print("this is the best_action", best_action)
-            #action_index = mdp.get_actions().index(best_action)
             samples.append((cur_state, best_action, 0))
 
         return samples
