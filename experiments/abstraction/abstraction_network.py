@@ -13,14 +13,19 @@ class abstraction_network:
 			self.Pr_a_given_z=tf.compat.v1.placeholder(tf.float32, [None,self.num_abstract_states], name = 'prob_of_all_a_given_z')
 			h=self.obs
 			for _ in range(params['abstraction_network_hidden_layers']):
-				h=tf.layers.dense(
-		            inputs = h,
+				# h=tf.layers.dense(
+		        #     inputs = h,
+		        #     units = params['abstraction_network_hidden_nodes'],
+		        #     activation = tf.nn.relu)
+				
+				h=tf.keras.layers.Dense(
 		            units = params['abstraction_network_hidden_nodes'],
-		            activation = tf.nn.relu)
+		            activation = tf.nn.relu)(h)
+				
 
-			self.logits=tf.layers.dense(
-	            inputs = h,
-	            units = self.num_abstract_states)
+			self.logits=tf.keras.layers.Dense(
+	            # inputs = h,
+	            units = self.num_abstract_states)(h)
 
 			self.Pr_z_given_s = tf.nn.softmax(self.logits)
 			self.Pr_z_given_s=tf.clip_by_value(
@@ -29,11 +34,9 @@ class abstraction_network:
 				    clip_value_max=0.9999,
 				)
 
-			self.loss=-tf.reduce_mean(tf.multiply(self.Pr_a_given_z,tf.log(self.Pr_z_given_s)))
-														  
+			self.loss=-tf.reduce_mean(tf.multiply(self.Pr_a_given_z,tf.compat.v1.log(self.Pr_z_given_s)))							  
 											
-									
-			self.optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate).minimize(self.loss)
+			self.optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate=self.learning_rate).minimize(self.loss)
 
 			#self.optimizer = tf.train.GradientDescentOptimizer(learning_rate=self.learning_rate).minimize(self.loss)
 	def predict(self,samples):

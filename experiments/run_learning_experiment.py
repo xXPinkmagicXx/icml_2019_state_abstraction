@@ -29,8 +29,9 @@ from .abstraction.NNStateAbstrClass import NNStateAbstr
 from .utils.experiment_utils import make_nn_sa, make_nn_sa_2
 
 import tensorflow as tf
-# tf.compat.v1.disable_v2_behavior()
-# tf.compat.v1.disable_eager_execution()
+# To make code compatible with old code implemented in tensorflow 1.x
+tf.compat.v1.disable_v2_behavior()
+tf.compat.v1.disable_eager_execution()
 
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
