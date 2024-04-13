@@ -18,9 +18,11 @@ import policies.Policy as Policy
 import policies.CartPolePolicy as cpp
 import policies.MountainCarPolicy as mpd
 import policies.AcrobotPolicy as abp
-import policies.LunarLanderPolicy as llps
+import policies.LunarLanderPolicy as llp
+import policies.LunarLanderPolicySB as llp_sb
 import policies.PendulumPolicy as pp
 import policies.MountainCarPolicySB as mpd_sb
+import policies.CartPolePolicySB as cpp_sb
 from huggingface_sb3 import load_from_hub
 
 
@@ -36,11 +38,10 @@ tf.compat.v1.disable_eager_execution()
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-
-def get_policy(gym_env: GymMDP, sb3=False):
+def get_policy_sb3(gym_env: GymMDP):
     """
     Args:
-        gym_env (GymMDP)
+        :param gym_env (GymMDP)
     Returns:
         Policy
 
@@ -51,6 +52,32 @@ def get_policy(gym_env: GymMDP, sb3=False):
     4. LunarLander-v2
     5. Pendulum-v1
     """
+    algo = "dqn"
+    path_to_learned_policy = './rl-trained-agents/' + algo + "_" + gym_env.env_name
+    if gym_env.env_name == "MountainCar-v0":
+        return mpd_sb.MountainCarPolicySB(gym_env, path_to_learned_policy)
+    if gym_env.env_name == "LunarLander-v2":
+        return llp_sb.LunarLanderPolicySB(gym_env, path_to_learned_policy)
+    
+    return cpp_sb.CartPolePolicySB(gym_env, path_to_learned_policy)
+
+
+def get_policy(gym_env: GymMDP):
+    """
+    Args:
+        :param gym_env (GymMDP) : Gym MDP object
+        :param sb3 (bool): If True, use stable baselines 3
+    Returns:
+        Policy 
+
+    Implemeted policies for the environments are
+    1. CartPole-v0
+    2. Acrobot-v1
+    3. MountainCar-v0
+    4. LunarLander-v2
+    5. Pendulum-v1
+    """
+
     if gym_env.env_name == "CartPole-v0":
         return cpp.CartPolePolicy(gym_env)
 
@@ -58,16 +85,10 @@ def get_policy(gym_env: GymMDP, sb3=False):
         return abp.AcrobotPolicy(gym_env)
 
     if gym_env.env_name == "MountainCar-v0":
-        if sb3:
-            checkpoint = load_from_hub(
-                repo_id="sb3/dqn-MountainCar-v0",
-                filename="dqn-MountainCar-v0.zip")
-            return mpd_sb.MountainCarPolicySB(checkpoint, gym_env)
-
         return mpd.MountainCarPolicy(gym_env)
 
     if gym_env.env_name == "LunarLander-v2":
-        return llps.LunarLanderPolicy(gym_env)
+        return llp.LunarLanderPolicy(gym_env)
 
     if gym_env.env_name == "Pendulum-v1":
         return pp.PendulumPolicy(gym_env)
@@ -75,13 +96,14 @@ def get_policy(gym_env: GymMDP, sb3=False):
     return NotImplementedError("Policy not implemented for this environment")
 
 
-def main(env_name, abstraction=True, verbose=False, seed=42):
+def main(env_name, sb3 = False, abstraction=True, verbose=False, seed=42):
     """
     Args:
-        env_name (str): Name of the environment
-        abstraction = True (bool): If True, use state abstraction
-        verbose = False (bool) : If True, print the environment name
-        seed = 42 (int) :Seed for reproducibility
+        :param env_name (str): Name of the environment
+        :param sb3 = False (bool): If True, use trained stable baselines 3 models
+        :param abstraction = True (bool): If True, use state abstraction
+        :param verbose = False (bool) : If True, print the environment name
+        :param seed = 42 (int) :Seed for reproducibility
     Returns:
         None
     This function runs the learning experiment for the given environment.
@@ -98,10 +120,14 @@ def main(env_name, abstraction=True, verbose=False, seed=42):
     ## Get actions and features
     actions = list(gym_env.get_actions())
 
-    GET_STABLE_BASELINES = True
+    sb3 = True
 
     ## Get policy
-    policy = get_policy(gym_env, GET_STABLE_BASELINES)
+    if sb3:
+        policy = get_policy_sb3(gym_env)
+    else:
+        policy = get_policy(gym_env)
+
     policy.params["num_mdps"] = 1
     policy.params["size_a"] = len(actions)
     policy.params["num_iterations_for_abstraction_learning"] = 500

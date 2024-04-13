@@ -10,13 +10,12 @@ from stable_baselines3 import DQN
 
 class MountainCarPolicySB():
     
-    def __init__(self, checkpoint, gym_env: GymMDP):    
-        self.checkpoint = checkpoint
+    def __init__(self, gym_env: GymMDP, path_to_learned_policy):    
         self.gym_env = gym_env
-        self.model = DQN.load(checkpoint, env=gym_env.env)
+        self.model = DQN.load(path_to_learned_policy ,env=gym_env.env)
         self.params = self.get_params()
         self.demo_policy = self.expert_policy
-    
+        
     def get_params(self):
 		
         params={}
