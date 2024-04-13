@@ -54,12 +54,13 @@ def get_policy_sb3(gym_env: GymMDP):
     """
     algo = "dqn"
     path_to_learned_policy = './rl-trained-agents/' + algo + "_" + gym_env.env_name
-    if gym_env.env_name == "MountainCar-v0":
-        return mpd_sb.MountainCarPolicySB(gym_env, path_to_learned_policy)
-    if gym_env.env_name == "LunarLander-v2":
-        return llp_sb.LunarLanderPolicySB(gym_env, path_to_learned_policy)
     
-    return cpp_sb.CartPolePolicySB(gym_env, path_to_learned_policy)
+    if gym_env.env_name == "MountainCar-v0":
+        return mpd_sb.MountainCarPolicySB(gym_env)
+    if gym_env.env_name == "LunarLander-v2":
+        return llp_sb.LunarLanderPolicySB(gym_env)
+    
+    return cpp_sb.CartPolePolicySB(gym_env, algo)
 
 
 def get_policy(gym_env: GymMDP):
@@ -96,17 +97,18 @@ def get_policy(gym_env: GymMDP):
     return NotImplementedError("Policy not implemented for this environment")
 
 
-def main(env_name, sb3 = False, abstraction=True, verbose=False, seed=42):
+def main(env_name: str, algo: str, abstraction=True, verbose=False, seed=42):
     """
     Args:
         :param env_name (str): Name of the environment
-        :param sb3 = False (bool): If True, use trained stable baselines 3 models
+        :param algo (str): Name of the algorithm
         :param abstraction = True (bool): If True, use state abstraction
         :param verbose = False (bool) : If True, print the environment name
         :param seed = 42 (int) :Seed for reproducibility
     Returns:
         None
-    This function runs the learning experiment for the given environment.
+    This function runs the learning experiment for the given environment and does state 
+    abstraction if true.
     """
     ## get parameters
     gym_env = GymMDP(env_name, render=True, render_every_n_episodes=2)
@@ -120,26 +122,29 @@ def main(env_name, sb3 = False, abstraction=True, verbose=False, seed=42):
     ## Get actions and features
     actions = list(gym_env.get_actions())
 
-    sb3 = True
 
     ## Get policy
-    if sb3:
-        policy = get_policy_sb3(gym_env)
-    else:
+    if algo == 'mac':
         policy = get_policy(gym_env)
+    else:
+        policy = get_policy_sb3(gym_env)
+
+    # policy_mac = get_policy(gym_env)
 
     policy.params["num_mdps"] = 1
     policy.params["size_a"] = len(actions)
-    policy.params["num_iterations_for_abstraction_learning"] = 500
+    policy.params["num_iterations_for_abstraction_learning"] = 10
     policy.params["steps"] = 200
-
+    
     ## Make Abstraction
     if abstraction:
-        policy.params["obs_size"] 
         sess = tf.compat.v1.Session()
+        
         sample_batch = policy.sample_unif_random()
         abstraction_net = make_nn_sa_2(sess, policy.params, sample_batch)
         nn_sa = NNStateAbstr(abstraction_net)
+        
+        
 
     # If the action space is continuous
     # if isinstance(gym_env.env.action_space, gym.spaces.Box):
@@ -155,13 +160,18 @@ def main(env_name, sb3 = False, abstraction=True, verbose=False, seed=42):
     linear_agent = QLearningAgent(actions=actions)
     # ql_agent = QLearningAgent(actions)
     agent_params = {"alpha":policy.params['rl_learning_rate'],"epsilon":0.1,"actions":actions}
+    
     sa_agent = AbstractionWrapper(QLearningAgent,
                                   agent_params=agent_params,
                                   state_abstr=nn_sa,
                                   name_ext="_phi"+ "_" + str(seed))
+    # sa_agent_mac = AbstractionWrapper(QLearningAgent,
+    #                               agent_params=agent_params,
+    #                               state_abstr=nn_sa_mac,
+    #                               name_ext="_phi"+ "_" + str(seed))
 
     ## Agents in experiment
-    agent_list = [sa_agent,demo_agent]
+    agent_list = [sa_agent]
 
     # Timestamp for saving the experiment
     dir_for_plot = str(datetime.now().time()).replace(":", "_").replace(".", "_")

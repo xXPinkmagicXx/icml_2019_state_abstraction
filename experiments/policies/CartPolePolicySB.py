@@ -8,12 +8,12 @@ from stable_baselines3 import DQN
 
 class CartPolePolicySB(PolicySB):
 	
-	def __init__(self, gym_env: GymMDP, path_to_learned_policy):
+	def __init__(self, gym_env: GymMDP, algo: str = "dqn"):
 		# self.gym_env = gym_env
 		# self.model = DQN.load(path_to_learned_policy ,env=gym_env.env)
 		# self.params = self.get_params()
 		# self.demo_policy = self.expert_policy
-		super().__init__(gym_env, "dqn")
+		super().__init__(gym_env, algo)
 	
 	def get_params(self):
 		

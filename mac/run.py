@@ -45,7 +45,22 @@ def main(env_name, seed=42):
 		alg_params['critic_target_net_freq']=1
 		alg_params['max_buffer_size']=10000
 		alg_params['critic_train_type']='model_free_critic_TD'#or model_free_critic_monte_carlo
-
+	
+	if env_name == 'CartPole-v1':
+		meta_params['max_learning_episodes']=400
+		alg_params['A']=meta_params['env'].action_space.n
+		alg_params['critic_num_h']=1
+		alg_params['critic_h']=64
+		alg_params['critic_lr']=0.01
+		alg_params['actor_num_h']=1
+		alg_params['actor_h']=64
+		alg_params['actor_lr']=0.001
+		alg_params['critic_batch_size']=32
+		alg_params['critic_num_epochs']=40
+		alg_params['critic_target_net_freq']=1
+		alg_params['max_buffer_size']=10000
+		alg_params['critic_train_type']='model_free_critic_TD'#or model_free_critic_monte_carlo
+	
 	if  env_name =='LunarLander-v2':
 		meta_params['max_learning_episodes']=3000
 		alg_params['state_dimension']=len(meta_params['env'].reset())
