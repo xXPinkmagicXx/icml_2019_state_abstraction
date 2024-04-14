@@ -133,7 +133,7 @@ def main(env_name: str, algo: str, abstraction=True, verbose=False, seed=42):
 
     policy.params["num_mdps"] = 1
     policy.params["size_a"] = len(actions)
-    policy.params["num_iterations_for_abstraction_learning"] = 10
+    policy.params["num_iterations_for_abstraction_learning"] = 200
     policy.params["steps"] = 200
     
     ## Make Abstraction
@@ -171,7 +171,7 @@ def main(env_name: str, algo: str, abstraction=True, verbose=False, seed=42):
     #                               name_ext="_phi"+ "_" + str(seed))
 
     ## Agents in experiment
-    agent_list = [sa_agent]
+    agent_list = [demo_agent,sa_agent]
 
     # Timestamp for saving the experiment
     dir_for_plot = str(datetime.now().time()).replace(":", "_").replace(".", "_")

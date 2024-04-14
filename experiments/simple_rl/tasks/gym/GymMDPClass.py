@@ -37,10 +37,6 @@ class GymMDP(MDP):
             env = self.discretizing_wrapper(env, k)
         self.env = env
         self.render = render
-        print("this is the reset", self.env.reset())
-        # if env_name == "MountainCar-v0":
-        #     MDP.__init__(self, range(self.env.action_space.n), self._transition_func, self._reward_func, init_state=GymState(self.env.reset()))
-        # else: 
         obs, info = self.env.reset()
         MDP.__init__(self, range(self.env.action_space.n), self._transition_func, self._reward_func, init_state=GymState(obs))
 
