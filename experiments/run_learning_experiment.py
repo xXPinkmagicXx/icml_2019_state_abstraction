@@ -134,7 +134,7 @@ def main(env_name: str, algo: str, abstraction=True, verbose=False, seed=42):
 
     policy.params["num_mdps"] = 1
     policy.params["size_a"] = len(actions)
-    policy.params["num_iterations_for_abstraction_learning"] = 2
+    policy.params["num_iterations_for_abstraction_learning"] = 10
     policy.params["steps"] = 200
 
     ## Make Abstraction
@@ -144,9 +144,15 @@ def main(env_name: str, algo: str, abstraction=True, verbose=False, seed=42):
         import numpy as np
         from keras.utils import to_categorical
 
+
+
         x_train, y_train = policy.sample_training_data()
 
-
+        x_train = tf.keras.utils.normalize(x_train, axis=1)
+        
+        max_value = np.max(x_train)
+        min_value = np.min(x_train)
+        print("this is the max and min value", max_value, min_value)
         print("this si the shape of x_train", x_train[:2])
         print("this is the shape of y_train", y_train.shape)
         

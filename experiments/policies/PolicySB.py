@@ -6,6 +6,7 @@ import abc
 import os
 from gymnasium.vector.utils import batch_space
 import numpy as np
+import tensorflow as tf
 from stable_baselines3 import DQN, PPO, A2C, SAC, TD3, DDPG
 # load json and create model
 # load weights into new model
@@ -129,7 +130,11 @@ class PolicySB:
             x.append(cur_state)
             y.append(best_action)
 
-        return np.array(x), np.array(y)
+        # normalize and conver the data
+        x_train = tf.keras.utils.normalize(np.array(x), axis=1)
+        y_train = np.array(y)
+
+        return x_train, y_train
     
     def _get_model_class(self, algo_name: str):
         if algo_name == 'ppo':
