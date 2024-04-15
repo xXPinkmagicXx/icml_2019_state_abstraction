@@ -24,6 +24,7 @@ import policies.CartPolePolicy as cpd
 
 import Lunar_dqn.lunar_demonstrator as ld
 from ..abstraction.abstraction_network import abstraction_network 
+from ..abstraction.abstraction_network_new import abstraction_network_new 
 
 colors = dict(mcolors.BASE_COLORS, **mcolors.CSS4_COLORS)
 # Sort colors by hue, saturation, value and name.
@@ -412,5 +413,48 @@ def make_nn_sa_2(sess, params: dict, samples_batch, verbose=True):
         ## Print loss
         if verbose and iteration_number % 10 == 0:
             print("iteration number {} , obj {}".format(iteration_number,-loss))
+    
+    return abstraction_net
+def make_nn_sa_3(params: dict, x_train, y_train, verbose=True):
+    '''
+    Args:
+        :param sess (tf.session)
+        :param params (dict)
+        :param sample_batch (list of (state, action, mdp_id) tuples)
+            Usually creted with saple_unif_random from the Policy or PolicySB class 
+        :param verbose (bool)
+
+    Summary:
+        Traing and saves a neural network state abstraction for the given
+        @environment and @demo_policy.
+    '''
+
+    num_mdps = params["num_mdps"]
+    size_a = params["size_a"]
+    
+    if verbose:
+        print("this is the size of a", size_a)
+    
+    if num_mdps == 1:
+        size_z = size_a
+        a_in_z = np.array([x for x in range(size_z)]).reshape(size_z,num_mdps)
+    else:
+        size_z = np.power(size_a,num_mdps)
+        a_in_z = enumeration_policy(size_z,size_a,num_mdps)
+
+    num_abstract_states = size_z
+    print("This is the number of abstract states:", num_abstract_states)
+    ## Create abstraction network
+    abstraction_net = abstraction_network_new(params, num_abstract_states)
+    
+    ## print
+    if verbose:
+        print("env_name:", params['env_name'])
+
+    ## Do training
+    print("Now training the abstraction network...")
+        
+    # training the abstraction network
+    abstraction_net.net.fit(x_train, y_train, epochs=params['num_iterations_for_abstraction_learning'])
     
     return abstraction_net

@@ -28,7 +28,7 @@ class NNStateAbstr(StateAbstraction):
         Returns:
             state (simple_rl.State)
         '''
-        pr_z_given_s = list(self.abstraction_net.predict([state]))
+        pr_z_given_s = list(self.abstraction_net.predict(state))
         abstr_state_index = np.argmax(pr_z_given_s)
 
         return State(abstr_state_index)

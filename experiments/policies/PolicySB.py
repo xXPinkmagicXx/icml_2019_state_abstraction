@@ -4,6 +4,7 @@ from simple_rl.tasks import GymMDP
 from keras.models import model_from_json
 import abc
 import os
+from gymnasium.vector.utils import batch_space
 import numpy as np
 from stable_baselines3 import DQN, PPO, A2C, SAC, TD3, DDPG
 # load json and create model
@@ -28,8 +29,10 @@ class PolicySB:
             path_to_trained_agents = '../rl-trained-agents/'
         elif cwd == "Bachelor-Project":
             path_to_trained_agents = './rl-trained-agents/'	
+        elif cwd == "experiments":
+            path_to_trained_agents = '../../rl-trained-agents/'
         ## . if called as submodule or .. if called from experiments/
-        
+        print("this is the path to trained agents:", path_to_trained_agents)
         path_to_agent = path_to_trained_agents + algo + '_' + self.env_name
 
         self.model = self._load_agent(path_to_agent)
@@ -66,6 +69,22 @@ class PolicySB:
         # print("this is the temp:", temp, "with the best action", best_action)
         return temp[0]
 
+
+    def export_policy_batch(self, state_batch):
+        """
+        Args:
+            state_batch (list): List of states
+        Returns:
+            (list): List of actions
+        """
+        print("this is the shape of the state_batch", np.shape(state_batch))
+        print("this is state_batch", state_batch)
+        temp, _ = self.model.predict(state_batch)
+        
+        print("this is the shape of the temp", np.shape(temp))
+
+        return temp
+    
     def sample_unif_random(self, num_samples = 5000):
         '''
 		Args:
@@ -92,6 +111,25 @@ class PolicySB:
             samples.append((cur_state, best_action, 0))
 
         return samples
+    
+    def sample_training_data(self, num_samples = 10000):
+        """
+        Args:
+            num_samples (int): Number of samples to collect
+        Returns:
+            x_train, y_train: (np.array, np.array): Tuple of states and actions
+        """
+        x = []
+        y = []
+        for _ in range(num_samples):
+            cur_state = self.gym_env.env.observation_space.sample()
+            self.gym_env.env.state = cur_state
+            self.model.env.state = cur_state
+            best_action = self.demo_policy(cur_state)
+            x.append(cur_state)
+            y.append(best_action)
+
+        return np.array(x), np.array(y)
     
     def _get_model_class(self, algo_name: str):
         if algo_name == 'ppo':

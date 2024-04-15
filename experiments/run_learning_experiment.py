@@ -28,7 +28,8 @@ from huggingface_sb3 import load_from_hub
 
 # abstraction
 from .abstraction.NNStateAbstrClass import NNStateAbstr
-from .utils.experiment_utils import make_nn_sa, make_nn_sa_2
+from .utils.experiment_utils import make_nn_sa, make_nn_sa_2, make_nn_sa_3
+from .abstraction.abstraction_network_new import abstraction_network_new
 
 import tensorflow as tf
 # To make code compatible with old code implemented in tensorflow 1.x
@@ -54,12 +55,12 @@ def get_policy_sb3(gym_env: GymMDP):
     """
     algo = "dqn"
     path_to_learned_policy = './rl-trained-agents/' + algo + "_" + gym_env.env_name
-    
+
     if gym_env.env_name == "MountainCar-v0":
         return mpd_sb.MountainCarPolicySB(gym_env)
     if gym_env.env_name == "LunarLander-v2":
-        return llp_sb.LunarLanderPolicySB(gym_env)
-    
+        return llp_sb.LunarLanderPolicySB(gym_env, algo)
+
     return cpp_sb.CartPolePolicySB(gym_env, algo)
 
 
@@ -69,7 +70,7 @@ def get_policy(gym_env: GymMDP):
         :param gym_env (GymMDP) : Gym MDP object
         :param sb3 (bool): If True, use stable baselines 3
     Returns:
-        Policy 
+        Policy
 
     Implemeted policies for the environments are
     1. CartPole-v0
@@ -107,7 +108,7 @@ def main(env_name: str, algo: str, abstraction=True, verbose=False, seed=42):
         :param seed = 42 (int) :Seed for reproducibility
     Returns:
         None
-    This function runs the learning experiment for the given environment and does state 
+    This function runs the learning experiment for the given environment and does state
     abstraction if true.
     """
     ## get parameters
@@ -133,19 +134,26 @@ def main(env_name: str, algo: str, abstraction=True, verbose=False, seed=42):
 
     policy.params["num_mdps"] = 1
     policy.params["size_a"] = len(actions)
-    policy.params["num_iterations_for_abstraction_learning"] = 200
+    policy.params["num_iterations_for_abstraction_learning"] = 2
     policy.params["steps"] = 200
-    
+
     ## Make Abstraction
     if abstraction:
-        sess = tf.compat.v1.Session()
-        
-        sample_batch = policy.sample_unif_random()
 
-        abstraction_net = make_nn_sa_2(sess, policy.params, sample_batch)
+
+        import numpy as np
+        from keras.utils import to_categorical
+
+        x_train, y_train = policy.sample_training_data()
+
+
+        print("this si the shape of x_train", x_train[:2])
+        print("this is the shape of y_train", y_train.shape)
+        
+        abstraction_net = make_nn_sa_3(policy.params, x_train, y_train)
         nn_sa = NNStateAbstr(abstraction_net)
-        
-        
+
+
 
     # If the action space is continuous
     # if isinstance(gym_env.env.action_space, gym.spaces.Box):
@@ -161,7 +169,7 @@ def main(env_name: str, algo: str, abstraction=True, verbose=False, seed=42):
     linear_agent = QLearningAgent(actions=actions)
     # ql_agent = QLearningAgent(actions)
     agent_params = {"alpha":policy.params['rl_learning_rate'],"epsilon":0.1,"actions":actions}
-    
+
     sa_agent = AbstractionWrapper(QLearningAgent,
                                   agent_params=agent_params,
                                   state_abstr=nn_sa,

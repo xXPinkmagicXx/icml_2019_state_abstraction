@@ -12,8 +12,8 @@ class LunarLanderPolicySB(PolicySB):
 	This class loads the pre-trained model for LunarLander-v2 environment.
 	"""
 
-	def __init__(self, gym_env: GymMDP, path_to_learned_policy):
-		super().__init__(gym_env, "dqn")
+	def __init__(self, gym_env: GymMDP, algo: str = "dqn"):
+		super().__init__(gym_env, algo)
 		
 	def get_params(self):
 		params={}
@@ -32,37 +32,3 @@ class LunarLanderPolicySB(PolicySB):
 
 		return params
 	
-	def update_params(self, params):
-		self.params = params
-
-	def expert_policy(self, state):
-		
-		s_size=len(state)
-		s_array=np.array(state).reshape(1,s_size)
-		temp = self.model.predict(s_array)
-		
-		return np.argmax(temp[0])
-		
-
-	def sample_unif_random(self, num_samples = 5000):
-		'''
-		Args:
-			mdp (simple_rl.MDP)
-			num_samples (int)
-			epsilon (float)
-
-		Returns:
-			(list): A collection of (s, a, mdp_id) tuples.
-		'''
-
-		samples = []
-
-		for _ in range(num_samples):
-			cur_state = self.gym_env.env.observation_space.sample()
-			self.gym_env.env.state = cur_state
-
-			# Get demo action.
-			best_action = self.demo_policy(cur_state)
-			samples.append((cur_state, best_action, 0))
-
-		return samples
