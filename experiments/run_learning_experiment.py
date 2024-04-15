@@ -141,6 +141,7 @@ def main(env_name: str, algo: str, abstraction=True, verbose=False, seed=42):
         sess = tf.compat.v1.Session()
         
         sample_batch = policy.sample_unif_random()
+
         abstraction_net = make_nn_sa_2(sess, policy.params, sample_batch)
         nn_sa = NNStateAbstr(abstraction_net)
         
@@ -171,7 +172,7 @@ def main(env_name: str, algo: str, abstraction=True, verbose=False, seed=42):
     #                               name_ext="_phi"+ "_" + str(seed))
 
     ## Agents in experiment
-    agent_list = [demo_agent,sa_agent]
+    agent_list = [sa_agent]
 
     # Timestamp for saving the experiment
     dir_for_plot = str(datetime.now().time()).replace(":", "_").replace(".", "_")

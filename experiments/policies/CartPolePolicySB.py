@@ -19,7 +19,7 @@ class CartPolePolicySB(PolicySB):
 		
 		params={}
 		params['env_name']="CartPole-v0"
-		params['multitask']=True
+		params['multitask']=False
 		params['obs_size']=4
 		params['num_iterations_for_abstraction_learning']=500
 		params['learning_rate_for_abstraction_learning']=0.001

@@ -361,23 +361,24 @@ def make_nn_sa(mdp_demo_policy_dict, sess, params, verbose=True, sample_type="ra
 
         
         
-def make_nn_sa_2(sess, params, samples_batch=None, verbose=True):
+def make_nn_sa_2(sess, params: dict, samples_batch, verbose=True):
     '''
     Args:
-        mdp_demo_policy_dict (dict):
-            Key: (simple_rl.MDP)
-            Val: (lambda : simple_rl.State --> str)
-        sess (tf.session)
-        params (dict)
-        verbose (bool)
-        sample_type (str): one of {"rand","demo"}
+        :param sess (tf.session)
+        :param params (dict)
+        :param sample_batch (list of (state, action, mdp_id) tuples)
+            Usually creted with saple_unif_random from the Policy or PolicySB class 
+        :param verbose (bool)
 
     Summary:
         Traing and saves a neural network state abstraction for the given
         @environment and @demo_policy.
     '''
 
+    print("Now making abstraction network...")
+    assert type(samples_batch) == list, "samples_batch must be a list of (state, action, mdp_id) tuples."
     # MDP Specific parameters.
+
     num_mdps = params["num_mdps"]
     size_a = params["size_a"]
     
@@ -392,11 +393,9 @@ def make_nn_sa_2(sess, params, samples_batch=None, verbose=True):
         a_in_z = enumeration_policy(size_z,size_a,num_mdps)
 
     num_abstract_states = size_z
-    
-    print("this is the number of abstract states", num_abstract_states)
-
+    print("This is the number of abstract states:", num_abstract_states)
     ## Create abstraction network
-    abstraction_net = abstraction_network(sess, params,num_abstract_states)
+    abstraction_net = abstraction_network(sess, params, num_abstract_states)
     sess.run(tf.compat.v1.global_variables_initializer())
     
     ## print
@@ -404,8 +403,11 @@ def make_nn_sa_2(sess, params, samples_batch=None, verbose=True):
         print("env_name:", params['env_name'])
 
     ## Do training
+    print("Now training the abstraction network...")
     for iteration_number in range(params['num_iterations_for_abstraction_learning']):
-        loss=abstraction_net.train(samples_batch, a_in_z)
+        
+        print("With samples_batch like this:", random.choice(samples_batch))
+        loss = abstraction_net.train(samples_batch, a_in_z)
         
         ## Print loss
         if verbose and iteration_number % 10 == 0:

@@ -79,14 +79,16 @@ class PolicySB:
 
         samples = []
 
-        for _ in range(num_samples):
+        for i in range(num_samples):
             cur_state = self.gym_env.env.observation_space.sample()
             self.gym_env.env.state = cur_state
             self.model.env.state = cur_state
             # Get demo action.
             best_action = self.demo_policy(cur_state)
-            print("this is the best action:", best_action)
             # print("this is the best action:", best_action)
+            if i % 100 == 0:
+                print("this is the best action:", best_action)
+                print("Appending this to the sample", (cur_state, best_action, 0))
             samples.append((cur_state, best_action, 0))
 
         return samples
