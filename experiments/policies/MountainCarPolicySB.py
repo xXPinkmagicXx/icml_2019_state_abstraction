@@ -5,16 +5,15 @@ from simple_rl.tasks import GymMDP
 import policies.Policy as Policy
 import os
 from stable_baselines3 import DQN
+from policies.PolicySB import PolicySB
 
 
-
-class MountainCarPolicySB():
+class MountainCarPolicySB(PolicySB):
     
-    def __init__(self, gym_env: GymMDP, path_to_learned_policy):    
-        self.gym_env = gym_env
-        self.model = DQN.load(path_to_learned_policy ,env=gym_env.env)
-        self.params = self.get_params()
-        self.demo_policy = self.expert_policy
+    def __init__(self, gym_env: GymMDP, algo: str = "dqn"):    
+        
+        super().__init__(gym_env, algo)
+        
         
     def get_params(self):
 		
@@ -33,34 +32,3 @@ class MountainCarPolicySB():
         params['rl_learning_rate']=0.001
     
         return params
-
-    def expert_policy(self, state):
-        
-        s_size=len(state)
-        s_array=np.array(state).reshape(1,s_size)
-        temp = self.model.predict(s_array)
-		
-        return np.argmax(temp[0])
-
-    def sample_unif_random(self, num_samples = 5000):
-        '''
-        Args:
-            mdp (simple_rl.MDP)
-            num_samples (int)
-            epsilon (float)
-
-        Returns:
-            (list): A collection of (s, a, mdp_id) tuples.
-        '''
-
-        samples = []
-
-        for _ in range(num_samples):
-            cur_state = self.gym_env.env.observation_space.sample()
-            self.gym_env.env.state = cur_state
-
-            # Get demo action.
-            best_action = self.demo_policy(cur_state)
-            samples.append((cur_state, best_action, 0))
-
-        return samples

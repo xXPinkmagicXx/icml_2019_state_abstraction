@@ -15,10 +15,10 @@ class CartPolePolicySB(PolicySB):
 		# self.demo_policy = self.expert_policy
 		super().__init__(gym_env, algo)
 	
-	def get_params(self):
+	def get_params(self, env_name):
 		
 		params={}
-		params['env_name']="CartPole-v0"
+		params['env_name']=env_name
 		params['multitask']=False
 		params['obs_size']=4
 		params['num_iterations_for_abstraction_learning']=500
@@ -32,37 +32,3 @@ class CartPolePolicySB(PolicySB):
 		params['rl_learning_rate']=0.001
     
 		return params
-	
-	# def update_params(self, params):
-	# 	self.params = params
-
-	# def expert_policy(self, state):
-		
-	# 	s_size=len(state)
-	# 	s_array=np.array(state).reshape(1,s_size)
-	# 	temp = self.model.predict(s_array)
-		
-	# 	return np.argmax(temp[0])	
-
-	# def sample_unif_random(self, num_samples = 5000):
-	# 	'''
-	# 	Args:
-	# 		mdp (simple_rl.MDP)
-	# 		num_samples (int)
-	# 		epsilon (float)
-
-	# 	Returns:
-	# 		(list): A collection of (s, a, mdp_id) tuples.
-	# 	'''
-
-	# 	samples = []
-
-	# 	for _ in range(num_samples):
-	# 		cur_state = self.gym_env.env.observation_space.sample()
-	# 		self.gym_env.env.state = cur_state
-	# 		print("cur_state: ", cur_state)
-	# 		# Get demo action.
-	# 		best_action = self.demo_policy(cur_state)
-	# 		samples.append((cur_state, best_action, 0))
-
-	# 	return samples

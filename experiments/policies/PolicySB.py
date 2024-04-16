@@ -16,11 +16,17 @@ class PolicySB:
 	
     def __init__(self, gym_env: GymMDP, algo: str):
 		
+        # environment 
         self.gym_env = gym_env
-        self.params = self.get_params()
-        self._model_class = self._get_model_class(algo)
         self.env_name = gym_env.env_name
-		
+
+        # Get the model class based on the algorithm
+        self._model_class = self._get_model_class(algo)
+
+        # Get the parameters for the policy
+        self.params = self.get_params()
+        self.params['env_name'] = self.env_name
+
         ## Get current working directory
         cwd = os.getcwd().split('\\')[-1]
 		
@@ -131,7 +137,7 @@ class PolicySB:
             y.append(best_action)
 
         # normalize and conver the data
-        x_train = tf.keras.utils.normalize(np.array(x), axis=1)
+        x_train = tf.keras.utils.normalize(np.array(x), axis=0)
         y_train = np.array(y)
 
         return x_train, y_train
