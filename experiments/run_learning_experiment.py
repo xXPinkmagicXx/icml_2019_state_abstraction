@@ -2,7 +2,7 @@
 import sys
 import random
 import tensorflow as tf
-import gym
+import gymnasium as gym
 from datetime import datetime
 # simple_rl imports.
 from simple_rl.tasks import GymMDP
@@ -15,15 +15,17 @@ from simple_rl.mdp import MDPDistribution
 # Local imports.
 # Import policies
 import policies.Policy as Policy
+import policies.PolicySB as PolicySB
 import policies.CartPolePolicy as cpp
 import policies.MountainCarPolicy as mpd
 import policies.AcrobotPolicy as abp
+import policies.AcrobotPolicySB as abp_sb
 import policies.LunarLanderPolicy as llp
 import policies.LunarLanderPolicySB as llp_sb
 import policies.PendulumPolicy as pp
+import policies.PendulumPolicySB as pp_sb
 import policies.MountainCarPolicySB as mpd_sb
 import policies.CartPolePolicySB as cpp_sb
-from huggingface_sb3 import load_from_hub
 
 
 # abstraction
@@ -33,13 +35,13 @@ from .abstraction.abstraction_network_new import abstraction_network_new
 
 import tensorflow as tf
 # To make code compatible with old code implemented in tensorflow 1.x
-tf.compat.v1.disable_v2_behavior()
-tf.compat.v1.disable_eager_execution()
+# tf.compat.v1.disable_v2_behavior()
+# tf.compat.v1.disable_eager_execution()
 
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-def get_policy_sb3(gym_env: GymMDP):
+def get_policy_sb3(gym_env: GymMDP, algo: str = "dqn"):
     """
     Args:
         :param gym_env (GymMDP)
@@ -53,14 +55,21 @@ def get_policy_sb3(gym_env: GymMDP):
     4. LunarLander-v2
     5. Pendulum-v1
     """
-    algo = "dqn"
-    path_to_learned_policy = './rl-trained-agents/' + algo + "_" + gym_env.env_name
-
     if gym_env.env_name == "MountainCar-v0":
         return mpd_sb.MountainCarPolicySB(gym_env)
+    
     if gym_env.env_name == "LunarLander-v2":
         return llp_sb.LunarLanderPolicySB(gym_env, algo)
+    
+    if gym_env.env_name == "CartPole-v0" or gym_env.env_name == "CartPole-v1":
+        return cpp_sb.CartPolePolicySB(gym_env, algo)
+    
+    if gym_env.env_name == "Acrobot-v1":
+        return abp_sb.AcrobotPolicySB(gym_env, algo)
 
+    if gym_env.env_name == "Pendulum-v1":
+        return pp_sb.PendulumPolicySB(gym_env, algo)
+    
     return cpp_sb.CartPolePolicySB(gym_env, algo)
 
 
@@ -128,7 +137,7 @@ def main(env_name: str, algo: str, abstraction=True, verbose=False, seed=42):
     if algo == 'mac':
         policy = get_policy(gym_env)
     else:
-        policy = get_policy_sb3(gym_env)
+        policy = get_policy_sb3(gym_env, algo)
 
     # policy_mac = get_policy(gym_env)
 
@@ -137,6 +146,9 @@ def main(env_name: str, algo: str, abstraction=True, verbose=False, seed=42):
     policy.params["num_iterations_for_abstraction_learning"] = 10
     policy.params["steps"] = 200
 
+    ## Run one episode of the environment
+    # run_one_episode_sb(env_name, policy)
+    
     ## Make Abstraction
     if abstraction:
 
@@ -144,17 +156,14 @@ def main(env_name: str, algo: str, abstraction=True, verbose=False, seed=42):
         import numpy as np
         from keras.utils import to_categorical
 
-
-
         x_train, y_train = policy.sample_training_data()
-
-        x_train = tf.keras.utils.normalize(x_train, axis=1)
+        x_val, y_val = policy.sample_training_data()
         
         max_value = np.max(x_train)
         min_value = np.min(x_train)
         print("this is the max and min value", max_value, min_value)
         print("this si the shape of x_train", x_train[:2])
-        print("this is the shape of y_train", y_train.shape)
+        print("this is the shape of y_train", y_train.shape, "with unique values", np.unique(y_train, return_counts=True))
         
         abstraction_net = make_nn_sa_3(policy.params, x_train, y_train)
         nn_sa = NNStateAbstr(abstraction_net)
@@ -212,6 +221,23 @@ def main(env_name: str, algo: str, abstraction=True, verbose=False, seed=42):
                       track_success=True,
                       success_reward=1,
                       dir_for_plot=dir_for_plot)
+
+
+def run_one_episode_sb(env_name, policy: PolicySB):
+    """
+    Args:
+        :param gym_env (GymMDP)
+        :param policy (Policy OR PolicySB)
+    """
+    eval_env = gym.make(env_name, render_mode='human')
+    obs, info = eval_env.reset()
+    for _ in range(200):
+        action = policy.expert_policy(obs)
+        obs, reward, terminated, truncated, info = eval_env.step(action)
+        if terminated or truncated:
+            obs, info = eval_env.reset()
+            break
+        eval_env.render()
 
 
 if __name__ == "__main__":
