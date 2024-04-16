@@ -19,14 +19,15 @@ class PolicySB:
         # environment 
         self.gym_env = gym_env
         self.env_name = gym_env.env_name
-
+        self.algo = algo
         # Get the model class based on the algorithm
         self._model_class = self._get_model_class(algo)
 
         # Get the parameters for the policy
         self.params = self.get_params()
         self.params['env_name'] = self.env_name
-
+        self.params['algo'] = algo
+        self.params['save_path'] = "trained-abstract-agents/" + self.params['algo'] + '_' + self.params['env_name'] 
         ## Get current working directory
         cwd = os.getcwd().split('\\')[-1]
 		

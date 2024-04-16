@@ -11,7 +11,7 @@ from simple_rl.agents import QLearningAgent, LinearQAgent, FixedPolicyAgent, RMa
 # from simple_rl.tasks import PuddleMDP
 from simple_rl.run_experiments import run_agents_on_mdp, run_agents_lifelong, evaluate_agent, run_single_agent_on_mdp
 from simple_rl.mdp import MDPDistribution
-
+from ..mac.ActionWrapper import discretizing_wrapper
 # Local imports.
 # Import policies
 import policies.Policy as Policy
@@ -121,7 +121,11 @@ def main(env_name: str, algo: str, abstraction=True, verbose=False, seed=42):
     abstraction if true.
     """
     ## get parameters
-    gym_env = GymMDP(env_name, render=True, render_every_n_episodes=2)
+    gym_env = GymMDP(env_name, render=False)
+
+    ## Make the environment discrete
+    # if isinstance(gym_env.env.action_space, gym.spaces.Box):
+    #     gym_env.env = discretizing_wrapper(gym_env.env, 20) 
 
     ## Set seed
     # gym_env.env.seed(seed)
@@ -131,6 +135,7 @@ def main(env_name: str, algo: str, abstraction=True, verbose=False, seed=42):
         print("this is the environment: ", gym_env.env_name)
     ## Get actions and features
     actions = list(gym_env.get_actions())
+
 
 
     ## Get policy
@@ -143,9 +148,9 @@ def main(env_name: str, algo: str, abstraction=True, verbose=False, seed=42):
 
     policy.params["num_mdps"] = 1
     policy.params["size_a"] = len(actions)
-    policy.params["num_iterations_for_abstraction_learning"] = 10
+    policy.params["num_iterations_for_abstraction_learning"] = 100
     policy.params["steps"] = 200
-
+    policy.params["episodes"] = 50
     ## Run one episode of the environment
     # run_one_episode_sb(env_name, policy)
     
@@ -166,15 +171,16 @@ def main(env_name: str, algo: str, abstraction=True, verbose=False, seed=42):
         print("this is the shape of y_train", y_train.shape, "with unique values", np.unique(y_train, return_counts=True))
         
         abstraction_net = make_nn_sa_3(policy.params, x_train, y_train)
+        
         nn_sa = NNStateAbstr(abstraction_net)
 
 
 
     # If the action space is continuous
-    # if isinstance(gym_env.env.action_space, gym.spaces.Box):
-    #     k = 20
-    #     discretized_actions = gym.spaces.Discrete(k)
-    #     action_abstraction = ActionAbstraction(discretized_actions)
+    if isinstance(gym_env.env.action_space, gym.spaces.Box):
+        k = 20
+        discretized_actions = gym.spaces.Discrete(k)
+        action_abstraction = ActionAbstraction(discretized_actions)
 
     # Make agents
     ## TODO: LinearQagent and number of features does not wor
@@ -200,27 +206,17 @@ def main(env_name: str, algo: str, abstraction=True, verbose=False, seed=42):
     # Timestamp for saving the experiment
     dir_for_plot = str(datetime.now().time()).replace(":", "_").replace(".", "_")
 
-    # test if the new sb3 works
-    # if GET_STABLE_BASELINES:
-    #     vec_env = policy.model.get_env()
-    #     obs = vec_env.reset()
-    #     for _ in range(1000):
-    #         # print("this is the observation", obs)
-    #         action, _states = policy.model.predict(obs, deterministic=True)
-    #         obs, rewards, done, info = vec_env.step(action)
-    #         vec_env.render("human")
-
-    # mode
+    
     # Run the experiment
-    run_agents_on_mdp(agent_list,
-                      gym_env,
-                      instances=1,
-                      episodes=policy.params['episodes'],
-                      steps=policy.params['steps'],
-                      verbose=True,
-                      track_success=True,
-                      success_reward=1,
-                      dir_for_plot=dir_for_plot)
+    # run_agents_on_mdp(agent_list,
+    #                   gym_env,
+    #                   instances=1,
+    #                   episodes=policy.params['episodes'],
+    #                   steps=policy.params['steps'],
+    #                   verbose=True,
+    #                   track_success=True,
+    #                   success_reward=1,
+    #                   dir_for_plot=dir_for_plot)
 
 
 def run_one_episode_sb(env_name, policy: PolicySB):

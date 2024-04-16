@@ -14,7 +14,7 @@ from collections import defaultdict
 import gymnasium as gym
 from simple_rl.mdp.MDPClass import MDP
 from simple_rl.tasks.gym.GymStateClass import GymState
-from gym import spaces
+from gymnasium import spaces
 
 class GymMDP(MDP):
     ''' Class for Gym MDPs '''
@@ -34,7 +34,7 @@ class GymMDP(MDP):
         self.env_name = env_name
         env = gym.make(env_name)
         if isinstance(env.action_space, gym.spaces.Box):
-            env = self.discretizing_wrapper(env, k)
+            env = self.discretizing_wrapper(env, k)   
         self.env = env
         self.render = render
         obs, info = self.env.reset()

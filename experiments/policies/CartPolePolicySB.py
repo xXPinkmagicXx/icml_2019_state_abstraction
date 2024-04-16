@@ -9,16 +9,13 @@ from stable_baselines3 import DQN
 class CartPolePolicySB(PolicySB):
 	
 	def __init__(self, gym_env: GymMDP, algo: str = "dqn"):
-		# self.gym_env = gym_env
-		# self.model = DQN.load(path_to_learned_policy ,env=gym_env.env)
-		# self.params = self.get_params()
-		# self.demo_policy = self.expert_policy
+		
 		super().__init__(gym_env, algo)
 	
-	def get_params(self, env_name):
+	def get_params(self):
 		
 		params={}
-		params['env_name']=env_name
+		params['env_name']="CartPole-v1"
 		params['multitask']=False
 		params['obs_size']=4
 		params['num_iterations_for_abstraction_learning']=500

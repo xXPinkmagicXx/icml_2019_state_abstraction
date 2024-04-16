@@ -1,6 +1,7 @@
 import gym
 import numpy as np
-from gym import spaces
+from gymnasium import spaces
+import gymnasium as gym
 # Three line comment
 # This code is copied from 
 # https://github.com/robintyh1/onpolicybaselines/blob/master/onpolicyalgos/discrete_actions_space/ppo_discrete/wrapper.py
@@ -20,21 +21,19 @@ def discretizing_wrapper(env, K):
     action_table = np.reshape([np.linspace(action_low[i], action_high[i], K) for i in range(naction)], [naction, K])
     assert action_table.shape == (naction, K)
 
-    def discretizing_reset():
-        obs = unwrapped_env.orig_reset_()
-        return obs
+    def discretizing_reset(seed=None):
+        obs, info = unwrapped_env.orig_reset_()
+        return obs, info
 
     def discretizing_step(action):
-        print("this is the action", action)
         # action is a sequence of discrete indices
         action_cont = action_table[np.arange(naction), action]
         obs, rew, terminated, truncated, info, = unwrapped_env.orig_step_(action_cont)
         
-        return (obs, rew, terminated, info)
+        return (obs, rew, terminated, truncated, info)
 
     # change observation space
     # In the case where the action space is a single value
-    print("naction: ", naction)
     if naction == 1:
         env.action_space = spaces.Discrete(K)
     else:

@@ -12,6 +12,7 @@ class AcrobotPolicySB(PolicySB):
 		super().__init__(gym_env, algo)
 	
 	def get_params(self):
+		
 		params={}
 		## steps in acrobot above 500 is truncated
 		steps = 500

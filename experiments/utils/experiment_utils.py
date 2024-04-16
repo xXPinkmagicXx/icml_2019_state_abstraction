@@ -457,4 +457,6 @@ def make_nn_sa_3(params: dict, x_train, y_train, verbose=True):
     # training the abstraction network
     abstraction_net.net.fit(x_train, y_train, batch_size=32, epochs=params['num_iterations_for_abstraction_learning'])
     
+    abstraction_net.save_model()
+    
     return abstraction_net

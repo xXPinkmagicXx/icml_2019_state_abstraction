@@ -11,6 +11,8 @@ class abstraction_network_new():
 	
 	def __init__(self, params, num_abstract_states):
 		
+		self.save_path = params['save_path']
+
 		self.obs_size = params['obs_size']
 		self.action_size = params['size_a'] 
 		self.num_nodes = params['abstraction_network_hidden_nodes']
@@ -18,12 +20,12 @@ class abstraction_network_new():
 		self.activation_output = 'softmax' if self.action_size > 2 else 'sigmoid'
 		self.output_nodes = num_abstract_states if num_abstract_states > 2 else 1
 		
-		self.optimizer = 'RMSprop'
-
+		self.optimizer = tf.keras.optimizers.Adam(learning_rate=0.01)
+		
 		if self.action_size > 2:
-			self.loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+			self.loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False)
 		else:
-			self.loss_fn = tf.keras.losses.BinaryCrossentropy(from_logits=True)
+			self.loss_fn = tf.keras.losses.BinaryCrossentropy(from_logits=False)
 		
 		self.net = tf.keras.models.Sequential()
 		# self.net.add(tf.keras.layers.Flatten(input_shape=(self.obs_size,)))
@@ -33,7 +35,7 @@ class abstraction_network_new():
 		self.net.add(tf.keras.layers.Dense(self.num_nodes, activation='relu'))
 		
 		# output layer
-		self.net.add(tf.keras.layers.Dense(self.output_nodes, activation=None))
+		self.net.add(tf.keras.layers.Dense(self.output_nodes, activation=self.activation_output))
 		# compile the model
 		self.net.compile(
 			loss=self.loss_fn,
@@ -48,4 +50,12 @@ class abstraction_network_new():
 		li = self.net.predict(x)
 		
 		return li
+	
+	def save_model(self):
+		
+		self.net.save(self.save_path)
+	
+	def load_model(self, path):
+		
+		self.net = tf.keras.models.load_model(path)
 
