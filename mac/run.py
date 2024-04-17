@@ -2,20 +2,22 @@ from .mac import mac
 import numpy
 import gym,sys,random
 import tensorflow as tf
-from keras import backend as K
+# from keras import backend as K
 
 # Import action wrapper
 from .ActionWrapper import discretizing_wrapper
 from .HyperParameters import AlgorithmParameters, MetaParameters, make_parameters
 
-# tf.compat.v1.disable_v2_behavior()
-# tf.compat.v1.disable_eager_execution()
+
 
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 def main(env_name, seed=42):
 	
+	# tf.compat.v1.disable_v2_behavior()
+	# tf.compat.v1.disable_eager_execution()
+
 	#get and set hyper-parameters
 	meta_params,alg_params={},{}
 	print("default environment is Lunar Lander ...")
@@ -208,8 +210,8 @@ def main(env_name, seed=42):
 
 	# set session
 	session_conf = tf.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1)
-	sess = tf.Session(graph=tf.get_default_graph(), config=session_conf)
-	K.set_session(sess)
+	sess = tf.compat.v1.Session(graph=tf.get_default_graph(), config=session_conf)
+	# tf.compat.v1.keras.set_session(sess)
 
 
 	print("this is the action space", env.action_space)

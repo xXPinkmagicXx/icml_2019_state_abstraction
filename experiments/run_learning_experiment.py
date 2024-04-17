@@ -11,6 +11,7 @@ from simple_rl.agents import QLearningAgent, LinearQAgent, FixedPolicyAgent, RMa
 # from simple_rl.tasks import PuddleMDP
 from simple_rl.run_experiments import run_agents_on_mdp, run_agents_lifelong, evaluate_agent, run_single_agent_on_mdp
 from simple_rl.mdp import MDPDistribution
+from simple_rl.mdp.StateClass import State
 from ..mac.ActionWrapper import discretizing_wrapper
 # Local imports.
 # Import policies
@@ -107,7 +108,7 @@ def get_policy(gym_env: GymMDP):
 
     return NotImplementedError("Policy not implemented for this environment")
 
-def Get_GymMDP(env_name, k = 20):
+def Get_GymMDP(env_name, k = 20, render=False):
     """
     Args:
         :param env_name (str): Name of the environment
@@ -120,7 +121,8 @@ def Get_GymMDP(env_name, k = 20):
     """
     k = 20
     ## get parameters
-    gym_env = gym.make(env_name)
+
+    gym_env = gym.make(env_name, render_mode="human") if render else gym.make(env_name)
     ## Make the environment discrete
     if isinstance(gym_env.env.action_space, gym.spaces.Box):
         gym_env = discretizing_wrapper(gym_env, k)   
@@ -128,6 +130,39 @@ def Get_GymMDP(env_name, k = 20):
     gym_env = GymMDP(gym_env, render=False)
     
     return gym_env
+def run_episodes_sb(env_name, policy: PolicySB, episodes=3, steps=500):
+    """
+    Args:
+        :param gym_env (GymMDP)
+        :param policy (Policy OR PolicySB)
+    """
+    eval_env = Get_GymMDP(env_name=env_name, k = 20, render=True).env
+    obs, info = eval_env.reset()
+    for e in range(episodes):
+        for _ in range(500):
+            action = policy.expert_policy(obs)
+            obs, reward, terminated, truncated, info = eval_env.step(action)
+            if terminated or truncated:
+                obs, info = eval_env.reset()
+                break
+            eval_env.render()
+def run_episodes_from_nn(env_name, abstraction_net: NNStateAbstr, episodes=3, steps=500):
+    """
+    Args:
+        :param gym_env (GymMDP)
+        :param policy (Policy OR PolicySB)
+    """
+    eval_env = Get_GymMDP(env_name, k = 20, render=True).env
+    obs, info = eval_env.reset()
+    for e in range(episodes):
+        for s in range(steps):
+            action = abstraction_net.phi(State(obs))
+            obs, reward, terminated, truncated, info = eval_env.step(action.data)
+            if terminated or truncated:
+                print("terminated", terminated, "truncated", truncated, "after steps", s)
+                obs, info = eval_env.reset()
+                break
+            eval_env.render()
 
 def create_abstraction_network(policy: PolicySB):
 
@@ -205,7 +240,6 @@ def main(env_name: str, algo: str, abstraction=True, load_model = False, verbose
     policy.params["episodes"] = 50
 
     ## Run one episode of the environment
-    # run_one_episode_sb(env_name, policy)
 
     nn_sa = None
     ## Make Abstraction
@@ -218,7 +252,9 @@ def main(env_name: str, algo: str, abstraction=True, load_model = False, verbose
         nn_sa = load_agent(env_name, algo)
     else:
         print("Skipping loading of pre-trained model...s")
-
+    
+    run_episodes_sb(env_name, policy)
+    run_episodes_from_nn(env_name, abstraction_net=nn_sa)
     # Make agents
     ## TODO: LinearQagent and number of features does not wor
     # num_features = gym_env.get_num_state_feats()
@@ -244,32 +280,18 @@ def main(env_name: str, algo: str, abstraction=True, load_model = False, verbose
     dir_for_plot = str(datetime.now().time()).replace(":", "_").replace(".", "_")
     
     # Run the experiment
-    run_agents_on_mdp(agent_list,
-                      gym_env,
-                      instances=1,
-                      episodes=policy.params['episodes'],
-                      steps=policy.params['steps'],
-                      verbose=True,
-                      track_success=True,
-                      success_reward=1,
-                      dir_for_plot=dir_for_plot)
+    # run_agents_on_mdp(agent_list,
+    #                   gym_env,
+    #                   instances=1,
+    #                   episodes=policy.params['episodes'],
+    #                   steps=policy.params['steps'],
+    #                   verbose=True,
+    #                   track_success=True,
+    #                   success_reward=1,
+    #                   dir_for_plot=dir_for_plot)
 
 
-def run_one_episode_sb(env_name, policy: PolicySB):
-    """
-    Args:
-        :param gym_env (GymMDP)
-        :param policy (Policy OR PolicySB)
-    """
-    eval_env = gym.make(env_name, render_mode='human')
-    obs, info = eval_env.reset()
-    for _ in range(200):
-        action = policy.expert_policy(obs)
-        obs, reward, terminated, truncated, info = eval_env.step(action)
-        if terminated or truncated:
-            obs, info = eval_env.reset()
-            break
-        eval_env.render()
+
 
 
 if __name__ == "__main__":
