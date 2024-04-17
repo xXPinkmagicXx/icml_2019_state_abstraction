@@ -27,6 +27,12 @@ The `baselines.py` takes the following parameters
 - -sh --show: bool (default=False), if true renders one episode of the algorithm in the enviroment, and does not train
 
 ## To run the environment
+What is expected to run the environment
+- python=3.10
+- PyTorch
+- TensorFlow=2.9.1
+- Stable-Baselines3
+- rl_zoo3
 
 ```
 1. Then install the `requirements.txt`
