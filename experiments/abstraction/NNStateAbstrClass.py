@@ -18,9 +18,9 @@ class NNStateAbstr(StateAbstraction):
         Args:
             abstraction_net (str): The name of the model.
         '''
+        
         self.abstraction_net = abstraction_net
-
-    def phi(self, state):
+    def phi(self, state: State):
         '''
         Args:
             state (simple_rl.State)
@@ -28,9 +28,12 @@ class NNStateAbstr(StateAbstraction):
         Returns:
             state (simple_rl.State)
         '''
-        pr_z_given_s = list(self.abstraction_net.predict(state))
+        pred = self.abstraction_net.predict(state.features().reshape(1, -1))
+        pr_z_given_s = list(pred)
+        # print("this is the pred", pred, "and the list", pr_z_given_s)
         abstr_state_index = np.argmax(pr_z_given_s)
-
+        # abstr_state_index = float(pred > 0.5)
+        # print("best abstract index", abstr_state_index)
         return State(abstr_state_index)
 
     def phi_pmf(self, state):

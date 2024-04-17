@@ -27,6 +27,7 @@ import policies.PendulumPolicySB as pp_sb
 import policies.MountainCarPolicySB as mpd_sb
 import policies.CartPolePolicySB as cpp_sb
 
+import numpy as np
 
 # abstraction
 from .abstraction.NNStateAbstrClass import NNStateAbstr
@@ -106,13 +107,76 @@ def get_policy(gym_env: GymMDP):
 
     return NotImplementedError("Policy not implemented for this environment")
 
+def Get_GymMDP(env_name, k = 20):
+    """
+    Args:
+        :param env_name (str): Name of the environment
+        :param k = 20 (int): Number of bins to discretize the action space into. Only used if the action space is continuous.
+    Returns:
+        GymMDP object for the given environment
+    Summary:
+    This function creates a GymMDP object for the given environment.
+    If the action space is continous, it discretizes the action space into k bin pr action.
+    """
+    k = 20
+    ## get parameters
+    gym_env = gym.make(env_name)
+    ## Make the environment discrete
+    if isinstance(gym_env.env.action_space, gym.spaces.Box):
+        gym_env = discretizing_wrapper(gym_env, k)   
+    
+    gym_env = GymMDP(gym_env, render=False)
+    
+    return gym_env
 
-def main(env_name: str, algo: str, abstraction=True, verbose=False, seed=42):
+def create_abstraction_network(policy: PolicySB):
+
+    """
+    Args:
+        :param policy (PolicySB): Policy object
+        :param x_train (np.array): Training data
+        :param y_train (np.array): Labels
+    Returns:
+        NNStateAbstr object
+    """
+
+    x_train, y_train = policy.sample_training_data()
+    
+    max_value = np.max(x_train)
+    min_value = np.min(x_train)
+    print("this is the max and min value", max_value, min_value)
+    print("this si the shape of x_train", x_train[:2])
+    print("this is the shape of y_train", y_train.shape, "with unique values", np.unique(y_train, return_counts=True))
+    
+    abstraction_net = make_nn_sa_3(policy.params, x_train, y_train)
+    
+    StateAbsractionNetwork = NNStateAbstr(abstraction_net)
+    
+    return StateAbsractionNetwork
+
+def load_agent(env_name, algo):
+    """
+    Args:
+        :param env_name (str): Name of the environment
+        :param algo (str): Name of the algorithm
+    Returns:
+        NNStateAbstr object
+    """
+    print("loading pre-trained agent with algo", algo, "and environment", env_name)
+    save_name = "trained-abstract-agents/"+ algo + "_" + env_name
+    load_net =  tf.keras.models.load_model(save_name)
+    load_net.summary()
+    nn_sa = NNStateAbstr(load_net)
+    print("loading complete...")
+    return nn_sa
+
+def main(env_name: str, algo: str, abstraction=True, load_model = False, verbose=False, seed=42):
     """
     Args:
         :param env_name (str): Name of the environment
         :param algo (str): Name of the algorithm
         :param abstraction = True (bool): If True, use state abstraction
+        :param load_model = False (bool): If True, load a pre-trained abstraction agent
         :param verbose = False (bool) : If True, print the environment name
         :param seed = 42 (int) :Seed for reproducibility
     Returns:
@@ -120,23 +184,14 @@ def main(env_name: str, algo: str, abstraction=True, verbose=False, seed=42):
     This function runs the learning experiment for the given environment and does state
     abstraction if true.
     """
-    ## get parameters
-    gym_env = GymMDP(env_name, render=False)
-
-    ## Make the environment discrete
-    # if isinstance(gym_env.env.action_space, gym.spaces.Box):
-    #     gym_env.env = discretizing_wrapper(gym_env.env, 20) 
-
+   
+    gym_env = Get_GymMDP(env_name, k = 20)
     ## Set seed
     # gym_env.env.seed(seed)
     random.seed(seed)
 
-    if verbose:
-        print("this is the environment: ", gym_env.env_name)
     ## Get actions and features
     actions = list(gym_env.get_actions())
-
-
 
     ## Get policy
     if algo == 'mac':
@@ -144,43 +199,25 @@ def main(env_name: str, algo: str, abstraction=True, verbose=False, seed=42):
     else:
         policy = get_policy_sb3(gym_env, algo)
 
-    # policy_mac = get_policy(gym_env)
-
     policy.params["num_mdps"] = 1
-    policy.params["size_a"] = len(actions)
     policy.params["num_iterations_for_abstraction_learning"] = 100
     policy.params["steps"] = 200
     policy.params["episodes"] = 50
+
     ## Run one episode of the environment
     # run_one_episode_sb(env_name, policy)
-    
+
+    nn_sa = None
     ## Make Abstraction
     if abstraction:
-
-
-        import numpy as np
-        from keras.utils import to_categorical
-
-        x_train, y_train = policy.sample_training_data()
-        x_val, y_val = policy.sample_training_data()
-        
-        max_value = np.max(x_train)
-        min_value = np.min(x_train)
-        print("this is the max and min value", max_value, min_value)
-        print("this si the shape of x_train", x_train[:2])
-        print("this is the shape of y_train", y_train.shape, "with unique values", np.unique(y_train, return_counts=True))
-        
-        abstraction_net = make_nn_sa_3(policy.params, x_train, y_train)
-        
-        nn_sa = NNStateAbstr(abstraction_net)
-
-
-
-    # If the action space is continuous
-    if isinstance(gym_env.env.action_space, gym.spaces.Box):
-        k = 20
-        discretized_actions = gym.spaces.Discrete(k)
-        action_abstraction = ActionAbstraction(discretized_actions)
+        nn_sa = create_abstraction_network(policy)
+    else:
+        print("skipping abstraction")
+    
+    if load_model:
+        nn_sa = load_agent(env_name, algo)
+    else:
+        print("Skipping loading of pre-trained model...s")
 
     # Make agents
     ## TODO: LinearQagent and number of features does not wor
@@ -190,11 +227,11 @@ def main(env_name: str, algo: str, abstraction=True, verbose=False, seed=42):
     linear_agent = QLearningAgent(actions=actions)
     # ql_agent = QLearningAgent(actions)
     agent_params = {"alpha":policy.params['rl_learning_rate'],"epsilon":0.1,"actions":actions}
-
     sa_agent = AbstractionWrapper(QLearningAgent,
                                   agent_params=agent_params,
                                   state_abstr=nn_sa,
                                   name_ext="_phi"+ "_" + str(seed))
+    
     # sa_agent_mac = AbstractionWrapper(QLearningAgent,
     #                               agent_params=agent_params,
     #                               state_abstr=nn_sa_mac,
@@ -205,18 +242,17 @@ def main(env_name: str, algo: str, abstraction=True, verbose=False, seed=42):
 
     # Timestamp for saving the experiment
     dir_for_plot = str(datetime.now().time()).replace(":", "_").replace(".", "_")
-
     
     # Run the experiment
-    # run_agents_on_mdp(agent_list,
-    #                   gym_env,
-    #                   instances=1,
-    #                   episodes=policy.params['episodes'],
-    #                   steps=policy.params['steps'],
-    #                   verbose=True,
-    #                   track_success=True,
-    #                   success_reward=1,
-    #                   dir_for_plot=dir_for_plot)
+    run_agents_on_mdp(agent_list,
+                      gym_env,
+                      instances=1,
+                      episodes=policy.params['episodes'],
+                      steps=policy.params['steps'],
+                      verbose=True,
+                      track_success=True,
+                      success_reward=1,
+                      dir_for_plot=dir_for_plot)
 
 
 def run_one_episode_sb(env_name, policy: PolicySB):
