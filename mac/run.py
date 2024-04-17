@@ -1,7 +1,8 @@
 from .mac import mac 
 import numpy
-import gym,sys,random
+import sys,random
 import tensorflow as tf
+import gymnasium as gym
 # from keras import backend as K
 
 # Import action wrapper

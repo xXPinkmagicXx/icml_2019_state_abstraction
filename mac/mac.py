@@ -1,7 +1,7 @@
 import numpy
 from .critic_network import critic
 from .actor_network import actor
-import gym
+import gymnasium as gym
 import sys
 import os
 from collections import deque

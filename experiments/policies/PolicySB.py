@@ -1,5 +1,3 @@
-import keras
-import sys
 from simple_rl.tasks import GymMDP
 from keras.models import model_from_json
 import abc
@@ -7,10 +5,7 @@ import os
 from gymnasium.vector.utils import batch_space
 import numpy as np
 import tensorflow as tf
-import tensorflow_transform as tft
-from stable_baselines3 import DQN, PPO, A2C, SAC, TD3, DDPG
-# load json and create model
-# load weights into new model
+from stable_baselines3 import DQN, PPO, SAC, TD3, DDPG
 
 class PolicySB:
     __metaclass__ = abc.ABCMeta
@@ -29,7 +24,7 @@ class PolicySB:
         self.params['env_name'] = self.env_name
         self.params['algo'] = algo
         self.params['num_actions'] = self.get_num_actions()
-        self.params['size_a'] = self.params['num_actions'        ]
+        self.params['size_a'] = self.params['num_actions']
         self.params['save_path'] = "trained-abstract-agents/" + self.params['algo'] + '_' + self.params['env_name'] 
         ## Get current working directory
         cwd = os.getcwd().split('\\')[-1]
@@ -43,6 +38,8 @@ class PolicySB:
         elif cwd == "experiments":
             path_to_trained_agents = '../../rl-trained-agents/'
         ## . if called as submodule or .. if called from experiments/
+        path_to_trained_agents += str(100_000)
+        
         print("this is the path to trained agents:", path_to_trained_agents)
         path_to_agent = path_to_trained_agents + algo + '_' + self.env_name
 
@@ -142,7 +139,6 @@ class PolicySB:
 
         # normalize and conver the data
         x_train = tf.keras.utils.normalize(np.array(x), axis=0)
-        x_train = tft.scale_to_0_1(x_train)
         y_train = np.array(y)
 
         return x_train, y_train
@@ -150,8 +146,6 @@ class PolicySB:
     def _get_model_class(self, algo_name: str):
         if algo_name == 'ppo':
             return PPO
-        elif algo_name == 'a2c':
-            return A2C
         elif algo_name == 'dqn':
             return DQN
         elif algo_name == 'sac':
