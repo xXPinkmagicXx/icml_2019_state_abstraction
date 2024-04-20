@@ -4,7 +4,6 @@ from keras.models import model_from_json
 import numpy as np
 from simple_rl.tasks import GymMDP
 from policies.PolicySB import PolicySB
-from stable_baselines3 import DQN
 import os
 class LunarLanderPolicySB(PolicySB):
 	
@@ -12,9 +11,9 @@ class LunarLanderPolicySB(PolicySB):
 	This class loads the pre-trained model for LunarLander-v2 environment.
 	"""
 
-	def __init__(self, gym_env: GymMDP, algo: str = "dqn"):
+	def __init__(self, gym_env: GymMDP, algo: str = "ppo", policy_train_steps=100_000):
 		
-		super().__init__(gym_env, algo)
+		super().__init__(gym_env, algo, policy_train_steps)
 		
 	def get_params(self):
 		params={}

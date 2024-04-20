@@ -12,7 +12,7 @@ class abstraction_network_new():
 	def __init__(self, params, num_abstract_states):
 		
 		self.save_path = params['save_path']
-
+		self.train_step_size = params['policy_train_steps'] # the number of steps the pre-trained policy is trained for
 		self.obs_size = params['obs_size']
 		self.action_size = params['size_a'] 
 		self.num_nodes = params['abstraction_network_hidden_nodes']

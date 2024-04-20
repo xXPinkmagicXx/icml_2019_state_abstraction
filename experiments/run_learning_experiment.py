@@ -283,15 +283,15 @@ def main(env_name: str, algo: str, abstraction=True, load_model = False, verbose
     dir_for_plot = str(datetime.now().time()).replace(":", "_").replace(".", "_")
     
     # Run the experiment
-    # run_agents_on_mdp(agent_list,
-    #                   gym_env,
-    #                   instances=1,
-    #                   episodes=policy.params['episodes'],
-    #                   steps=policy.params['steps'],
-    #                   verbose=True,
-    #                   track_success=True,
-    #                   success_reward=1,
-    #                   dir_for_plot=dir_for_plot)
+    run_agents_on_mdp(agent_list,
+                      gym_env,
+                      instances=1,
+                      episodes=policy.params['episodes'],
+                      steps=policy.params['steps'],
+                      verbose=True,
+                      track_success=True,
+                      success_reward=1,
+                      dir_for_plot=dir_for_plot)
 
 
 

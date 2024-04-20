@@ -8,9 +8,9 @@ import os
 
 class PendulumPolicySB(PolicySB):
 	
-	def __init__(self, gym_env: GymMDP, algo: str = "dqn"):
+	def __init__(self, gym_env: GymMDP, algo: str = "ppo", policy_train_steps=100_000):
 		
-		super().__init__(gym_env, algo)
+		super().__init__(gym_env, algo, policy_train_steps)
 		
 	def get_params(self):
 		params={}
