@@ -16,11 +16,12 @@ class abstraction_network_new():
 		self.obs_size = params['obs_size']
 		self.action_size = params['size_a'] 
 		self.num_nodes = params['abstraction_network_hidden_nodes']
+		self.learning_rate = params['learning_rate_for_abstraction_learning']
 
 		self.activation_output = 'softmax' if self.action_size > 2 else 'sigmoid'
 		self.output_nodes = num_abstract_states if num_abstract_states > 2 else 1
 		
-		self.optimizer = tf.keras.optimizers.Adam(learning_rate=0.01)
+		self.optimizer = tf.keras.optimizers.Adam(learning_rate=self.learning_rate)
 		
 		if self.action_size > 2:
 			self.loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False)
@@ -46,6 +47,7 @@ class abstraction_network_new():
 		self.net.summary()
 		print("Created network with loss function", self.loss_fn, "and optimizer", self.optimizer, "and activation function", self.activation_output, "and output nodes", self.output_nodes)
 	def predict(self, x):
+		
 		x = np.array(x).reshape(1, self.obs_size)
 		li = self.net.predict(x)
 		

@@ -189,12 +189,15 @@ class Experiment(object):
         else:
             plot_file_name = ""
 
-        chart_utils.make_plots(self.exp_directory, agent_name_ls,
+        chart_utils.make_plots(self.exp_directory,
+                               agent_name_ls,
                                 episodic=self.is_episodic,
                                 plot_file_name=plot_file_name,
                                 cumulative=self.cumulative_plot,
                                 track_disc_reward=self.track_disc_reward,
-                                open_plot=open_plot)
+                                open_plot=open_plot,
+                                new_title="Experiment: " + str(self.mdp),
+                                )
 
         if self.track_success:
             chart_utils.make_plots(os.path.join(self.exp_directory, "success"), agent_name_ls,

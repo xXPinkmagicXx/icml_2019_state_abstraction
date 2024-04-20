@@ -26,7 +26,9 @@ class PolicySB:
         self.params['num_actions'] = self.get_num_actions()
         self.params['size_a'] = self.params['num_actions']
         self.params['policy_train_steps'] = policy_train_steps
-        self.params['save_path'] = "trained-abstract-agents/" + policy_train_steps + '/' + self.params['algo'] + '_' + self.params['env_name'] 
+        self.params['plot_path'] = 'results/' + 'gym-'+ self.params['env_name'] + '/' + str(policy_train_steps)
+
+        self.params['save_path'] = "trained-abstract-agents/" + str(policy_train_steps) + '/' + self.params['algo'] + '_' + self.params['env_name'] 
         ## Get current working directory
         cwd = os.getcwd().split('\\')[-1]
 		
@@ -39,7 +41,7 @@ class PolicySB:
         elif cwd == "experiments":
             path_to_trained_agents = '../../rl-trained-agents/'
         ## . if called as submodule or .. if called from experiments/
-        path_to_trained_agents += str(policy_train_steps)
+        path_to_trained_agents += str(policy_train_steps) + '/'
         
         print("this is the path to trained agents:", path_to_trained_agents)
         path_to_agent = path_to_trained_agents + algo + '_' + self.env_name

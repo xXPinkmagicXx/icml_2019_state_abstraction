@@ -17,16 +17,22 @@ from ..mac.ActionWrapper import discretizing_wrapper
 # Import policies
 import policies.Policy as Policy
 import policies.PolicySB as PolicySB
+
 import policies.CartPolePolicy as cpp
-import policies.MountainCarPolicy as mpd
+import policies.CartPolePolicySB as cpp_sb
+
+import policies.MountainCarPolicy as mcp
+import policies.MountainCarPolicySB as mcp_sb
+import policies.MountainCarContinuousPolicySB as mcpc_sb
+
 import policies.AcrobotPolicy as abp
 import policies.AcrobotPolicySB as abp_sb
+
 import policies.LunarLanderPolicy as llp
 import policies.LunarLanderPolicySB as llp_sb
+
 import policies.PendulumPolicy as pp
 import policies.PendulumPolicySB as pp_sb
-import policies.MountainCarPolicySB as mpd_sb
-import policies.CartPolePolicySB as cpp_sb
 
 import numpy as np
 
@@ -43,7 +49,7 @@ import tensorflow as tf
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-def get_policy_sb3(gym_env: GymMDP, algo: str = "dqn"):
+def get_policy_sb3(gym_env: GymMDP, algo: str = "ppo", policy_train_steps=100_000):
     """
     Args:
         :param gym_env (GymMDP)
@@ -58,21 +64,24 @@ def get_policy_sb3(gym_env: GymMDP, algo: str = "dqn"):
     5. Pendulum-v1
     """
     if gym_env.env_name == "MountainCar-v0":
-        return mpd_sb.MountainCarPolicySB(gym_env)
+        return mcp_sb.MountainCarPolicySB(gym_env, algo, policy_train_steps)
     
+    if gym_env.env_name == "MountainCarContinuous-v0":
+        return mcpc_sb.MountainCarContunuousPolicySB(gym_env, algo, policy_train_steps)
+
     if gym_env.env_name == "LunarLander-v2":
-        return llp_sb.LunarLanderPolicySB(gym_env, algo)
+        return llp_sb.LunarLanderPolicySB(gym_env, algo, policy_train_steps)
     
     if gym_env.env_name == "CartPole-v0" or gym_env.env_name == "CartPole-v1":
-        return cpp_sb.CartPolePolicySB(gym_env, algo)
+        return cpp_sb.CartPolePolicySB(gym_env, algo, policy_train_steps)
     
     if gym_env.env_name == "Acrobot-v1":
-        return abp_sb.AcrobotPolicySB(gym_env, algo)
+        return abp_sb.AcrobotPolicySB(gym_env, algo, policy_train_steps)
 
     if gym_env.env_name == "Pendulum-v1":
-        return pp_sb.PendulumPolicySB(gym_env, algo)
+        return pp_sb.PendulumPolicySB(gym_env, algo, policy_train_steps)
     
-    return cpp_sb.CartPolePolicySB(gym_env, algo)
+    return NotImplementedError("Policy not implemented for this environment")
 
 
 def get_policy(gym_env: GymMDP):
@@ -98,7 +107,7 @@ def get_policy(gym_env: GymMDP):
         return abp.AcrobotPolicy(gym_env)
 
     if gym_env.env_name == "MountainCar-v0":
-        return mpd.MountainCarPolicy(gym_env)
+        return mcp.MountainCarPolicy(gym_env)
 
     if gym_env.env_name == "LunarLander-v2":
         return llp.LunarLanderPolicy(gym_env)
@@ -131,12 +140,13 @@ def Get_GymMDP(env_name, k = 20, render=False):
     
     return gym_env
 
-def run_episodes_sb(env_name, policy: PolicySB, episodes=3, steps=500):
+def run_episodes_sb(env_name, policy: PolicySB, episodes=1, steps=500):
     """
     Args:
         :param gym_env (GymMDP)
         :param policy (Policy OR PolicySB)
     """
+    print("Now running", episodes,"episodes of", env_name, "SB polic...")
     eval_env = Get_GymMDP(env_name=env_name, k = 20, render=True).env
     obs, info = eval_env.reset()
     for e in range(episodes):
@@ -148,7 +158,7 @@ def run_episodes_sb(env_name, policy: PolicySB, episodes=3, steps=500):
                 break
             eval_env.render()
 
-def run_episodes_from_nn(env_name, abstraction_net: NNStateAbstr, episodes=3, steps=500):
+def run_episodes_from_nn(env_name, abstraction_net: NNStateAbstr, episodes=1, steps=500):
     """
     Args:
         :param gym_env (GymMDP)
@@ -191,7 +201,7 @@ def create_abstraction_network(policy: PolicySB):
     
     return StateAbsractionNetwork
 
-def load_agent(env_name, algo):
+def load_agent(env_name: str, algo: str, policy_train_steps = 100_000):
     """
     Args:
         :param env_name (str): Name of the environment
@@ -200,14 +210,14 @@ def load_agent(env_name, algo):
         NNStateAbstr object
     """
     print("loading pre-trained agent with algo", algo, "and environment", env_name)
-    save_name = "trained-abstract-agents/"+ algo + "_" + env_name
+    save_name = "trained-abstract-agents/"+ str(policy_train_steps) + '/' + algo + "_" + env_name
     load_net =  tf.keras.models.load_model(save_name)
     load_net.summary()
     nn_sa = NNStateAbstr(load_net)
     print("loading complete...")
     return nn_sa
 
-def main(env_name: str, algo: str, abstraction=True, load_model = False, verbose=False, seed=42):
+def main(env_name: str, algo: str, policy_train_steps = 100_000, abstraction=True, load_model = False, run_expiriment=True,  verbose=False, seed=42):
     """
     Args:
         :param env_name (str): Name of the environment
@@ -235,7 +245,7 @@ def main(env_name: str, algo: str, abstraction=True, load_model = False, verbose
     if algo == 'mac':
         policy = get_policy(gym_env)
     else:
-        policy = get_policy_sb3(gym_env, algo)
+        policy = get_policy_sb3(gym_env, algo, policy_train_steps)
 
     policy.params["num_mdps"] = 1
     policy.params["num_iterations_for_abstraction_learning"] = 100
@@ -277,21 +287,25 @@ def main(env_name: str, algo: str, abstraction=True, load_model = False, verbose
     #                               name_ext="_phi"+ "_" + str(seed))
 
     ## Agents in experiment
-    agent_list = [sa_agent]
+    agent_list = [linear_agent, sa_agent]
 
     # Timestamp for saving the experiment
-    dir_for_plot = str(datetime.now().time()).replace(":", "_").replace(".", "_")
-    
     # Run the experiment
-    run_agents_on_mdp(agent_list,
-                      gym_env,
-                      instances=1,
-                      episodes=policy.params['episodes'],
-                      steps=policy.params['steps'],
-                      verbose=True,
-                      track_success=True,
-                      success_reward=1,
-                      dir_for_plot=dir_for_plot)
+    if run_expiriment:
+        print("Running experiment...")
+        # dir_for_plot = str(datetime.now().time()).replace(":", "_").replace(".", "_")
+        dir_for_plot = str(policy_train_steps)
+        run_agents_on_mdp(agent_list,
+                        gym_env,
+                        instances=1,
+                        episodes=policy.params['episodes'],
+                        steps=policy.params['steps'],
+                        verbose=True,
+                        track_success=True,
+                        success_reward=1,
+                        dir_for_plot=dir_for_plot)
+    else:
+        print("Skipping experiment...")
 
 
 
