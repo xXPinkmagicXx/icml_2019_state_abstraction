@@ -27,8 +27,13 @@ class PolicySB:
         self.params['size_a'] = self.params['num_actions']
         self.params['policy_train_steps'] = policy_train_steps
         self.params['plot_path'] = 'results/' + 'gym-'+ self.params['env_name'] + '/' + str(policy_train_steps)
+        
+        abstract_agent_save_path = "trained-abstract-agents/" + str(policy_train_steps) + '/'
+        if os.path.exists(abstract_agent_save_path) == False:
+            os.makedirs(abstract_agent_save_path)
+        
+        self.params['save_path'] = abstract_agent_save_path + self.params['algo'] + '_' + self.params['env_name'] 
 
-        self.params['save_path'] = "trained-abstract-agents/" + str(policy_train_steps) + '/' + self.params['algo'] + '_' + self.params['env_name'] 
         ## Get current working directory
         cwd = os.getcwd().split('\\')[-1]
 		
