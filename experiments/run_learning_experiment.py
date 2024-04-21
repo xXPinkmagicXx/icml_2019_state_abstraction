@@ -83,7 +83,6 @@ def get_policy_sb3(gym_env: GymMDP, algo: str = "ppo", policy_train_steps=100_00
     
     return NotImplementedError("Policy not implemented for this environment")
 
-
 def get_policy(gym_env: GymMDP):
     """
     Args:
@@ -176,7 +175,7 @@ def run_episodes_from_nn(env_name, abstraction_net: NNStateAbstr, episodes=1, st
                 break
             eval_env.render()
 
-def create_abstraction_network(policy: PolicySB):
+def create_abstraction_network(policy: PolicySB, num_samples=10000):
 
     """
     Args:
@@ -187,7 +186,7 @@ def create_abstraction_network(policy: PolicySB):
         NNStateAbstr object
     """
 
-    x_train, y_train = policy.sample_training_data()
+    x_train, y_train = policy.sample_training_data(num_samples)
     
     max_value = np.max(x_train)
     min_value = np.min(x_train)
@@ -200,6 +199,31 @@ def create_abstraction_network(policy: PolicySB):
     StateAbsractionNetwork = NNStateAbstr(abstraction_net)
     
     return StateAbsractionNetwork
+
+def create_abstraction_network_mac(policy: Policy, num_samples=10000, x_train=None):
+    
+    """
+    Args:
+        :param policy (PolicySB): Policy object
+        :param x_train (np.array): Training data
+        :param y_train (np.array): Labels
+    Returns:
+        NNStateAbstr object
+    """
+
+    x_train, y_train = policy.sample_training_data(num_samples)
+    
+    max_value = np.max(x_train)
+    min_value = np.min(x_train)
+    print("this is the max and min value", max_value, min_value)
+    print("this si the shape of x_train", x_train[:2])
+    print("this is the shape of y_train", y_train.shape, "with unique values", np.unique(y_train, return_counts=True))
+    
+    abstraction_net = make_nn_sa_3(policy.params, x_train, y_train)
+    
+    StateAbsractionNetwork = NNStateAbstr(abstraction_net)
+    
+    return StateAbsractionNetwork    
 
 def load_agent(env_name: str, algo: str, policy_train_steps = 100_000):
     """
@@ -241,33 +265,40 @@ def main(env_name: str, algo: str, policy_train_steps = 100_000, abstraction=Tru
     ## Get actions and features
     actions = list(gym_env.get_actions())
 
-    ## Get policy
-    if algo == 'mac':
-        policy = get_policy(gym_env)
-    else:
-        policy = get_policy_sb3(gym_env, algo, policy_train_steps)
+    ## Get policies
+    
+    policy_mac = get_policy(gym_env)
+    policy = get_policy_sb3(gym_env, algo, policy_train_steps)
 
     policy.params["num_mdps"] = 1
     policy.params["num_iterations_for_abstraction_learning"] = 100
     policy.params["steps"] = 200
     policy.params["episodes"] = 50
 
+    policy_mac.params["num_mdps"] = 1
+    policy_mac.params["num_iterations_for_abstraction_learning"] = 100
+    policy_mac.params["steps"] = 200
+    policy_mac.params["episodes"] = 50
+
     ## Run one episode of the environment
 
-    nn_sa = None
+    abstraction_network = None
+    abstraction_network_mac = None
     ## Make Abstraction
+    num_samples = 10000
     if abstraction:
-        nn_sa = create_abstraction_network(policy)
+        abstraction_network_mac = create_abstraction_network_mac(policy_mac, num_samples)
+        abstraction_network = create_abstraction_network(policy, num_samples)
     else:
         print("skipping abstraction")
     
     if load_model:
-        nn_sa = load_agent(env_name, algo)
+        abstraction_network = load_agent(env_name, algo)
     else:
         print("Skipping loading of pre-trained model...s")
     
     run_episodes_sb(env_name, policy)
-    run_episodes_from_nn(env_name, abstraction_net=nn_sa)
+    run_episodes_from_nn(env_name, abstraction_net=abstraction_network)
     # Make agents
     ## TODO: LinearQagent and number of features does not wor
     # num_features = gym_env.get_num_state_feats()
@@ -276,10 +307,16 @@ def main(env_name: str, algo: str, policy_train_steps = 100_000, abstraction=Tru
     linear_agent = QLearningAgent(actions=actions)
     # ql_agent = QLearningAgent(actions)
     agent_params = {"alpha":policy.params['rl_learning_rate'],"epsilon":0.1,"actions":actions}
+    
     sa_agent = AbstractionWrapper(QLearningAgent,
                                   agent_params=agent_params,
-                                  state_abstr=nn_sa,
-                                  name_ext="_phi"+ "_" + str(seed))
+                                  state_abstr=abstraction_network,
+                                  name_ext="_phi_"+ str(algo) + "_" + str(seed))
+    
+    sa_agent_mac = AbstractionWrapper(QLearningAgent,
+                                  agent_params=agent_params,
+                                  state_abstr=abstraction_network_mac,
+                                  name_ext="_phi_mac"+ "_" + str(seed))
     
     # sa_agent_mac = AbstractionWrapper(QLearningAgent,
     #                               agent_params=agent_params,
@@ -287,7 +324,7 @@ def main(env_name: str, algo: str, policy_train_steps = 100_000, abstraction=Tru
     #                               name_ext="_phi"+ "_" + str(seed))
 
     ## Agents in experiment
-    agent_list = [linear_agent, sa_agent]
+    agent_list = [linear_agent, sa_agent, sa_agent_mac]
 
     # Timestamp for saving the experiment
     # Run the experiment

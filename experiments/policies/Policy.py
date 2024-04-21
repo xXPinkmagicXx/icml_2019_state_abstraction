@@ -2,6 +2,8 @@ import keras
 import sys
 from simple_rl.tasks import GymMDP
 from keras.models import model_from_json
+import tensorflow as tf
+import numpy as np
 import abc
 import os
 # load json and create model
@@ -10,12 +12,21 @@ import os
 class Policy:
     __metaclass__ = abc.ABCMeta
 	
-    def __init__(self, gym_env: GymMDP):
+    def __init__(self, gym_env: GymMDP, policy_train_steps=10_000):
 		
         self.gym_env = gym_env
         self.params = self.get_params()
         self.env_name = self.params['env_name']
 		
+        self.params['size_a'] = self.get_num_actions()
+        self.params['algo'] = 'mac'
+        self.params['policy_train_steps'] = policy_train_steps
+
+        abstract_agent_save_path = "trained-abstract-agents/" + str(policy_train_steps) + '/'
+        if os.path.exists(abstract_agent_save_path) == False:
+            os.makedirs(abstract_agent_save_path)
+        
+        self.params['save_path'] = abstract_agent_save_path + self.env_name + '/'
         ## Get current working directory
         cwd = os.getcwd().split('\\')[-1]
 		
@@ -73,6 +84,41 @@ class Policy:
     @abc.abstractmethod
     def expert_policy(self, state): 
         return 
+
+    def _sample_y_data(self, num_samples=10_000, x_train=None):
+        
+        if x_train is None:
+            x_train, y_train = self.sample_training_data(num_samples)
+        else:
+            y_train = []
+            for state in x_train:
+                y_train.append(self.demo_policy(state))
+            y_train = np.array(y_train)
+        
+        return x_train, y_train
+    def sample_training_data(self, num_samples=10_000):
+        '''
+        Args:
+            self (Policy: class)
+            num_samples (int)
+
+        Returns:
+            (list): A collection of (s, a, mdp_id) tuples.
+        '''
+        x = []
+        y = []
+        for _ in range(num_samples):
+            cur_state = self.gym_env.env.observation_space.sample()
+            self.gym_env.env.state = cur_state
+            best_action = self.demo_policy(cur_state)
+            x.append(cur_state)
+            y.append(best_action)
+
+        # normalize and conver the data
+        x_train = tf.keras.utils.normalize(np.array(x), axis=0)
+        y_train = np.array(y)
+
+        return x_train, y_train
 
     @abc.abstractmethod
     def sample_unif_random(self, num_samples):

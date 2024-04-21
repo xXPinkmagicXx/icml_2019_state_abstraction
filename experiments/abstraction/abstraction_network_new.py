@@ -18,12 +18,12 @@ class abstraction_network_new():
 		self.num_nodes = params['abstraction_network_hidden_nodes']
 		self.learning_rate = params['learning_rate_for_abstraction_learning']
 
-		self.activation_output = 'softmax' if self.action_size > 2 else 'sigmoid'
-		self.output_nodes = num_abstract_states if num_abstract_states > 2 else 1
+		self.activation_output = 'softmax' if self.action_size > 2 else 'softmax'
+		self.output_nodes = num_abstract_states if num_abstract_states > 2 else 2
 		
 		self.optimizer = tf.keras.optimizers.Adam(learning_rate=self.learning_rate)
 		
-		if self.action_size > 2:
+		if self.action_size >= 2:
 			self.loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False)
 		else:
 			self.loss_fn = tf.keras.losses.BinaryCrossentropy(from_logits=False)
