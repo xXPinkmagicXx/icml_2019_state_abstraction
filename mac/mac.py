@@ -28,7 +28,7 @@ class mac:
 			learned_policy_path = './mac/learned_policy/'
 		elif cwd == "Bachelor-Project":
 			learned_policy_path = './icml_2019_state_abstraction/mac/learned_policy/'	
-		self.learned_policy_path = learned_policy_path
+		self.learned_policy_path = learned_policy_path  +str(self.params['time_steps']) + '/' + self.params['env_name'] 
 
 	def add_2_memory(self,states,actions,rewards):
 		T=len(states)
@@ -82,11 +82,11 @@ class mac:
 			interaction for an episode, and then returns important information
 			used for training.
 		'''
-		s0,rewards,states,actions,t=meta_params['env'].reset(),[],[],[],0
-		s=s0
+		s0, rewards, states, actions, t=meta_params['env'].reset(),[],[],[],0
+		s, _ = s0
 		while True:
-			a=self.actor.select_action(s)
-			s_p,r,done,_= meta_params['env'].step(a)
+			a = self.actor.select_action(s)
+			s_p, r, done, trucated,_= meta_params['env'].step(a)
 			
 			if episode%250==0:
 				meta_params['env'].render()
@@ -101,14 +101,17 @@ class mac:
 		returns=self.rewardToReturn(rewards,meta_params['gamma'])
 
 		if episode%50==0:
+			
 			model_json = self.actor.network.to_json()
-			with open(self.learned_policy_path+meta_params['env_name']+".json", "w") as json_file:
+			with open(self.learned_policy_path + ".json", "w") as json_file:
 				json_file.write(model_json)
+			
 			# serialize weights to HDF5
-			self.actor.network.save_weights(self.learned_policy_path+meta_params['env_name']+".h5")
+			self.actor.network.save_weights(self.learned_policy_path + ".h5")
 			print("Saved latest policy network to disk")
 
 		return states,actions,returns,rewards
+	
 	def rewardToReturn(self, rewards,gamma):
 		T=len(rewards)
 		returns=T*[0]

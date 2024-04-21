@@ -44,17 +44,28 @@ class actor:
             selects an action given a state. First computes \pi(.|s)
             using the neural net, and then draws an action a~\pi(.|s)
         '''
-        pr=self.network.predict(numpy.array(state).reshape(1,self.params['state_dimension']))[0]
+        print("this is the state: ", state)
+        print("this is the state dimension: ", self.params['state_dimension'])
+        s = numpy.array(state).reshape(1, self.params['state_dimension'])
+        print("This is s: ", s)
+        pr = self.network.predict(s)[0]
         print("this is the pr: ", pr)
         ## Implement \epsilon greedy exploration
         epsilon = self.params['epsilon']
-        if numpy.random.random() > epsilon:
-            a =  np.random.choice(range(self.params['A']))
+        if numpy.random.random() < epsilon:
+            # if k is 1, then we have a single action space
+            if self.params["k"] == 1:
+                a = np.random.choice(range( self.params['A']))
+            else:
+                print("Now choosing at random...")
+                a = np.random.choice(range(self.params['k']), self.params['action_space'])
         else:
-            a = np.argmax(pr)
-        
-        #a = numpy.random.choice([x for x in range(self.params['|A|'])],p=pr)
-        
+            print("Now choosing based on the policy...")
+            print("this is the pr: ", pr.shape)
+            a = np.argmax(pr, axis=0)
+
+        #a = numpy.random.choice([x for x in range(selxf.params['|A|'])],p=pr)
+        print("this is the chosen action: ", a)
         return a
 
     def train(self,states,critic):
