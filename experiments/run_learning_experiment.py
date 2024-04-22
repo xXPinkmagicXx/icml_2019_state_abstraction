@@ -116,11 +116,11 @@ def get_policy(gym_env: GymMDP, policy_time_steps=10_000):
 
     return NotImplementedError("Policy not implemented for this environment")
 
-def Get_GymMDP(env_name, k = 20, render=False):
+def Get_GymMDP(env_name, k: int, render=False):
     """
     Args:
         :param env_name (str): Name of the environment
-        :param k = 20 (int): Number of bins to discretize the action space into. Only used if the action space is continuous.
+        :param k = 1 (int): Number of bins to discretize the action space into. Only used if the action space is continuous.
     Returns:
         GymMDP object for the given environment
     Summary:
@@ -242,19 +242,89 @@ def load_agent(env_name: str, algo: str, policy_train_steps = 100_000):
     return nn_sa
 
 def get_policies(gym_env: str, algo: str, policy_train_steps = 100_000):
+    """
+    Args:
+        :param gym_env (GymMDP)
+        :param algo (str): Name of the algorithm
+        :param policy_train_steps = 100_000 (int): Number of time steps the pre-trained policy was trained for
+    Returns:
+        Policy, PolicySB
+    Summary:
+    This function returns two policies, one for the given algorithm and the other for the MAC algorithm.
+    if the algorithm is MAC, it returns only the MAC policy, and other as None.
+    """
+    policy_mac = get_policy(gym_env)
+    policy_mac.params["num_mdps"] = 1
+    policy_mac.params["num_iterations_for_abstraction_learning"] = 100
+    policy_mac.params["steps"] = 200
+    policy_mac.params["episodes"] = 50
+    
     if algo == "mac":
-        policy_mac = get_policy(gym_env)
-        policy_mac.params["num_mdps"] = 1
-        policy_mac.params["num_iterations_for_abstraction_learning"] = 100
-        policy_mac.params["steps"] = 200
-        policy_mac.params["episodes"] = 50
+        return None, policy_mac
+    
+    policy = get_policy_sb3(gym_env, algo, policy_train_steps)
+    policy.params["num_mdps"] = 1
+    policy.params["num_iterations_for_abstraction_learning"] = 100
+    policy.params["steps"] = 200
+    policy.params["episodes"] = 50
+
+    return policy, policy_mac
+
+def get_abstraction_networks(env_name: str, policySB: PolicySB, policy_mac: Policy, do_abstraction: bool, load_model: bool):
+    """
+    Summary:
+        This function creates or loads the abstraction networks for the given environment.
+        Can return None if no abstraction networks are created or loaded.
+    Args:
+        :param env_name (str): Name of the environment
+        :param policy_mac (Policy): Policy object for MAC
+        :param policySB (PolicySB): Policy object for the given algorithm
+        :param do_abstraction (bool): If True, create abstraction networks
+        :param load_model (bool): If True, load pre-trained abstraction networks
+    Returns:
+        abstraction_network (NNStateAbstr), abstraction_network_mac (NNStateAbstr)
+    """
+
+
+    abstraction_network = None
+    abstraction_network_mac = None
+    num_samples = 10000
+    has_mac = policy_mac == None
+    has_sb = policySB == None 
+    if not has_mac and not has_sb:
+        return ValueError("Both policies cannot be None")
+    
+    if load_model:
+        print("Loading trained abstraction networks...")
+        
+        if has_mac:
+            algo = policy_mac.params["algo"]
+            abstraction_network_mac = load_agent(env_name, algo)
+        if has_sb:
+            algo = policySB.params["algo"]
+            abstraction_network = load_agent(env_name, algo)    
+        
+        # returns can be None if no policy is provided 
+        return abstraction_network, abstraction_network_mac
+
+    if do_abstraction:
+        print("Creating abstraction networks...")
+        
+        if has_mac:
+            num_samples = policy_mac.params["num_samples_from_demonstrator"]
+            abstraction_network_mac = create_abstraction_network_mac(policy_mac, num_samples)
+
+        if policySB is not None and do_abstraction:
+            num_samples = policySB.params["num_samples_from_demonstrator"]
+            abstraction_network = create_abstraction_network(policySB, num_samples)
+    
     else:
-        policy = get_policy_sb3(gym_env, algo, policy_train_steps)
-        policy.params["num_mdps"] = 1
-        policy.params["num_iterations_for_abstraction_learning"] = 100
-        policy.params["steps"] = 200
-        policy.params["episodes"] = 50
-def main(env_name: str, algo: str, policy_train_steps = 100_000, abstraction=True, load_model = False, run_expiriment=True,  verbose=False, seed=42):
+        print("No abstraction loaded or created, reuturns None, None...")
+    
+    return abstraction_network, abstraction_network_mac
+    
+
+def main(env_name: str, algo: str, policy_train_steps: int, k_bins=1, abstraction=True, load_model = False, run_expiriment=True,  verbose=False, seed=42):
     """
     Args:
         :param env_name (str): Name of the environment
@@ -279,40 +349,12 @@ def main(env_name: str, algo: str, policy_train_steps = 100_000, abstraction=Tru
     actions = list(gym_env.get_actions())
 
     ## Get policies
-    if algo == "mac":
-        policy_mac = get_policy(gym_env)
-        policy_mac.params["num_mdps"] = 1
-        policy_mac.params["num_iterations_for_abstraction_learning"] = 100
-        policy_mac.params["steps"] = 200
-        policy_mac.params["episodes"] = 50
-    else:
-        policy = get_policy_sb3(gym_env, algo, policy_train_steps)
-        policy.params["num_mdps"] = 1
-        policy.params["num_iterations_for_abstraction_learning"] = 100
-        policy.params["steps"] = 200
-        policy.params["episodes"] = 50
+    policy, policy_mac = get_policies(gym_env, algo, policy_train_steps)
 
-
+    ## Get abstraction networks (can be none)
+    abstraction_network, abstraction_network_mac = get_abstraction_networks(env_name, policy_mac, policy, abstraction, load_model)
     
-    
-
     ## Run one episode of the environment
-
-    abstraction_network = None
-    abstraction_network_mac = None
-    ## Make Abstraction
-    num_samples = 10000
-    if abstraction:
-        abstraction_network_mac = create_abstraction_network_mac(policy_mac, num_samples)
-        abstraction_network = create_abstraction_network(policy, num_samples)
-    else:
-        print("skipping abstraction")
-    
-    if load_model:
-        abstraction_network = load_agent(env_name, algo)
-    else:
-        print("Skipping loading of pre-trained model...s")
-    
     run_episodes_sb(env_name, policy)
     run_episodes_from_nn(env_name, abstraction_net=abstraction_network)
     # Make agents
