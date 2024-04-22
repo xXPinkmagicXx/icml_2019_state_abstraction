@@ -44,17 +44,35 @@ class actor:
             selects an action given a state. First computes \pi(.|s)
             using the neural net, and then draws an action a~\pi(.|s)
         '''
+            
         pr=self.network.predict(numpy.array(state).reshape(1,self.params['state_dimension']))[0]
-        print("this is the pr: ", pr)
+        ## Reshape the pr to action x k
+        if not self.params["k"] == 1:
+            pr = np.array(pr).reshape(self.params['k'], self.params['action_space'])
+        
+        # if self.params["verbose"] == True:
+        #     # print("this is the state: ", state)
+        #     # print("this is the state dimension:", self.params["state_dimension"])
+        #     print("this is the action space: ", self.params['action_space']) 
+        #     print("This is the state reshaped: ", numpy.array(state).reshape(1,self.params['state_dimension']))
+        
         ## Implement \epsilon greedy exploration
         epsilon = self.params['epsilon']
-        if numpy.random.random() > epsilon:
-            a =  np.random.choice(range(self.params['A']))
+        if numpy.random.random() < epsilon:
+            # if k is 1, then we have a single action space
+            if self.params["k"] == 1:
+                a = np.random.choice(range( self.params['A']))
+            else:
+                a = np.random.choice(range(self.params['k']), self.params['action_space'])
+            # if self.params["verbose"] == True:
+            #     print("this is the selected_action: ", a)
         else:
-            a = np.argmax(pr)
+            a = np.argmax(pr, axis=0)
+            # a_2 = np.argmax(n_pr, axis=1)
         
         #a = numpy.random.choice([x for x in range(self.params['|A|'])],p=pr)
-        
+        # if self.params["verbose"] == True:
+        #     print("this is the selected_action: ", a)
         return a
 
     def train(self,states,critic):

@@ -7,7 +7,7 @@ from gym import spaces
 """
 wrapper for discretizing continuous action space
 """
-def discretizing_wrapper(env, K):
+def discretizing_wrapper(env, K, verbose=False):
     """
     # discretize each action dimension to K bins
     """
@@ -18,6 +18,7 @@ def discretizing_wrapper(env, K):
     action_low, action_high = env.action_space.low, env.action_space.high
     naction = action_low.size
     action_table = np.reshape([np.linspace(action_low[i], action_high[i], K) for i in range(naction)], [naction, K])
+    # print("This is the action table", action_table)
     assert action_table.shape == (naction, K)
 
     def discretizing_reset():
@@ -25,20 +26,32 @@ def discretizing_wrapper(env, K):
         return obs
 
     def discretizing_step(action):
-        print("this is the action", action)
         # action is a sequence of discrete indices
         action_cont = action_table[np.arange(naction), action]
+        # if verbose:
+        #     print("In discretizing_step - this is the action", action)
+        #     print("In discretizing_step - this is the action table", action_table)
+        #     print("In discretizing_step - this is the action cont", action_cont)
         obs, rew, terminated, truncated, info, = unwrapped_env.orig_step_(action_cont)
         
         return (obs, rew, terminated, info)
 
     # change observation space
     # In the case where the action space is a single value
-    print("naction: ", naction)
     if naction == 1:
         env.action_space = spaces.Discrete(K)
     else:
-        env.action_space = spaces.MultiDiscrete([K for _ in range(naction)])
+        action_space = [K for _ in range(naction)]
+        # print("This is the action space", action_space)
+        a = []
+        for _ in range(naction):
+            a.append(K)
+        action_space = spaces.MultiDiscrete(a) 
+        action_space.sample()
+        # if verbose:
+        #     print("This is a sample", action_space.sample())
+
+        env.action_space = spaces.MultiDiscrete(a)
 
     unwrapped_env.step = discretizing_step
     unwrapped_env.reset = discretizing_reset
