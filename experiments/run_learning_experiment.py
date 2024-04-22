@@ -49,7 +49,7 @@ import tensorflow as tf
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-def get_policy_sb3(gym_env: GymMDP, algo: str = "ppo", policy_train_steps=100_000):
+def get_policy_sb3(gym_env: GymMDP, algo: str, policy_train_steps: int):
     """
     Args:
         :param gym_env (GymMDP)
@@ -83,7 +83,7 @@ def get_policy_sb3(gym_env: GymMDP, algo: str = "ppo", policy_train_steps=100_00
     
     return NotImplementedError("Policy not implemented for this environment")
 
-def get_policy(gym_env: GymMDP, policy_time_steps=10_000):
+def get_policy(gym_env: GymMDP, policy_time_steps: int):
     """
     Args:
         :param gym_env (GymMDP) : Gym MDP object
@@ -120,7 +120,7 @@ def Get_GymMDP(env_name, k: int, render=False):
     """
     Args:
         :param env_name (str): Name of the environment
-        :param k = 1 (int): Number of bins to discretize the action space into. Only used if the action space is continuous.
+        :param k (int): Number of bins to discretize the action space into. Only used if the action space is continuous.
     Returns:
         GymMDP object for the given environment
     Summary:
@@ -340,7 +340,7 @@ def main(env_name: str, algo: str, policy_train_steps: int, k_bins=1, abstractio
     abstraction if true.
     """
    
-    gym_env = Get_GymMDP(env_name, k = 20)
+    gym_env = Get_GymMDP(env_name, k = k_bins)
     ## Set seed
     # gym_env.env.seed(seed)
     random.seed(seed)
