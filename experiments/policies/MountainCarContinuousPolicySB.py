@@ -8,7 +8,7 @@ from stable_baselines3 import DQN
 from policies.PolicySB import PolicySB
 
 
-class MountainCarPolicySB(PolicySB):
+class MountainCarContunuousPolicySB(PolicySB):
     
     def __init__(self, gym_env: GymMDP, algo: str = "ppo", policy_train_steps=100_000):    
         
@@ -18,7 +18,7 @@ class MountainCarPolicySB(PolicySB):
     def get_params(self):
 		
         params={}
-        params['env_name']="MountainCar-v0"
+        params['env_name']="MountainCarContinuous-v0"
         params['multitask']=False
         params['obs_size']=self.gym_env.env.observation_space.shape[0]
         params['num_iterations_for_abstraction_learning']=500

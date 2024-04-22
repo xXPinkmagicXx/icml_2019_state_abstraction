@@ -7,15 +7,15 @@ import policies.Policy as Policy
 
 class CartPolePolicy(Policy.Policy):
 	
-	def __init__(self, gym_env: GymMDP):
+	def __init__(self, gym_env: GymMDP, policy_train_steps: int):
 		
-		super().__init__(gym_env)
+		super().__init__(gym_env, policy_train_steps)
 	
 	def get_params(self):
 		
 		params={}
 		params['env_name']="CartPole-v0"
-		params['multitask']=True
+		params['multitask']=False
 		params['obs_size']=4
 		params['num_iterations_for_abstraction_learning']=500
 		params['learning_rate_for_abstraction_learning']=0.001

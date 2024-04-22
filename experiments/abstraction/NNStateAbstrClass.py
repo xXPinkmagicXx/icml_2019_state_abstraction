@@ -13,14 +13,14 @@ import numpy
 
 class NNStateAbstr(StateAbstraction):
 
-    def __init__(self, abstraction_net):
+    def __init__(self, abstraction_net, binary_classification=False):
         '''
         Args:
             abstraction_net (str): The name of the model.
         '''
+        self.binary_classification = binary_classification
         self.abstraction_net = abstraction_net
-
-    def phi(self, state):
+    def phi(self, state: State):
         '''
         Args:
             state (simple_rl.State)
@@ -28,9 +28,17 @@ class NNStateAbstr(StateAbstraction):
         Returns:
             state (simple_rl.State)
         '''
-        pr_z_given_s = list(self.abstraction_net.predict([state]))
-        abstr_state_index = np.argmax(pr_z_given_s)
-
+        pred = self.abstraction_net.predict(state.features().reshape(1, -1))
+        pr_z_given_s = list(pred)
+        # print("this is the pred", pred, "and the list", pr_z_given_s)
+        
+        if self.binary_classification:
+            print("this is the pred", pred)
+            abstr_state_index = float(pred > 0.5)
+        else:
+            abstr_state_index = np.argmax(pr_z_given_s)
+        # abstr_state_index = float(pred > 0.5)
+        # print("best abstract index", abstr_state_index)
         return State(abstr_state_index)
 
     def phi_pmf(self, state):

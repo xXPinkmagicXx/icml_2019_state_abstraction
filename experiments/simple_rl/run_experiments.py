@@ -340,7 +340,8 @@ def run_single_agent_on_mdp(agent, mdp, episodes, steps, experiment=None, verbos
 
             # step time
             step_start = time.time()
-
+            # print("this is step number: ", step)
+            
             # Compute the agent's policy.
             action = agent.act(state, reward)
 

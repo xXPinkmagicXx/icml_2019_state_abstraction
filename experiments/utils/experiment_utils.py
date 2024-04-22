@@ -24,6 +24,7 @@ import policies.CartPolePolicy as cpd
 
 import Lunar_dqn.lunar_demonstrator as ld
 from ..abstraction.abstraction_network import abstraction_network 
+from ..abstraction.abstraction_network_new import abstraction_network_new 
 
 colors = dict(mcolors.BASE_COLORS, **mcolors.CSS4_COLORS)
 # Sort colors by hue, saturation, value and name.
@@ -361,23 +362,24 @@ def make_nn_sa(mdp_demo_policy_dict, sess, params, verbose=True, sample_type="ra
 
         
         
-def make_nn_sa_2(sess, params, samples_batch=None, verbose=True):
+def make_nn_sa_2(sess, params: dict, samples_batch, verbose=True):
     '''
     Args:
-        mdp_demo_policy_dict (dict):
-            Key: (simple_rl.MDP)
-            Val: (lambda : simple_rl.State --> str)
-        sess (tf.session)
-        params (dict)
-        verbose (bool)
-        sample_type (str): one of {"rand","demo"}
+        :param sess (tf.session)
+        :param params (dict)
+        :param sample_batch (list of (state, action, mdp_id) tuples)
+            Usually creted with saple_unif_random from the Policy or PolicySB class 
+        :param verbose (bool)
 
     Summary:
         Traing and saves a neural network state abstraction for the given
         @environment and @demo_policy.
     '''
 
+    print("Now making abstraction network...")
+    assert type(samples_batch) == list, "samples_batch must be a list of (state, action, mdp_id) tuples."
     # MDP Specific parameters.
+
     num_mdps = params["num_mdps"]
     size_a = params["size_a"]
     
@@ -392,9 +394,9 @@ def make_nn_sa_2(sess, params, samples_batch=None, verbose=True):
         a_in_z = enumeration_policy(size_z,size_a,num_mdps)
 
     num_abstract_states = size_z
-    
+    print("This is the number of abstract states:", num_abstract_states)
     ## Create abstraction network
-    abstraction_net = abstraction_network(sess, params,num_abstract_states)
+    abstraction_net = abstraction_network(sess, params, num_abstract_states)
     sess.run(tf.compat.v1.global_variables_initializer())
     
     ## print
@@ -402,12 +404,71 @@ def make_nn_sa_2(sess, params, samples_batch=None, verbose=True):
         print("env_name:", params['env_name'])
 
     ## Do training
+    print("Now training the abstraction network...")
     for iteration_number in range(params['num_iterations_for_abstraction_learning']):
         
-        loss=abstraction_net.train(samples_batch, a_in_z)
+        print("With samples_batch like this:", random.choice(samples_batch))
+        loss = abstraction_net.train(samples_batch, a_in_z)
         
         ## Print loss
         if verbose and iteration_number % 10 == 0:
             print("iteration number {} , obj {}".format(iteration_number,-loss))
+    
+    return abstraction_net
+def make_nn_sa_3(params: dict, x_train, y_train, verbose=True):
+    '''
+    Args:
+        :param sess (tf.session)
+        :param params (dict)
+        :param sample_batch (list of (state, action, mdp_id) tuples)
+            Usually creted with saple_unif_random from the Policy or PolicySB class 
+        :param verbose (bool)
+
+    Summary:
+        Traing and saves a neural network state abstraction for the given
+        @environment and @demo_policy.
+    '''
+
+    num_mdps = params["num_mdps"]
+    size_a = params["size_a"]
+    
+    if verbose:
+        print("this is the size of a", size_a)
+    
+    if num_mdps == 1:
+        size_z = size_a
+        a_in_z = np.array([x for x in range(size_z)]).reshape(size_z,num_mdps)
+    else:
+        size_z = np.power(size_a,num_mdps)
+        a_in_z = enumeration_policy(size_z,size_a,num_mdps)
+
+    num_abstract_states = size_z
+    print("This is the number of abstract states:", num_abstract_states)
+    ## Create abstraction network
+    abstraction_net = abstraction_network_new(params, num_abstract_states)
+    
+    ## print
+    if verbose:
+        print("env_name:", params['env_name'])
+
+    ## Do training
+    print("Now training the abstraction network...")
+        
+    # training the abstraction network
+    history = abstraction_net.net.fit(x_train, y_train, batch_size=32, epochs=params['num_iterations_for_abstraction_learning'])
+    
+    # plot history
+    plt.plot(range(len(history.history['accuracy'])), history.history['accuracy'])
+    plt.xlabel('Epochs')
+    plt.ylabel('Accuracy')
+    title_str = params['env_name'] + " Abstraction Accuracy" 
+    plt.title(title_str)
+    if os.path.exists(params['save_path']) == False:
+        os.mkdir(params['save_path'])
+    plt.savefig(params['save_path'] + "/history.png")
+    print("Plot saved at:", params['save_path'] + "/history.png")
+
+    # Save model
+    abstraction_net.save_model()
     
     return abstraction_net

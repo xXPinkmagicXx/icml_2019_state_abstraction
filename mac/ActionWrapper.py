@@ -1,6 +1,6 @@
-import gym
 import numpy as np
-from gym import spaces
+from gymnasium import spaces
+import gymnasium as gym
 # Three line comment
 # This code is copied from 
 # https://github.com/robintyh1/onpolicybaselines/blob/master/onpolicyalgos/discrete_actions_space/ppo_discrete/wrapper.py
@@ -21,9 +21,9 @@ def discretizing_wrapper(env, K, verbose=False):
     # print("This is the action table", action_table)
     assert action_table.shape == (naction, K)
 
-    def discretizing_reset():
-        obs = unwrapped_env.orig_reset_()
-        return obs
+    def discretizing_reset(seed=None):
+        obs, info = unwrapped_env.orig_reset_()
+        return obs, info
 
     def discretizing_step(action):
         # action is a sequence of discrete indices
@@ -34,7 +34,7 @@ def discretizing_wrapper(env, K, verbose=False):
         #     print("In discretizing_step - this is the action cont", action_cont)
         obs, rew, terminated, truncated, info, = unwrapped_env.orig_step_(action_cont)
         
-        return (obs, rew, terminated, info)
+        return (obs, rew, terminated, truncated, info)
 
     # change observation space
     # In the case where the action space is a single value
@@ -48,8 +48,7 @@ def discretizing_wrapper(env, K, verbose=False):
             a.append(K)
         action_space = spaces.MultiDiscrete(a) 
         action_space.sample()
-        # if verbose:
-        #     print("This is a sample", action_space.sample())
+        print("This is a sample", action_space.sample())
 
         env.action_space = spaces.MultiDiscrete(a)
 

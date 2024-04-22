@@ -3,15 +3,16 @@
 
 
 class MetaParameters:
-    def __init__(self, env, env_name, max_learning_episodes, gamma, seed = 42) -> None:
+    def __init__(self, env, env_name, time_steps, gamma, seed = 42) -> None:
         
         self.env = env
         self.env_name = env_name
-        self.max_learning_episodes = max_learning_episodes
+        self.time_steps = time_steps
+        self.max_learning_episodes = self._get_number_of_episodes(env, time_steps)
         self.seed = seed
         self.gamma = gamma
         self.plot = False
-        self.state_dimension = len(env.reset())
+        self.state_dimension = env.observation_space.shape[0]
     
     def to_Dictionary(self):
         
@@ -20,9 +21,16 @@ class MetaParameters:
         meta_params['env_name'] = self.env_name
         meta_params['seed'] = self.seed
         meta_params['gamma'] = self.gamma
+        meta_params['state_dimension'] = self.state_dimension
+        meta_params['plot'] = self.plot
+        meta_params['time_steps'] = self.time_steps
         meta_params['max_learning_episodes'] = self.max_learning_episodes
 
         return meta_params
+    def _get_number_of_episodes(self, gym_env, time_steps) -> int:
+        max_steps = gym_env._max_episode_steps    
+        episodes = time_steps // max_steps
+        return episodes
 
 def make_parameters(action_space: int, state_dimension: int, k: int, actor_h: list, critic_h: list, actor_lr : list, critic_lr : list, critic_batch_size : list, critic_train_type : list, epsilon : list, max_buffer_size : list):
     

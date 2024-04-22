@@ -1,7 +1,7 @@
 import numpy
 from .critic_network import critic
 from .actor_network import actor
-import gym
+import gymnasium as gym
 import sys
 import os
 from collections import deque
@@ -29,8 +29,8 @@ class mac:
 		if cwd == "icml_2019_state_abstraction":
 			learned_policy_path = './mac/learned_policy/'
 		elif cwd == "Bachelor-Project":
-			learned_policy_path = './icml_2019_state_abstraction/mac/learned_policy/'
-		self.learned_policy_path = learned_policy_path
+			learned_policy_path = './icml_2019_state_abstraction/mac/learned_policy/'	
+		self.learned_policy_path = learned_policy_path  +str(self.params['time_steps']) + '/' + self.params['env_name'] 
 
 	def add_2_memory(self,states,actions,rewards):
 		T=len(states)
@@ -102,7 +102,7 @@ class mac:
 			used for training.
 		'''
 
-		s0 = self.params['env'].reset()
+		s0, _ = self.params['env'].reset()
 		rewards = []
 		states = []
 		actions = []
@@ -141,14 +141,16 @@ class mac:
 		## Save to disk every 200 episodes
 		if episode%200==0:
 			model_json = self.actor.network.to_json()
-			with open(self.learned_policy_path+self.params['env_name']+".json", "w") as json_file:
+			with open(self.learned_policy_path+".json", "w") as json_file:
 				json_file.write(model_json)
+			
 			# serialize weights to HDF5
-			self.actor.network.save_weights(self.learned_policy_path+self.params['env_name']+".h5")
+			self.actor.network.save_weights(self.learned_policy_path + ".h5")
 			print("Saved latest policy network to disk")
 
-		return states, actions, returns, rewards
-	def rewardToReturn(self, rewards):
+		return states,actions,returns,rewards
+	
+	def rewardToReturn(self, rewards,gamma):
 		T=len(rewards)
 		returns=T*[0]
 		returns[T-1]=rewards[T-1]

@@ -1,7 +1,9 @@
 from .mac import mac 
 import numpy
-import gym,sys,random
+import sys,random
 import tensorflow as tf
+import gymnasium as gym
+# from keras import backend as K
 from keras import backend as K
 import matplotlib.pyplot as plt
 
@@ -10,51 +12,52 @@ import matplotlib.pyplot as plt
 from .ActionWrapper import discretizing_wrapper
 from .HyperParameters import AlgorithmParameters, MetaParameters, make_parameters
 
-# tf.compat.v1.disable_v2_behavior()
-# tf.compat.v1.disable_eager_execution()
+
 
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-def main(env_name, seed=42, verbose=False):
+def main(env_name: str, time_steps=10_000, k_bins=1, seed=42, verbose=False):
 	
-	seed = numpy.random.randint(0, 1000)
+	# tf.compat.v1.disable_v2_behavior()
+	# tf.compat.v1.disable_eager_execution()
+
 	#get and set hyper-parameters
-	meta_params,alg_params={},{}
 	print("default environment is Lunar Lander ...")
 
 	# Params for all environments.
 	env = gym.make(env_name)
 	
 	# How to discretize the action space for the environment
+	k = k_bins
 	## Discretize the action space for Pendulum-v0
-	k = 1
 	if isinstance(env.action_space, gym.spaces.Box):
 		k = 100
 
 		env = discretizing_wrapper(env, k)
 
 	# Params for specific environments.
-	if env_name =='CartPole-v0':
-
+	if env_name =='CartPole-v0' or env_name == 'CartPole-v1':
+		
 		meta_params = MetaParameters(
 			env=env,
-			env_name="CartPole-v0",
-			max_learning_episodes=400,
+			env_name=env_name,
+			time_steps=time_steps,
 			gamma=0.99,
 			seed=seed)
 		
+		print("this is the observation space", env.observation_space.shape[0])
 		alg_params = AlgorithmParameters(
 			max_buffer_size=10000,
-			state_dimension=len(env.reset()),
+			state_dimension=env.observation_space.shape[0],
 			action_space=env.action_space.n,
-			k=k,
+			k=1,
 			epsilon=0.3,
 			actor_num_h=1,
 			actor_h=64,
 			actor_lr=0.001,
 			critic_num_h=1,
-			critic_h=64,
+			critic_h=32,
 			critic_lr=0.01,
 			critic_batch_size=32,
 			critic_num_epochs=40,
@@ -121,13 +124,13 @@ def main(env_name, seed=42, verbose=False):
 		meta_params = MetaParameters(
 			env=env,
 			env_name="MountainCar-v0",
-			max_learning_episodes=2000,
-			gamma=0.99,
+			time_steps=time_steps,
+			gamma=0.8,
 			seed=seed)
 
 		alg_params = AlgorithmParameters(
 			max_buffer_size=10000,
-			state_dimension=len(env.reset()),
+			state_dimension=len(env.reset()[0]),
 			action_space=env.action_space.n,
 			epsilon=0.3,
 			actor_num_h=2,
@@ -147,7 +150,7 @@ def main(env_name, seed=42, verbose=False):
 		meta_params = MetaParameters(
 			env=env,
 			env_name="Pendulum-v1",
-			max_learning_episodes=3000,
+			time_steps=time_steps,
 			gamma=0.99,
 			seed=seed)
 
@@ -171,13 +174,13 @@ def main(env_name, seed=42, verbose=False):
 		meta_params = MetaParameters(
 			env=env,
 			env_name="MountainCarContinuous-v0",
-			max_learning_episodes=600,
+			time_steps=time_steps,
 			gamma=0.8,
 			seed=seed)
 
 		alg_params = AlgorithmParameters(
 			max_buffer_size=10000,
-			state_dimension=len(env.reset()),
+			state_dimension=len(env.observation_space.shape[0]),
 			action_space= k,
 			epsilon=0.6,
 			actor_num_h=2,
@@ -224,12 +227,12 @@ def main(env_name, seed=42, verbose=False):
 	random.seed(seed)
 	if not isinstance(meta_params, MetaParameters):
 		meta_params['env'].seed(seed)
-	tf.set_random_seed(seed)
+	tf.compat.v1.set_random_seed(seed)
 
 	# set session
-	session_conf = tf.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1)
-	sess = tf.Session(graph=tf.get_default_graph(), config=session_conf)
-	K.set_session(sess)
+	session_conf = tf.compat.v1.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1)
+	sess = tf.compat.v1.Session(graph=tf.compat.v1.get_default_graph(), config=session_conf)
+	# tf.compat.v1.keras.set_session(sess)
 
 	if verbose:
 		print("this is the action space", env.action_space)
