@@ -26,7 +26,7 @@ class Policy:
         if os.path.exists(abstract_agent_save_path) == False:
             os.makedirs(abstract_agent_save_path)
         
-        self.params['save_path'] = abstract_agent_save_path + self.env_name + '/'
+        self.params['save_path'] = abstract_agent_save_path + "mac_" + self.env_name + '/'
         ## Get current working directory
         cwd = os.getcwd().split('\\')[-1]
 		

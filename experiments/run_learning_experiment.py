@@ -266,19 +266,22 @@ def main(env_name: str, algo: str, policy_train_steps = 100_000, abstraction=Tru
     actions = list(gym_env.get_actions())
 
     ## Get policies
+    if algo == "mac":
+        policy_mac = get_policy(gym_env)
+        policy_mac.params["num_mdps"] = 1
+        policy_mac.params["num_iterations_for_abstraction_learning"] = 100
+        policy_mac.params["steps"] = 200
+        policy_mac.params["episodes"] = 50
+    else:
+        policy = get_policy_sb3(gym_env, algo, policy_train_steps)
+        policy.params["num_mdps"] = 1
+        policy.params["num_iterations_for_abstraction_learning"] = 100
+        policy.params["steps"] = 200
+        policy.params["episodes"] = 50
+
+
     
-    policy_mac = get_policy(gym_env)
-    policy = get_policy_sb3(gym_env, algo, policy_train_steps)
-
-    policy.params["num_mdps"] = 1
-    policy.params["num_iterations_for_abstraction_learning"] = 100
-    policy.params["steps"] = 200
-    policy.params["episodes"] = 50
-
-    policy_mac.params["num_mdps"] = 1
-    policy_mac.params["num_iterations_for_abstraction_learning"] = 100
-    policy_mac.params["steps"] = 200
-    policy_mac.params["episodes"] = 50
+    
 
     ## Run one episode of the environment
 
@@ -308,23 +311,21 @@ def main(env_name: str, algo: str, policy_train_steps = 100_000, abstraction=Tru
     # ql_agent = QLearningAgent(actions)
     agent_params = {"alpha":policy.params['rl_learning_rate'],"epsilon":0.1,"actions":actions}
     
-    sa_agent = AbstractionWrapper(QLearningAgent,
+    if policy is not None:
+        sa_agent = AbstractionWrapper(QLearningAgent,
                                   agent_params=agent_params,
                                   state_abstr=abstraction_network,
                                   name_ext="_phi_"+ str(algo) + "_" + str(seed))
     
-    sa_agent_mac = AbstractionWrapper(QLearningAgent,
+    if policy_mac is not None:
+        sa_agent_mac = AbstractionWrapper(QLearningAgent,
                                   agent_params=agent_params,
                                   state_abstr=abstraction_network_mac,
                                   name_ext="_phi_mac"+ "_" + str(seed))
     
-    # sa_agent_mac = AbstractionWrapper(QLearningAgent,
-    #                               agent_params=agent_params,
-    #                               state_abstr=nn_sa_mac,
-    #                               name_ext="_phi"+ "_" + str(seed))
 
     ## Agents in experiment
-    agent_list = [linear_agent, sa_agent, sa_agent_mac]
+    agent_list = [linear_agent, sa_agent_mac]
 
     # Timestamp for saving the experiment
     # Run the experiment
