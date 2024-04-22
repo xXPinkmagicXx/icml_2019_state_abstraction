@@ -20,19 +20,24 @@ import policies.MountainCarPolicy as mpd
 import policies.AcrobotPolicy as abp
 import policies.LunarLanderPolicy as llps
 import policies.PendulumPolicy as pp
+import policies.MountainCarPolicySB as mpd_sb
+from huggingface_sb3 import load_from_hub
+
+
 # abstraction
 from .abstraction.NNStateAbstrClass import NNStateAbstr
 from .utils.experiment_utils import make_nn_sa, make_nn_sa_2
 
 import tensorflow as tf
-tf.disable_v2_behavior()
+# To make code compatible with old code implemented in tensorflow 1.x
+tf.compat.v1.disable_v2_behavior()
 tf.compat.v1.disable_eager_execution()
 
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 
-def get_policy(gym_env: GymMDP):
+def get_policy(gym_env: GymMDP, sb3=False):
     """
     Args:
         gym_env (GymMDP)
@@ -48,13 +53,19 @@ def get_policy(gym_env: GymMDP):
     """
     if gym_env.env_name == "CartPole-v0":
         return cpp.CartPolePolicy(gym_env)
-    
+
     if gym_env.env_name == "Acrobot-v1":
         return abp.AcrobotPolicy(gym_env)
 
     if gym_env.env_name == "MountainCar-v0":
+        if sb3:
+            checkpoint = load_from_hub(
+                repo_id="sb3/dqn-MountainCar-v0",
+                filename="dqn-MountainCar-v0.zip")
+            return mpd_sb.MountainCarPolicySB(checkpoint, gym_env)
+
         return mpd.MountainCarPolicy(gym_env)
-    
+
     if gym_env.env_name == "LunarLander-v2":
         return llps.LunarLanderPolicy(gym_env)
 
@@ -72,12 +83,12 @@ def main(env_name, abstraction=True, verbose=False, seed=42):
         verbose = False (bool) : If True, print the environment name
         seed = 42 (int) :Seed for reproducibility
     Returns:
-        None 
+        None
     This function runs the learning experiment for the given environment.
     """
     ## get parameters
     gym_env = GymMDP(env_name)
-    
+
     ## Set seed
     gym_env.env.seed(seed)
     random.seed(seed)
@@ -86,18 +97,18 @@ def main(env_name, abstraction=True, verbose=False, seed=42):
         print("this is the environment: ", gym_env.env_name)
     ## Get actions and features
     actions = list(gym_env.get_actions())
-    
-    
+
+
     ## Get policy
-    policy = get_policy(gym_env)
+    policy = get_policy(gym_env, True)
     policy.params["num_mdps"] = 1
     policy.params["size_a"] = len(actions)
     policy.params["num_iterations_for_abstraction_learning"] = 10
     policy.params["steps"] = 20
-    
+
     ## Make Abstraction
     if abstraction:
-        sess = tf.Session()
+        sess = tf.compat.v1.Session()
         sample_batch = policy.sample_unif_random()
         abstraction_net = make_nn_sa_2(sess, policy.params, sample_batch)
         nn_sa = NNStateAbstr(abstraction_net)
@@ -125,7 +136,7 @@ def main(env_name, abstraction=True, verbose=False, seed=42):
 
     # Timestamp for saving the experiment
     dir_for_plot = str(datetime.now().time()).replace(":", "_").replace(".", "_")
-    
+
     # mode
     # Run the experiment
     run_agents_on_mdp(agent_list,

@@ -112,7 +112,6 @@ def collect_samples_from_demo_policy_puddle(mdp_demo_policy_dict, num_samples, e
 
     return samples
 
-
 def collect_unif_random_samples_demo_policy_puddle(mdp_demo_policy_dict, num_samples):
     '''
     Args:
@@ -324,8 +323,8 @@ def make_nn_sa(mdp_demo_policy_dict, sess, params, verbose=True, sample_type="ra
     num_abstract_states = size_z
     dir_path = os.path.dirname(os.path.realpath(__file__))
     abstraction_net = abstraction_network.abstraction_network(sess, params,num_abstract_states)
-    sess.run(tf.global_variables_initializer())
-    saver = tf.train.Saver()
+    sess.run(tf.compat.v1.global_variables_initializer())
+    # saver = tf.train.Saver()
     if verbose:
         print("env_name:", params['env_name'])
     if params['env_name']=='PuddleMDP':
@@ -396,7 +395,7 @@ def make_nn_sa_2(sess, params, samples_batch=None, verbose=True):
     
     ## Create abstraction network
     abstraction_net = abstraction_network(sess, params,num_abstract_states)
-    sess.run(tf.global_variables_initializer())
+    sess.run(tf.compat.v1.global_variables_initializer())
     
     ## print
     if verbose:
