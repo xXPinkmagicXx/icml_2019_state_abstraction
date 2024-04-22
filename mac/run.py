@@ -4,6 +4,9 @@ import sys,random
 import tensorflow as tf
 import gymnasium as gym
 # from keras import backend as K
+from keras import backend as K
+import matplotlib.pyplot as plt
+
 
 # Import action wrapper
 from .ActionWrapper import discretizing_wrapper
@@ -14,7 +17,7 @@ from .HyperParameters import AlgorithmParameters, MetaParameters, make_parameter
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-def main(env_name: str, time_steps=10_000, k_bins=1, seed=42):
+def main(env_name: str, time_steps=10_000, k_bins=1, seed=42, verbose=False):
 	
 	# tf.compat.v1.disable_v2_behavior()
 	# tf.compat.v1.disable_eager_execution()
@@ -29,6 +32,7 @@ def main(env_name: str, time_steps=10_000, k_bins=1, seed=42):
 	k = k_bins
 	## Discretize the action space for Pendulum-v0
 	if isinstance(env.action_space, gym.spaces.Box):
+		k = 100
 
 		env = discretizing_wrapper(env, k)
 
@@ -58,45 +62,62 @@ def main(env_name: str, time_steps=10_000, k_bins=1, seed=42):
 			critic_batch_size=32,
 			critic_num_epochs=40,
 			critic_target_net_freq=1,
-			critic_train_type='model_free_critic_TD')
-		
-	
+			critic_train_type='model_free_critic_TD',
+			verbose=verbose)
+
 	if  env_name =='LunarLander-v2':
-		meta_params['max_learning_episodes']=3000
-		alg_params['state_dimension']=len(meta_params['env'].reset())
-		alg_params['A']=meta_params['env'].action_space.n
-		alg_params['critic_num_h']=2
-		alg_params['critic_h']=128
-		alg_params['critic_lr']=0.005
-		alg_params['actor_num_h']=2
-		alg_params['actor_h']=128
-		alg_params['actor_lr']=0.00025
-		alg_params['critic_batch_size']=32
-		alg_params['critic_num_epochs']=10
-		alg_params['critic_target_net_freq']=1
-		alg_params['max_buffer_size']=10000
-		alg_params['critic_train_type']='model_free_critic_TD'#or model_free_critic_monte_carlo
+
+		meta_params = MetaParameters(
+			env=env,
+			env_name="LunarLander-v2",
+			max_learning_episodes=3000,
+			gamma=0.99,
+			seed=seed)
+		
+		alg_params = AlgorithmParameters(
+			max_buffer_size=10000,
+			state_dimension=len(env.reset()),
+			action_space=env.action_space.n,
+			k=k,
+			epsilon=0.3,
+			actor_num_h=2,
+			actor_h=128,
+			actor_lr=0.00025,
+			critic_num_h=2,
+			critic_h=128,
+			critic_lr=0.005,
+			critic_batch_size=32,
+			critic_num_epochs=10,
+			critic_target_net_freq=1,
+			critic_train_type='model_free_critic_TD',
+			verbose=verbose)
 
 	if env_name == 'Acrobot-v1':
 		
-		meta_params['max_learning_episodes']=3000
-		alg_params['max_buffer_size']=5000
-		alg_params['state_|dimension|']=len(meta_params['env'].reset())
-
-		# Actor
-		alg_params['actor_num_h']=2
-		alg_params['actor_|h|']=128
-		alg_params['actor_lr']=0.00025
+		meta_params = MetaParameters(
+			env=env,
+			env_name="Acrobot-v1",
+			max_learning_episodes=3000,
+			gamma=0.99,
+			seed=seed)
 		
-		## critic
-		alg_params['|A|']= meta_params['env'].action_space.n
-		alg_params['critic_num_h']=2
-		alg_params['critic_|h|']=128
-		alg_params['critic_lr']=0.005
-		alg_params['critic_batch_size']=32
-		alg_params['critic_num_epochs']=10
-		alg_params['critic_target_net_freq']=1
-		alg_params['critic_train_type']='model_free_critic_TD'
+		alg_params = AlgorithmParameters(
+			max_buffer_size=10000,
+			state_dimension=len(env.reset()),
+			action_space=env.action_space.n,
+			k=k,
+			epsilon=0.3,
+			actor_num_h=2,
+			actor_h=128,
+			actor_lr=0.00025,
+			critic_num_h=2,
+			critic_h=128,
+			critic_lr=0.005,
+			critic_batch_size=32,
+			critic_num_epochs=10,
+			critic_target_net_freq=1,
+			critic_train_type='model_free_critic_TD',
+			verbose=verbose)
 
 	if env_name =='MountainCar-v0':
 		
@@ -111,17 +132,17 @@ def main(env_name: str, time_steps=10_000, k_bins=1, seed=42):
 			max_buffer_size=10000,
 			state_dimension=len(env.reset()[0]),
 			action_space=env.action_space.n,
-			epsilon=0.6,
+			epsilon=0.3,
 			actor_num_h=2,
-			actor_h=40,
-			actor_lr=0.01,
+			actor_h=64,
+			actor_lr=0.001,
 			critic_num_h=2,
-			critic_h=40,
-			critic_lr=0.01,
-			critic_batch_size=64,
+			critic_h=64,
+			critic_lr=0.001,
+			critic_batch_size=32,
 			critic_num_epochs=10,
 			critic_target_net_freq=1,
-			critic_train_type='model_free_critic_monte_carlo'
+			critic_train_type='model_free_critic_TD'
 		)
 
 	if env_name == "Pendulum-v1":
@@ -177,7 +198,7 @@ def main(env_name: str, time_steps=10_000, k_bins=1, seed=42):
 		meta_params = MetaParameters(
 			env=env,
 			env_name="Swimmer-v4",
-			max_learning_episodes=550,
+			max_learning_episodes=2000,
 			gamma=0.99,
 			seed=seed)
 
@@ -188,15 +209,17 @@ def main(env_name: str, time_steps=10_000, k_bins=1, seed=42):
 			k=k,
 			epsilon=0.3,
 			actor_num_h=2,
-			actor_h=64,
+			actor_h=128,
 			actor_lr=0.0001,
 			critic_num_h=2,
-			critic_h=64,
+			critic_h=128,
 			critic_lr=0.001,
 			critic_batch_size=32,
 			critic_num_epochs=10,
 			critic_target_net_freq=1,
-			critic_train_type='model_free_critic_TD')
+			critic_train_type='model_free_critic_TD',
+			verbose=verbose)
+		
 	## ensure results are reproducible
 	
 	# set seeds
@@ -211,11 +234,10 @@ def main(env_name: str, time_steps=10_000, k_bins=1, seed=42):
 	sess = tf.compat.v1.Session(graph=tf.compat.v1.get_default_graph(), config=session_conf)
 	# tf.compat.v1.keras.set_session(sess)
 
-
-	print("this is the action space", env.action_space)
+	if verbose:
+		print("this is the action space", env.action_space)
 	#create a MAC agent and run
-	action_space = 2
-	print("this is the action space", action_space)
+	action_space = env.action_space.n
 	state_dimension = len(env.reset())
 	actor_lr = [0.01]
 	critic_lr = [0.01]
@@ -242,25 +264,29 @@ def main(env_name: str, time_steps=10_000, k_bins=1, seed=42):
 
 	DO_PARAMETER_SEARCH = False
 
+	# alg_params.verbose = True
 
-	if isinstance(alg_params, AlgorithmParameters):
-
-		if DO_PARAMETER_SEARCH:
+	if DO_PARAMETER_SEARCH:
+		print("Starting parameter search...")
+		for alg_param in algo_parameter_list:
 			
-			print("Starting parameter search...")
-			for alg_param in algo_parameter_list:
-				
-				print(str(alg_param))
-				
-				agent = mac(alg_param.to_Dictionary())
-				agent.train(meta_params.to_Dictionary())
-		else:
-			agent = mac(alg_params.to_Dictionary())
-			returns = agent.train(meta_params.to_Dictionary())
-			print(returns)
+			print(str(alg_param))
+			params = {**alg_param.to_Dictionary(), **meta_params.to_Dictionary()}
+			agent = mac(alg_param.to_Dictionary())
+			agent.train()
 	else:
-		agent = mac(alg_params)
-		agent.train(meta_params)
+		
+		print("Starting normal training...")
+		params = {**alg_params.to_Dictionary(), **meta_params.to_Dictionary()}
+		params["verbose"] = True
+		agent = mac(params)
+		returns, rewards = agent.train()
+
+		print("this is the returns: ", returns)
+		print("this is the rewards: ", rewards)
+		## make plot of returns pr time step
+		plt.plot([i for i in range(len(returns))], returns)
+		plt.show()
 	
 	#create a MAC agent and run
 

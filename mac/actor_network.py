@@ -44,12 +44,18 @@ class actor:
             selects an action given a state. First computes \pi(.|s)
             using the neural net, and then draws an action a~\pi(.|s)
         '''
-        print("this is the state: ", state)
-        print("this is the state dimension: ", self.params['state_dimension'])
-        s = numpy.array(state).reshape(1, self.params['state_dimension'])
-        print("This is s: ", s)
-        pr = self.network.predict(s)[0]
-        print("this is the pr: ", pr)
+            
+        pr=self.network.predict(numpy.array(state).reshape(1,self.params['state_dimension']))[0]
+        ## Reshape the pr to action x k
+        if not self.params["k"] == 1:
+            pr = np.array(pr).reshape(self.params['k'], self.params['action_space'])
+        
+        # if self.params["verbose"] == True:
+        #     # print("this is the state: ", state)
+        #     # print("this is the state dimension:", self.params["state_dimension"])
+        #     print("this is the action space: ", self.params['action_space']) 
+        #     print("This is the state reshaped: ", numpy.array(state).reshape(1,self.params['state_dimension']))
+        
         ## Implement \epsilon greedy exploration
         epsilon = self.params['epsilon']
         if numpy.random.random() < epsilon:
@@ -57,15 +63,16 @@ class actor:
             if self.params["k"] == 1:
                 a = np.random.choice(range( self.params['A']))
             else:
-                print("Now choosing at random...")
                 a = np.random.choice(range(self.params['k']), self.params['action_space'])
+            # if self.params["verbose"] == True:
+            #     print("this is the selected_action: ", a)
         else:
-            print("Now choosing based on the policy...")
-            print("this is the pr: ", pr.shape)
             a = np.argmax(pr, axis=0)
-
-        #a = numpy.random.choice([x for x in range(selxf.params['|A|'])],p=pr)
-        print("this is the chosen action: ", a)
+            # a_2 = np.argmax(n_pr, axis=1)
+        
+        #a = numpy.random.choice([x for x in range(self.params['|A|'])],p=pr)
+        # if self.params["verbose"] == True:
+        #     print("this is the selected_action: ", a)
         return a
 
     def train(self,states,critic):
