@@ -121,15 +121,14 @@ def Get_GymMDP(env_name, k: int, render=False):
     Args:
         :param env_name (str): Name of the environment
         :param k (int): Number of bins to discretize the action space into. Only used if the action space is continuous.
+        :param render = False (bool): If True, sets the render_mode to human in the environment
     Returns:
         GymMDP object for the given environment
     Summary:
     This function creates a GymMDP object for the given environment.
     If the action space is continous, it discretizes the action space into k bin pr action.
+    You can also set the render mode to human if you want to see the environment.
     """
-    k = 20
-    ## get parameters
-
     gym_env = gym.make(env_name, render_mode="human") if render else gym.make(env_name)
     ## Make the environment discrete
     if isinstance(gym_env.env.action_space, gym.spaces.Box):
