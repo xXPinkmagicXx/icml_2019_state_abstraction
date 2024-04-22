@@ -12,7 +12,7 @@ import os
 class Policy:
     __metaclass__ = abc.ABCMeta
 	
-    def __init__(self, gym_env: GymMDP, policy_train_steps=10_000):
+    def __init__(self, gym_env: GymMDP, policy_train_steps: int):
 		
         self.gym_env = gym_env
         self.params = self.get_params()

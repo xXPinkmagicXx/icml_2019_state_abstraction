@@ -8,9 +8,9 @@ import os
 
 class MountainCarPolicy(Policy.Policy):
 	
-	def __init__(self, gym_env: GymMDP):
-		
-		super().__init__(gym_env)
+	def __init__(self, gym_env: GymMDP, policy_train_steps=10_000):
+
+		super().__init__(gym_env, policy_train_steps)
 		
 	def get_params(self):
 		

@@ -83,7 +83,7 @@ def get_policy_sb3(gym_env: GymMDP, algo: str = "ppo", policy_train_steps=100_00
     
     return NotImplementedError("Policy not implemented for this environment")
 
-def get_policy(gym_env: GymMDP):
+def get_policy(gym_env: GymMDP, policy_time_steps=10_000):
     """
     Args:
         :param gym_env (GymMDP) : Gym MDP object
@@ -100,19 +100,19 @@ def get_policy(gym_env: GymMDP):
     """
 
     if gym_env.env_name == "CartPole-v0":
-        return cpp.CartPolePolicy(gym_env)
+        return cpp.CartPolePolicy(gym_env, policy_time_steps)
 
     if gym_env.env_name == "Acrobot-v1":
-        return abp.AcrobotPolicy(gym_env)
+        return abp.AcrobotPolicy(gym_env, policy_time_steps)
 
     if gym_env.env_name == "MountainCar-v0":
-        return mcp.MountainCarPolicy(gym_env)
+        return mcp.MountainCarPolicy(gym_env, policy_time_steps)
 
     if gym_env.env_name == "LunarLander-v2":
-        return llp.LunarLanderPolicy(gym_env)
+        return llp.LunarLanderPolicy(gym_env, policy_time_steps)
 
     if gym_env.env_name == "Pendulum-v1":
-        return pp.PendulumPolicy(gym_env)
+        return pp.PendulumPolicy(gym_env, policy_time_steps)
 
     return NotImplementedError("Policy not implemented for this environment")
 
@@ -241,6 +241,19 @@ def load_agent(env_name: str, algo: str, policy_train_steps = 100_000):
     print("loading complete...")
     return nn_sa
 
+def get_policies(gym_env: str, algo: str, policy_train_steps = 100_000):
+    if algo == "mac":
+        policy_mac = get_policy(gym_env)
+        policy_mac.params["num_mdps"] = 1
+        policy_mac.params["num_iterations_for_abstraction_learning"] = 100
+        policy_mac.params["steps"] = 200
+        policy_mac.params["episodes"] = 50
+    else:
+        policy = get_policy_sb3(gym_env, algo, policy_train_steps)
+        policy.params["num_mdps"] = 1
+        policy.params["num_iterations_for_abstraction_learning"] = 100
+        policy.params["steps"] = 200
+        policy.params["episodes"] = 50
 def main(env_name: str, algo: str, policy_train_steps = 100_000, abstraction=True, load_model = False, run_expiriment=True,  verbose=False, seed=42):
     """
     Args:
