@@ -23,7 +23,8 @@ class MetaParameters:
         meta_params['state_dimension'] = self.state_dimension
         meta_params['plot'] = self.plot
         meta_params['max_learning_episodes'] = self.max_learning_episodes
-
+        meta_params['episodes'] = self.max_learning_episodes  
+        
         return meta_params
 
 def make_parameters(action_space: int, state_dimension: int, k: int, actor_h: list, critic_h: list, actor_lr : list, critic_lr : list, critic_batch_size : list, critic_train_type : list, epsilon : list, max_buffer_size : list):
@@ -62,11 +63,12 @@ def make_parameters(action_space: int, state_dimension: int, k: int, actor_h: li
 class AlgorithmParameters:
     
     def __str__(self) -> str:
-        return f"\nWith Parameters:\n\tmax_buffer_size: {self.max_buffer_size}, action_space: {self.action_space}, state_dimension: {self.state_dimension}, epsilon: {self.epsilon},
+        return f'''\nWith Parameters:
+            \n\tmax_buffer_size: {self.max_buffer_size}, action_space: {self.action_space}, state_dimension: {self.state_dimension}, epsilon: {self.epsilon},
         \nActor Params:
-        \n\tactor_num_h: {self.actor_num_h}, actor_h: {self.actor_h}, actor_lr: {self.actor_lr},
+            \n\tactor_num_h: {self.actor_num_h}, actor_h: {self.actor_h}, actor_lr: {self.actor_lr},
         \nCritic Params:
-        \n\tcritic_num_h: {self.critic_num_h}, critic_h: {self.critic_h}, critic_lr: {self.critic_lr}, critic_batch_size: {self.critic_batch_size}, critic_num_epochs: {self.critic_num_epochs}, critic_target_net_freq: {self.critic_target_net_freq}, critic_train_type: {self.critic_train_type}"
+            \n\tcritic_num_h: {self.critic_num_h}, critic_h: {self.critic_h}, critic_lr: {self.critic_lr}, critic_batch_size: {self.critic_batch_size}, critic_num_epochs: {self.critic_num_epochs}, critic_target_net_freq: {self.critic_target_net_freq}, critic_train_type: {self.critic_train_type}'''
 
     def __init__(
                 self,

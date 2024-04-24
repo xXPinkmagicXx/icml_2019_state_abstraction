@@ -6,6 +6,7 @@ import sys
 import os
 from collections import deque
 import time
+import matplotlib.pyplot as plt
 
 class mac:
 	'''
@@ -31,10 +32,10 @@ class mac:
 		elif cwd == "Bachelor-Project":
 			learned_policy_path = './icml_2019_state_abstraction/mac/learned_policy/'	
 		
-		if not os.path.exists(learned_policy_path + str(self.params['time_steps'])+'/'):
-			os.makedirs(learned_policy_path + str(self.params['time_steps'])+'/')
+		if not os.path.exists(learned_policy_path + str(self.params['episodes'])+'/'):
+			os.makedirs(learned_policy_path + str(self.params['episodes'])+'/')
 		
-		self.learned_policy_path = learned_policy_path  + str(self.params['time_steps']) + '/' + self.params['env_name'] 
+		self.learned_policy_path = learned_policy_path  + str(self.params['episodes']) + '/' + self.params['env_name'] 
 
 	def add_2_memory(self,states,actions,rewards):
 		T=len(states)
@@ -55,60 +56,66 @@ class mac:
 		li_returns=[]
 		li_actions=[]
 		li_rewards=[]
+		li_acc_rewards=[]
 		li_time = []
 		accumulated_rewards= 0
 
 		for episode in range(1,self.params['max_learning_episodes']):
 			# Do one episode of interaction
-			start_time = time.time()
-			states, actions, returns, rewards = self.interactOneEpisode(episode)
-			end_time = time.time()
-			
+			states, actions, returns, rewards = self.interactOneEpisode()
+
 			# Update epsilon for epsilon greedy policy
 			# print("This is the epsilon in actor", self.actor.params['epsilon'], "this is the epsilon in mac", self.epsilon)
 			self.actor.params['epsilon'] = max(1 - episode/(self.params["max_learning_episodes"]*self.epsilon), 0.01)
 
-			# Accumulated rewards
-			accumulated_rewards += numpy.sum(rewards)
-
-			# Time
-			episode_time = end_time - start_time
-			li_time.append(episode_time)
-
 			#add to memory
 			self.add_2_memory(states,actions,rewards)
 
+			# Accumulated rewards
+			accumulated_rewards += numpy.sum(rewards)
+			if episode%200==0:
+				self.save_model()
+				if self.params["verbose"]:
+					print("Saved latest policy network to disk")
+
+			if episode%250==0:
+				self.params['env'].render()
 			#log performance
 			if episode % 10 == 0:
-				print(episode,"return in last 10 episodes",numpy.mean(li_returns[-10:]), "with accumulated rewards", accumulated_rewards, "this was the last 10 epiode time", numpy.sum(li_time[-10:]))
+				print(episode,"return in last 10 episodes",numpy.mean(li_returns[-10:]), "with accumulated rewards", accumulated_rewards)
 
 			li_returns.append(returns[0])
 			li_rewards.append(numpy.sum(rewards))
+			li_acc_rewards.append(accumulated_rewards)
 			sys.stdout.flush()
 
 			#train the Q network
-			if self.params['critic_train_type']=='model_free_critic_monte_carlo':
-				self.critic.train_model_free_monte_carlo(states,actions,returns)
+			self.train_critic(states, actions, returns, episode)
 
-			elif self.params['critic_train_type']=='model_free_critic_TD':
-				self.critic.train_model_free_TD(self.memory,self.actor,self.params,self.params,episode)
-
-			self.actor.train(states,self.critic)
+			self.actor.train(states, self.critic)
 		
 		# save the model when training is over
-		model_json = self.actor.network.to_json()
-		with open(self.learned_policy_path+".json", "w") as json_file:
-			json_file.write(model_json)
-			
-		# serialize weights to HDF5
-		self.actor.network.save_weights(self.learned_policy_path + ".h5")
+		self.save_model()
 		print("Saved latest policy network to disk")
 
 		print("training is finished successfully!")
 		# Return the rewards 
+		self.makePlotofReturns(rewards)
+		self.makePlotofReturns(li_acc_rewards, title="Accumulated rewards")
+		
 		return li_returns, li_rewards
 
-	def interactOneEpisode(self,episode):
+	def train_critic(self, states, actions, returns, episode) -> None:
+		'''
+		Train the critic network
+		'''
+		if self.params['critic_train_type']=='model_free_critic_monte_carlo':
+			self.critic.train_model_free_monte_carlo(states,actions,returns)
+
+		elif self.params['critic_train_type']=='model_free_critic_TD':
+			self.critic.train_model_free_TD(self.memory,self.actor,self.params,self.params,episode)
+
+	def interactOneEpisode(self):
 		'''
 			given the mac agent and an environment, executes their
 			interaction for an episode, and then returns important information
@@ -121,29 +128,26 @@ class mac:
 		actions = []
 		t = 0
 		s=s0
-		s_max = -0.5
-		s_min = -0.5
 		while True:
 			a = self.actor.select_action(s)
 			s_p , r , terminated, truncated , info = self.params['env'].step(a)
-
-			if episode%250==0:
-				self.params['env'].render()
-
-			ra = self.rewardToMounainCar(s, s_p, r, a, episode)
 			
 			states.append(s)
 			actions.append(a)
-			rewards.append(ra)
+			rewards.append(r)
 			# update for next iteration
+			
 			s, t = (s_p,t+1)
 
 			# when done
 			if truncated or terminated :
-				if not truncated:
-					rewards[-1]=100
+				
+				if terminated and self.params["verbose"]:
+					# maybe reward function here
 					print("Reached the goal!")
-				states.append(s_p)#we actually store the terminal state!
+				
+				# we actually store the terminal state!
+				states.append(s_p)
 				a=self.actor.select_action(s_p)
 				actions.append(a),
 				rewards.append(0)
@@ -151,25 +155,30 @@ class mac:
 
 		returns = self.rewardToReturn(rewards)
 
-		## Save to disk every 200 episodes
-		if episode%200==0:
-			model_json = self.actor.network.to_json()
-			with open(self.learned_policy_path+".json", "w") as json_file:
-				json_file.write(model_json)
-			
-			# serialize weights to HDF5
-			self.actor.network.save_weights(self.learned_policy_path + ".h5")
-			print("Saved latest policy network to disk")
-
-		return states,actions,returns,rewards
+		return states, actions, returns, rewards
 	
-	def rewardToReturn(self, rewards):
+	def rewardToReturn(self, rewards) -> list:
 		T=len(rewards)
 		returns=T*[0]
 		returns[T-1]=rewards[T-1]
 		for t in range(T-2,-1,-1):
 			returns[t]=rewards[t]+self.params['gamma']*returns[t+1]
 		return returns
+	
+	def makePlotofReturns(self, returns, title="Returns")->None:
+		plt.plot([i for i in range(len(returns))], returns, 'o')
+		plt.title(title)
+		plt.show()
+
+	def save_model(self) -> None:
+		
+		## Update json file
+		model_json = self.actor.network.to_json()
+		with open(self.learned_policy_path+".json", "w") as json_file:
+			json_file.write(model_json)
+		
+		# serialize weights to HDF5
+		self.actor.network.save_weights(self.learned_policy_path + ".h5")
 
 	def rewardToMounainCar(self, current_state, next_state, reward, action, episode):
 		

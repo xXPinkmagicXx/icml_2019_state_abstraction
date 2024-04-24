@@ -5,10 +5,9 @@ import tensorflow as tf
 # Disable extensive logging
 tf.keras.utils.disable_interactive_logging()
 import gymnasium as gym
-# from keras import backend as K
 from keras import backend as K
 import matplotlib.pyplot as plt
-
+import time
 
 # Import action wrapper
 from .ActionWrapper import discretizing_wrapper
@@ -20,6 +19,8 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 def main(env_name: str, episodes=200, k_bins=1, seed=42, verbose=False):
 	
+	## The neural nets are created in version 1 of tensorflow
+	## This is to ensure compatibility and the code runs faster  
 	tf.compat.v1.disable_v2_behavior()
 	tf.compat.v1.disable_eager_execution()
 
@@ -30,12 +31,9 @@ def main(env_name: str, episodes=200, k_bins=1, seed=42, verbose=False):
 	env = gym.make(env_name)
 	
 	# How to discretize the action space for the environment
-	k = k_bins
-	## Discretize the action space for Pendulum-v0
+	## Discretize the action space for Pendulum-v0 and MountainCarContinuous
 	if isinstance(env.action_space, gym.spaces.Box):
-		k = 100
-
-		env = discretizing_wrapper(env, k)
+		env = discretizing_wrapper(env, k_bins)
 
 	# Params for specific environments.
 	if env_name =='CartPole-v0' or env_name == 'CartPole-v1':
@@ -43,7 +41,7 @@ def main(env_name: str, episodes=200, k_bins=1, seed=42, verbose=False):
 		meta_params = MetaParameters(
 			env=env,
 			env_name=env_name,
-			time_steps=episodes,
+			episodes=episodes,
 			gamma=0.99,
 			seed=seed)
 		
@@ -253,7 +251,7 @@ def main(env_name: str, episodes=200, k_bins=1, seed=42, verbose=False):
 	algo_parameter_list = make_parameters(
 							action_space,
 							state_dimension,
-							k,
+							k_bins,
 							actor_h,
 							critic_h,
 							actor_lr,
@@ -279,15 +277,19 @@ def main(env_name: str, episodes=200, k_bins=1, seed=42, verbose=False):
 		
 		print("Starting normal training...")
 		params = {**alg_params.to_Dictionary(), **meta_params.to_Dictionary()}
-		params["verbose"] = True
 		agent = mac(params)
+
+		# train the agent and time it
+		start_time = time.time()
 		returns, rewards = agent.train()
+		end_time = time.time()
+
+		with open(agent.learned_policy_path + "_time.txt", 'w') as f:
+			f.write(str(end_time - start_time))
 
 		print("this is the returns: ", returns)
 		print("this is the rewards: ", rewards)
 		## make plot of returns pr time step
-		plt.plot([i for i in range(len(returns))], returns)
-		plt.show()
 	
 	#create a MAC agent and run
 
