@@ -8,14 +8,54 @@ import gymnasium as gym
 from keras import backend as K
 import matplotlib.pyplot as plt
 import time
-
+import os
 # Import action wrapper
 from .ActionWrapper import discretizing_wrapper
 from .HyperParameters import AlgorithmParameters, MetaParameters, make_parameters
+from Code.icml import icml_config
 
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
+def get_config(env_name) -> dict:
+	pass
+	# # Get the config for the environment
+	if env_name == "MountainCar-v0":
+		return icml_config.MOUNTAIN_CAR
+	if env_name == "CartPole-v0" or env_name == "CartPole-v1":
+		return icml_config.CARTPOLE
+	elif env_name == "Acrobot-v1":
+		return icml_config.ACROBOT
+	elif env_name == "Pendulum-v1":
+		return icml_config.PENDULUM
+	elif env_name == "MountainCarContinuous-v0":
+		return icml_config.MOUNTAIN_CAR_CONTINUOUS
+	elif env_name == "LunarLander-v2":
+		return icml_config.LUNAR_LANDER
+	elif env_name == "Swimmer-v4":
+		return icml_config.SWIMMER
+	else:
+		raise ValueError("Invalid environment name")
+
+def get_params(env, env_name, episodes, k_bins, seed, verbose) -> dict:
+
+	## Get the config for the environment
+	config = get_config(env_name)
+
+	config['env'] = env
+	config['A'] = env.action_space.n
+	config['action_space']=env.action_space.n
+	config['k'] = k_bins
+	config['state_dimension']=env.observation_space.shape[0]
+	config['episodes'] = episodes
+	config['seed'] = seed
+	config['verbose'] = verbose
+	config['k_bins'] = k_bins
+	config['env_name'] = env_name
+	config['gamma'] = 0.99
+	config['plot'] = False
+	
+	return config
 
 def main(env_name: str, episodes=200, k_bins=1, seed=42, verbose=False):
 	
@@ -24,46 +64,18 @@ def main(env_name: str, episodes=200, k_bins=1, seed=42, verbose=False):
 	tf.compat.v1.disable_v2_behavior()
 	tf.compat.v1.disable_eager_execution()
 
-	#get and set hyper-parameters
-	print("default environment is Lunar Lander ...")
-
 	# Params for all environments.
 	env = gym.make(env_name)
-	
 	# How to discretize the action space for the environment
 	## Discretize the action space for Pendulum-v0 and MountainCarContinuous
 	if isinstance(env.action_space, gym.spaces.Box):
 		env = discretizing_wrapper(env, k_bins)
+	
+	# Get the config for the environment
+	params = get_params(env, env_name, episodes, k_bins, seed, verbose)
 
+	meta_params = {}
 	# Params for specific environments.
-	if env_name =='CartPole-v0' or env_name == 'CartPole-v1':
-		
-		meta_params = MetaParameters(
-			env=env,
-			env_name=env_name,
-			episodes=episodes,
-			gamma=0.99,
-			seed=seed)
-		
-		print("this is the observation space", env.observation_space.shape[0])
-		alg_params = AlgorithmParameters(
-			max_buffer_size=10000,
-			state_dimension=env.observation_space.shape[0],
-			action_space=env.action_space.n,
-			k=1,
-			epsilon=0.3,
-			actor_num_h=1,
-			actor_h=64,
-			actor_lr=0.001,
-			critic_num_h=1,
-			critic_h=32,
-			critic_lr=0.01,
-			critic_batch_size=32,
-			critic_num_epochs=40,
-			critic_target_net_freq=1,
-			critic_train_type='model_free_critic_TD',
-			verbose=verbose)
-
 	if  env_name =='LunarLander-v2':
 
 		meta_params = MetaParameters(
@@ -224,7 +236,7 @@ def main(env_name: str, episodes=200, k_bins=1, seed=42, verbose=False):
 	# set seeds
 	numpy.random.seed(seed)
 	random.seed(seed)
-	if not isinstance(meta_params, MetaParameters):
+	if not isinstance(meta_params, MetaParameters) and meta_params != {}:
 		meta_params['env'].seed(seed)
 	tf.compat.v1.set_random_seed(seed)
 
