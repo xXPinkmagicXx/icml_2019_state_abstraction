@@ -30,7 +30,11 @@ class mac:
 			learned_policy_path = './mac/learned_policy/'
 		elif cwd == "Bachelor-Project":
 			learned_policy_path = './icml_2019_state_abstraction/mac/learned_policy/'	
-		self.learned_policy_path = learned_policy_path  +str(self.params['time_steps']) + '/' + self.params['env_name'] 
+		
+		if not os.path.exists(learned_policy_path + str(self.params['time_steps'])+'/'):
+			os.makedirs(learned_policy_path + str(self.params['time_steps'])+'/')
+		
+		self.learned_policy_path = learned_policy_path  + str(self.params['time_steps']) + '/' + self.params['env_name'] 
 
 	def add_2_memory(self,states,actions,rewards):
 		T=len(states)
@@ -90,6 +94,15 @@ class mac:
 				self.critic.train_model_free_TD(self.memory,self.actor,self.params,self.params,episode)
 
 			self.actor.train(states,self.critic)
+		
+		# save the model when training is over
+		model_json = self.actor.network.to_json()
+		with open(self.learned_policy_path+".json", "w") as json_file:
+			json_file.write(model_json)
+			
+		# serialize weights to HDF5
+		self.actor.network.save_weights(self.learned_policy_path + ".h5")
+		print("Saved latest policy network to disk")
 
 		print("training is finished successfully!")
 		# Return the rewards 
@@ -112,7 +125,7 @@ class mac:
 		s_min = -0.5
 		while True:
 			a = self.actor.select_action(s)
-			s_p , r , done , info = self.params['env'].step(a)
+			s_p , r , terminated, truncated , info = self.params['env'].step(a)
 
 			if episode%250==0:
 				self.params['env'].render()
@@ -126,8 +139,8 @@ class mac:
 			s, t = (s_p,t+1)
 
 			# when done
-			if done==True:
-				if not "TimeLimit.truncated" in info:
+			if truncated or terminated :
+				if not truncated:
 					rewards[-1]=100
 					print("Reached the goal!")
 				states.append(s_p)#we actually store the terminal state!
@@ -150,7 +163,7 @@ class mac:
 
 		return states,actions,returns,rewards
 	
-	def rewardToReturn(self, rewards,gamma):
+	def rewardToReturn(self, rewards):
 		T=len(rewards)
 		returns=T*[0]
 		returns[T-1]=rewards[T-1]

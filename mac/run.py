@@ -2,6 +2,8 @@ from .mac import mac
 import numpy
 import sys,random
 import tensorflow as tf
+# Disable extensive logging
+tf.keras.utils.disable_interactive_logging()
 import gymnasium as gym
 # from keras import backend as K
 from keras import backend as K
@@ -12,15 +14,14 @@ import matplotlib.pyplot as plt
 from .ActionWrapper import discretizing_wrapper
 from .HyperParameters import AlgorithmParameters, MetaParameters, make_parameters
 
-
-
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-def main(env_name: str, time_steps=10_000, k_bins=1, seed=42, verbose=False):
+
+def main(env_name: str, episodes=200, k_bins=1, seed=42, verbose=False):
 	
-	# tf.compat.v1.disable_v2_behavior()
-	# tf.compat.v1.disable_eager_execution()
+	tf.compat.v1.disable_v2_behavior()
+	tf.compat.v1.disable_eager_execution()
 
 	#get and set hyper-parameters
 	print("default environment is Lunar Lander ...")
@@ -42,7 +43,7 @@ def main(env_name: str, time_steps=10_000, k_bins=1, seed=42, verbose=False):
 		meta_params = MetaParameters(
 			env=env,
 			env_name=env_name,
-			time_steps=time_steps,
+			time_steps=episodes,
 			gamma=0.99,
 			seed=seed)
 		
@@ -70,13 +71,13 @@ def main(env_name: str, time_steps=10_000, k_bins=1, seed=42, verbose=False):
 		meta_params = MetaParameters(
 			env=env,
 			env_name="LunarLander-v2",
-			max_learning_episodes=3000,
+			episodes=episodes,
 			gamma=0.99,
 			seed=seed)
 		
 		alg_params = AlgorithmParameters(
 			max_buffer_size=10000,
-			state_dimension=len(env.reset()),
+			state_dimension=env.observation_space.shape[0],
 			action_space=env.action_space.n,
 			k=k,
 			epsilon=0.3,
@@ -103,7 +104,7 @@ def main(env_name: str, time_steps=10_000, k_bins=1, seed=42, verbose=False):
 		
 		alg_params = AlgorithmParameters(
 			max_buffer_size=10000,
-			state_dimension=len(env.reset()),
+			state_dimension=env.observation_space.shape[0],
 			action_space=env.action_space.n,
 			k=k,
 			epsilon=0.3,
@@ -124,8 +125,8 @@ def main(env_name: str, time_steps=10_000, k_bins=1, seed=42, verbose=False):
 		meta_params = MetaParameters(
 			env=env,
 			env_name="MountainCar-v0",
-			time_steps=time_steps,
-			gamma=0.8,
+			episodes=episodes,
+			gamma=0.99,
 			seed=seed)
 
 		alg_params = AlgorithmParameters(
@@ -150,7 +151,7 @@ def main(env_name: str, time_steps=10_000, k_bins=1, seed=42, verbose=False):
 		meta_params = MetaParameters(
 			env=env,
 			env_name="Pendulum-v1",
-			time_steps=time_steps,
+			episodes=episodes,
 			gamma=0.99,
 			seed=seed)
 
@@ -174,7 +175,7 @@ def main(env_name: str, time_steps=10_000, k_bins=1, seed=42, verbose=False):
 		meta_params = MetaParameters(
 			env=env,
 			env_name="MountainCarContinuous-v0",
-			time_steps=time_steps,
+			episodes=episodes,
 			gamma=0.8,
 			seed=seed)
 
@@ -198,7 +199,7 @@ def main(env_name: str, time_steps=10_000, k_bins=1, seed=42, verbose=False):
 		meta_params = MetaParameters(
 			env=env,
 			env_name="Swimmer-v4",
-			max_learning_episodes=2000,
+			episodes=episodes,
 			gamma=0.99,
 			seed=seed)
 

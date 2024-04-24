@@ -3,12 +3,11 @@
 
 
 class MetaParameters:
-    def __init__(self, env, env_name, time_steps, gamma, seed = 42) -> None:
+    def __init__(self, env, env_name, episodes, gamma, seed = 42) -> None:
         
         self.env = env
         self.env_name = env_name
-        self.time_steps = time_steps
-        self.max_learning_episodes = self._get_number_of_episodes(env, time_steps)
+        self.max_learning_episodes = episodes
         self.seed = seed
         self.gamma = gamma
         self.plot = False
@@ -23,14 +22,9 @@ class MetaParameters:
         meta_params['gamma'] = self.gamma
         meta_params['state_dimension'] = self.state_dimension
         meta_params['plot'] = self.plot
-        meta_params['time_steps'] = self.time_steps
         meta_params['max_learning_episodes'] = self.max_learning_episodes
 
         return meta_params
-    def _get_number_of_episodes(self, gym_env, time_steps) -> int:
-        max_steps = gym_env._max_episode_steps    
-        episodes = time_steps // max_steps
-        return episodes
 
 def make_parameters(action_space: int, state_dimension: int, k: int, actor_h: list, critic_h: list, actor_lr : list, critic_lr : list, critic_batch_size : list, critic_train_type : list, epsilon : list, max_buffer_size : list):
     
@@ -68,7 +62,11 @@ def make_parameters(action_space: int, state_dimension: int, k: int, actor_h: li
 class AlgorithmParameters:
     
     def __str__(self) -> str:
-        return f"\nWith Parameters:\n\tmax_buffer_size: {self.max_buffer_size}, action_space: {self.action_space}, state_dimension: {self.state_dimension}, epsilon: {self.epsilon},\nActor Params:\n\tactor_num_h: {self.actor_num_h}, actor_h: {self.actor_h}, actor_lr: {self.actor_lr},\nCritic Params:\n\tcritic_num_h: {self.critic_num_h}, critic_h: {self.critic_h}, critic_lr: {self.critic_lr}, critic_batch_size: {self.critic_batch_size}, critic_num_epochs: {self.critic_num_epochs}, critic_target_net_freq: {self.critic_target_net_freq}, critic_train_type: {self.critic_train_type}"
+        return f"\nWith Parameters:\n\tmax_buffer_size: {self.max_buffer_size}, action_space: {self.action_space}, state_dimension: {self.state_dimension}, epsilon: {self.epsilon},
+        \nActor Params:
+        \n\tactor_num_h: {self.actor_num_h}, actor_h: {self.actor_h}, actor_lr: {self.actor_lr},
+        \nCritic Params:
+        \n\tcritic_num_h: {self.critic_num_h}, critic_h: {self.critic_h}, critic_lr: {self.critic_lr}, critic_batch_size: {self.critic_batch_size}, critic_num_epochs: {self.critic_num_epochs}, critic_target_net_freq: {self.critic_target_net_freq}, critic_train_type: {self.critic_train_type}"
 
     def __init__(
                 self,
