@@ -83,7 +83,7 @@ def get_policy_sb3(gym_env: GymMDP, algo: str, policy_train_steps: int):
     
     return NotImplementedError("Policy not implemented for this environment")
 
-def get_policy(gym_env: GymMDP, policy_time_steps: int):
+def get_mac_policy(gym_env: GymMDP, policy_time_episodes: int) -> Policy:
     """
     Args:
         :param gym_env (GymMDP) : Gym MDP object
@@ -99,20 +99,20 @@ def get_policy(gym_env: GymMDP, policy_time_steps: int):
     5. Pendulum-v1
     """
 
-    if gym_env.env_name == "CartPole-v0":
-        return cpp.CartPolePolicy(gym_env, policy_time_steps)
+    if gym_env.env_name == "CartPole-v0" or "CartPole-v1" == gym_env.env_name:
+        return cpp.CartPolePolicy(gym_env, policy_time_episodes)
 
     if gym_env.env_name == "Acrobot-v1":
-        return abp.AcrobotPolicy(gym_env, policy_time_steps)
+        return abp.AcrobotPolicy(gym_env, policy_time_episodes)
 
     if gym_env.env_name == "MountainCar-v0":
-        return mcp.MountainCarPolicy(gym_env, policy_time_steps)
+        return mcp.MountainCarPolicy(gym_env, policy_time_episodes)
 
     if gym_env.env_name == "LunarLander-v2":
-        return llp.LunarLanderPolicy(gym_env, policy_time_steps)
+        return llp.LunarLanderPolicy(gym_env, policy_time_episodes)
 
     if gym_env.env_name == "Pendulum-v1":
-        return pp.PendulumPolicy(gym_env, policy_time_steps)
+        return pp.PendulumPolicy(gym_env, policy_time_episodes)
 
     return NotImplementedError("Policy not implemented for this environment")
 
@@ -224,7 +224,7 @@ def create_abstraction_network_mac(policy: Policy, num_samples=10000, x_train=No
     
     return StateAbsractionNetwork    
 
-def load_agent(env_name: str, algo: str, policy_train_steps = 100_000):
+def load_agent(env_name: str, algo: str, policy_train_episodes: int) -> NNStateAbstr:
     """
     Args:
         :param env_name (str): Name of the environment
@@ -233,14 +233,14 @@ def load_agent(env_name: str, algo: str, policy_train_steps = 100_000):
         NNStateAbstr object
     """
     print("loading pre-trained agent with algo", algo, "and environment", env_name)
-    save_name = "trained-abstract-agents/"+ str(policy_train_steps) + '/' + algo + "_" + env_name
+    save_name = "trained-abstract-agents/"+ str(policy_train_episodes) + '/' + algo + "_" + env_name
     load_net =  tf.keras.models.load_model(save_name)
     load_net.summary()
     nn_sa = NNStateAbstr(load_net)
     print("loading complete...")
     return nn_sa
 
-def get_policies(gym_env: str, algo: str, policy_train_steps = 100_000):
+def get_policies(gym_env: str, algo: str, policy_train_episodes: int):
     """
     Args:
         :param gym_env (GymMDP)
@@ -252,7 +252,7 @@ def get_policies(gym_env: str, algo: str, policy_train_steps = 100_000):
     This function returns two policies, one for the given algorithm and the other for the MAC algorithm.
     if the algorithm is MAC, it returns only the MAC policy, and other as None.
     """
-    policy_mac = get_policy(gym_env)
+    policy_mac = get_policy(gym_env, policy_train_episodes)
     policy_mac.params["num_mdps"] = 1
     policy_mac.params["num_iterations_for_abstraction_learning"] = 100
     policy_mac.params["steps"] = 200
@@ -261,7 +261,7 @@ def get_policies(gym_env: str, algo: str, policy_train_steps = 100_000):
     if algo == "mac":
         return None, policy_mac
     
-    policy = get_policy_sb3(gym_env, algo, policy_train_steps)
+    policy = get_policy_sb3(gym_env, algo, policy_train_episodes)
     policy.params["num_mdps"] = 1
     policy.params["num_iterations_for_abstraction_learning"] = 100
     policy.params["steps"] = 200
@@ -321,7 +321,13 @@ def get_abstraction_networks(env_name: str, policySB: PolicySB, policy_mac: Poli
         print("No abstraction loaded or created, reuturns None, None...")
     
     return abstraction_network, abstraction_network_mac
-    
+
+def get_policy(gym_env: str, algo: str, policy_train_steps: int):
+    if algo == "mac":
+        return get_mac_policy(gym_env, policy_train_steps)
+    else: 
+        return get_policies(gym_env, algo, policy_train_steps)
+
 
 def main(env_name: str, algo: str, policy_train_steps: int, k_bins=1, abstraction=True, load_model = False, run_expiriment=True,  verbose=False, seed=42):
     """
@@ -348,38 +354,41 @@ def main(env_name: str, algo: str, policy_train_steps: int, k_bins=1, abstractio
     actions = list(gym_env.get_actions())
 
     ## Get policies
-    policy, policy_mac = get_policies(gym_env, algo, policy_train_steps)
+    policy = get_policy(env_name, algo, policy_train_steps)
 
     ## Get abstraction networks (can be none)
-    abstraction_network, abstraction_network_mac = get_abstraction_networks(env_name, policy_mac, policy, abstraction, load_model)
-    
+    if load_model:
+        abstraction_network = load_agent(env_name, algo, policy_train_steps)
+    elif abstraction and algo == "mac":
+        abstraction_network = create_abstraction_network_mac(policy,policy.params["num_samples_from_demonstrator"])
+    elif abstraction and algo != "mac":
+        abstraction_network = create_abstraction_network(policy, policy.params["num_samples_from_demonstrator"])
+    else:
+        print("No abstraction loaded or created...")
+
     ## Run one episode of the environment
-    run_episodes_sb(env_name, policy)
-    run_episodes_from_nn(env_name, abstraction_net=abstraction_network)
+    # run_episodes_sb(env_name, policy)
+    # run_episodes_from_nn(env_name, abstraction_net=abstraction_network)
     # Make agents
     ## TODO: LinearQagent and number of features does not wor
     # num_features = gym_env.get_num_state_feats()
     # print("this is the number of features: ", num_features)
     demo_agent = FixedPolicyAgent(policy.demo_policy)
-    linear_agent = QLearningAgent(actions=actions)
+    ql_agent = QLearningAgent(actions=actions)
     # ql_agent = QLearningAgent(actions)
     agent_params = {"alpha":policy.params['rl_learning_rate'],"epsilon":0.1,"actions":actions}
     
-    if policy is not None:
+    if abstraction_network is not None:
         sa_agent = AbstractionWrapper(QLearningAgent,
                                   agent_params=agent_params,
                                   state_abstr=abstraction_network,
                                   name_ext="_phi_"+ str(algo) + "_" + str(seed))
-    
-    if policy_mac is not None:
-        sa_agent_mac = AbstractionWrapper(QLearningAgent,
-                                  agent_params=agent_params,
-                                  state_abstr=abstraction_network_mac,
-                                  name_ext="_phi_mac"+ "_" + str(seed))
+    else:
+        print("skipping experiment for abstraction...")
     
 
     ## Agents in experiment
-    agent_list = [linear_agent, sa_agent_mac]
+    agent_list = [ql_agent, sa_agent]
 
     # Timestamp for saving the experiment
     # Run the experiment
