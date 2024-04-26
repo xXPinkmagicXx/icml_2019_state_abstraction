@@ -458,15 +458,15 @@ def make_nn_sa_3(params: dict, x_train, y_train, verbose=True):
     history = abstraction_net.net.fit(x_train, y_train, batch_size=32, epochs=params['num_iterations_for_abstraction_learning'])
     
     # plot history
-    plt.plot(range(len(history.history['accuracy'])), history.history['accuracy'])
-    plt.xlabel('Epochs')
-    plt.ylabel('Accuracy')
-    title_str = params['env_name'] + " Abstraction Accuracy" 
-    plt.title(title_str)
-    if os.path.exists(params['save_path']) == False:
-        os.mkdir(params['save_path'])
-    plt.savefig(params['save_path'] + "/history.png")
-    print("Plot saved at:", params['save_path'] + "/history.png")
+    # plt.plot(range(len(history.history['accuracy'])), history.history['accuracy'])
+    # plt.xlabel('Epochs')
+    # plt.ylabel('Accuracy')
+    # title_str = params['env_name'] + " Abstraction Accuracy" 
+    # plt.title(title_str)
+    # if os.path.exists(params['save_path']) == False:
+    #     os.mkdir(params['save_path'])
+    # plt.savefig(params['save_path'] + "/history.png")
+    # print("Plot saved at:", params['save_path'] + "/history.png")
 
     # Save model
     abstraction_net.save_model()

@@ -121,9 +121,8 @@ class PolicySB:
             # Get demo action.
             best_action = self.demo_policy(cur_state)
             # print("this is the best action:", best_action)
-            if i % 100 == 0:
-                print("this is the best action:", best_action)
-                print("Appending this to the sample", (cur_state, best_action, 0))
+            if i % 1000 == 0:
+                print("this is the number of samples:", i, "out of", num_samples, "samples.")
             samples.append((cur_state, best_action, 0))
 
         return samples

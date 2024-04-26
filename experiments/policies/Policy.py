@@ -107,13 +107,14 @@ class Policy:
         '''
         x = []
         y = []
-        for _ in range(num_samples):
+        for n in range(num_samples):
             cur_state = self.gym_env.env.observation_space.sample()
             self.gym_env.env.state = cur_state
             best_action = self.demo_policy(cur_state)
             x.append(cur_state)
             y.append(best_action)
-
+            if n % 1000 == 0:
+                print("Sampled ", n, " samples. out of ", num_samples, " samples.")
         # normalize and conver the data
         x_train = tf.keras.utils.normalize(np.array(x), axis=0)
         y_train = np.array(y)

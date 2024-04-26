@@ -322,14 +322,18 @@ def get_abstraction_networks(env_name: str, policySB: PolicySB, policy_mac: Poli
     
     return abstraction_network, abstraction_network_mac
 
-def get_policy(gym_env: str, algo: str, policy_train_steps: int):
+def get_policy(gym_env: GymMDP, algo: str, policy_train_episodes: int):
     if algo == "mac":
-        return get_mac_policy(gym_env, policy_train_steps)
+        policy = get_mac_policy(gym_env, policy_train_episodes)
     else: 
-        return get_policies(gym_env, algo, policy_train_steps)
+        policy = get_policy_sb3(gym_env, algo, policy_train_episodes)
+    
+    policy.params["num_mdps"] = 1
+    policy.params["num_iterations_for_abstraction_learning"] = 11
+    policy.params["steps"] = 20
+    return policy
 
-
-def main(env_name: str, algo: str, policy_train_steps: int, k_bins=1, abstraction=True, load_model = False, run_expiriment=True,  verbose=False, seed=42):
+def main(env_name: str, algo: str, policy_train_episodes: int, k_bins=1, abstraction=True, load_model = False, run_expiriment=True,  verbose=False, seed=42):
     """
     Args:
         :param env_name (str): Name of the environment
@@ -344,7 +348,7 @@ def main(env_name: str, algo: str, policy_train_steps: int, k_bins=1, abstractio
     This function runs the learning experiment for the given environment and does state
     abstraction if true.
     """
-   
+    verbose = True
     gym_env = Get_GymMDP(env_name, k = k_bins)
     ## Set seed
     # gym_env.env.seed(seed)
@@ -354,11 +358,11 @@ def main(env_name: str, algo: str, policy_train_steps: int, k_bins=1, abstractio
     actions = list(gym_env.get_actions())
 
     ## Get policies
-    policy = get_policy(env_name, algo, policy_train_steps)
+    policy = get_policy(gym_env, algo, policy_train_episodes)
 
     ## Get abstraction networks (can be none)
     if load_model:
-        abstraction_network = load_agent(env_name, algo, policy_train_steps)
+        abstraction_network = load_agent(env_name, algo, policy_train_episodes)
     elif abstraction and algo == "mac":
         abstraction_network = create_abstraction_network_mac(policy,policy.params["num_samples_from_demonstrator"])
     elif abstraction and algo != "mac":
@@ -395,7 +399,7 @@ def main(env_name: str, algo: str, policy_train_steps: int, k_bins=1, abstractio
     if run_expiriment:
         print("Running experiment...")
         # dir_for_plot = str(datetime.now().time()).replace(":", "_").replace(".", "_")
-        dir_for_plot = str(policy_train_steps)
+        dir_for_plot = str(policy_train_episodes)
         run_agents_on_mdp(agent_list,
                         gym_env,
                         instances=1,
