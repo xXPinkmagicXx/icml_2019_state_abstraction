@@ -60,13 +60,13 @@ class mac:
 		li_time = []
 		accumulated_rewards= 0
 
-		for episode in range(1,self.params['max_learning_episodes']):
+		for episode in range(1,self.params['episodes']):
 			# Do one episode of interaction
 			states, actions, returns, rewards = self.interactOneEpisode()
 
 			# Update epsilon for epsilon greedy policy
 			# print("This is the epsilon in actor", self.actor.params['epsilon'], "this is the epsilon in mac", self.epsilon)
-			self.actor.params['epsilon'] = max(1 - episode/(self.params["max_learning_episodes"]*self.epsilon), 0.01)
+			self.actor.params['epsilon'] = max(1 - episode/(self.params["episodes"]*self.epsilon), 0.01)
 
 			#add to memory
 			self.add_2_memory(states,actions,rewards)
