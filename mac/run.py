@@ -13,7 +13,6 @@ import os
 from .ActionWrapper import discretizing_wrapper
 from .HyperParameters import AlgorithmParameters, MetaParameters, make_parameters
 from Code.icml import icml_config
-
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
@@ -74,170 +73,12 @@ def main(env_name: str, episodes=200, k_bins=1, seed=42, verbose=False):
 	# Get the config for the environment
 	params = get_params(env, env_name, episodes, k_bins, seed, verbose)
 
-	meta_params = {}
 	# Params for specific environments.
-	if  env_name =='LunarLander-v2':
-
-		meta_params = MetaParameters(
-			env=env,
-			env_name="LunarLander-v2",
-			episodes=episodes,
-			gamma=0.99,
-			seed=seed)
-		
-		alg_params = AlgorithmParameters(
-			max_buffer_size=10000,
-			state_dimension=env.observation_space.shape[0],
-			action_space=env.action_space.n,
-			k=k,
-			epsilon=0.3,
-			actor_num_h=2,
-			actor_h=128,
-			actor_lr=0.00025,
-			critic_num_h=2,
-			critic_h=128,
-			critic_lr=0.005,
-			critic_batch_size=32,
-			critic_num_epochs=10,
-			critic_target_net_freq=1,
-			critic_train_type='model_free_critic_TD',
-			verbose=verbose)
-
-	if env_name == 'Acrobot-v1':
-		
-		meta_params = MetaParameters(
-			env=env,
-			env_name="Acrobot-v1",
-			max_learning_episodes=3000,
-			gamma=0.99,
-			seed=seed)
-		
-		alg_params = AlgorithmParameters(
-			max_buffer_size=10000,
-			state_dimension=env.observation_space.shape[0],
-			action_space=env.action_space.n,
-			k=k,
-			epsilon=0.3,
-			actor_num_h=2,
-			actor_h=128,
-			actor_lr=0.00025,
-			critic_num_h=2,
-			critic_h=128,
-			critic_lr=0.005,
-			critic_batch_size=32,
-			critic_num_epochs=10,
-			critic_target_net_freq=1,
-			critic_train_type='model_free_critic_TD',
-			verbose=verbose)
-
-	if env_name =='MountainCar-v0':
-		
-		meta_params = MetaParameters(
-			env=env,
-			env_name="MountainCar-v0",
-			episodes=episodes,
-			gamma=0.99,
-			seed=seed)
-
-		alg_params = AlgorithmParameters(
-			max_buffer_size=10000,
-			state_dimension=len(env.reset()[0]),
-			action_space=env.action_space.n,
-			epsilon=0.3,
-			actor_num_h=2,
-			actor_h=64,
-			actor_lr=0.001,
-			critic_num_h=2,
-			critic_h=64,
-			critic_lr=0.001,
-			critic_batch_size=32,
-			critic_num_epochs=10,
-			critic_target_net_freq=1,
-			critic_train_type='model_free_critic_TD'
-		)
-
-	if env_name == "Pendulum-v1":
-		# The episode truncates at 200 time steps.
-		meta_params = MetaParameters(
-			env=env,
-			env_name="Pendulum-v1",
-			episodes=episodes,
-			gamma=0.99,
-			seed=seed)
-
-		alg_params = AlgorithmParameters(
-			max_buffer_size=10000,
-			state_dimension=3,
-			action_space=k,
-			epsilon=0.3,
-			actor_num_h=2,
-			actor_h=64,
-			actor_lr=0.0001,
-			critic_num_h=2,
-			critic_h=64,
-			critic_lr=0.001,
-			critic_batch_size=32,
-			critic_num_epochs=10,
-			critic_target_net_freq=1,
-			critic_train_type='model_free_critic_TD')
-
-	if env_name == "MountainCarContinuous-v0":
-		meta_params = MetaParameters(
-			env=env,
-			env_name="MountainCarContinuous-v0",
-			episodes=episodes,
-			gamma=0.8,
-			seed=seed)
-
-		alg_params = AlgorithmParameters(
-			max_buffer_size=10000,
-			state_dimension=len(env.observation_space.shape[0]),
-			action_space= k,
-			epsilon=0.6,
-			actor_num_h=2,
-			actor_h=40,
-			actor_lr=0.01,
-			critic_num_h=2,
-			critic_h=40,
-			critic_lr=0.01,
-			critic_batch_size=64,
-			critic_num_epochs=10,
-			critic_target_net_freq=1,
-			critic_train_type='model_free_critic_monte_carlo')
-
-	if env_name == "Swimmer-v4":
-		meta_params = MetaParameters(
-			env=env,
-			env_name="Swimmer-v4",
-			episodes=episodes,
-			gamma=0.99,
-			seed=seed)
-
-		alg_params = AlgorithmParameters(
-			max_buffer_size=10000,
-			state_dimension=8,
-			action_space= 2,
-			k=k,
-			epsilon=0.3,
-			actor_num_h=2,
-			actor_h=128,
-			actor_lr=0.0001,
-			critic_num_h=2,
-			critic_h=128,
-			critic_lr=0.001,
-			critic_batch_size=32,
-			critic_num_epochs=10,
-			critic_target_net_freq=1,
-			critic_train_type='model_free_critic_TD',
-			verbose=verbose)
-		
 	## ensure results are reproducible
 	
 	# set seeds
 	numpy.random.seed(seed)
 	random.seed(seed)
-	if not isinstance(meta_params, MetaParameters) and meta_params != {}:
-		meta_params['env'].seed(seed)
 	tf.compat.v1.set_random_seed(seed)
 
 	# set session
@@ -248,60 +89,21 @@ def main(env_name: str, episodes=200, k_bins=1, seed=42, verbose=False):
 	if verbose:
 		print("this is the action space", env.action_space)
 	#create a MAC agent and run
-	action_space = env.action_space.n
-	state_dimension = len(env.reset())
-	actor_lr = [0.01]
-	critic_lr = [0.01]
-	critic_batch_size = [32]
-	critic_train_type = ['model_free_critic_TD', 'model_free_critic_monte_carlo']
-	epsilon = [0.3, 0.1, 0.5]
-	max_buffer_size = [10000]
-
-	actor_h = [128]
-	critic_h = [128]
-
-	algo_parameter_list = make_parameters(
-							action_space,
-							state_dimension,
-							k_bins,
-							actor_h,
-							critic_h,
-							actor_lr,
-							critic_lr,
-							critic_batch_size,
-							critic_train_type,
-							epsilon,
-							max_buffer_size)
-
-	DO_PARAMETER_SEARCH = False
-
-	# alg_params.verbose = True
-
-	if DO_PARAMETER_SEARCH:
-		print("Starting parameter search...")
-		for alg_param in algo_parameter_list:
-			
-			print(str(alg_param))
-			params = {**alg_param.to_Dictionary(), **meta_params.to_Dictionary()}
-			agent = mac(alg_param.to_Dictionary())
-			agent.train()
-	else:
 		
-		print("Starting normal training...")
-		params = {**alg_params.to_Dictionary(), **meta_params.to_Dictionary()}
-		agent = mac(params)
+	agent = mac(params)
 
-		# train the agent and time it
-		start_time = time.time()
-		returns, rewards = agent.train()
-		end_time = time.time()
+	# train the agent and time it
+	start_time = time.time()
+	returns, rewards = agent.train()
+	end_time = time.time()
 
-		with open(agent.learned_policy_path + "_time.txt", 'w') as f:
-			f.write(str(end_time - start_time))
-
+	with open(agent.learned_policy_path + "_time.txt", 'w') as f:
+		f.write(str(end_time - start_time))
+	
+	if verbose:
 		print("this is the returns: ", returns)
 		print("this is the rewards: ", rewards)
-		## make plot of returns pr time step
+	## make plot of returns pr time step
 	
 	#create a MAC agent and run
 
