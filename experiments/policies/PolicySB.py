@@ -10,13 +10,14 @@ from stable_baselines3 import DQN, PPO, SAC, TD3, DDPG
 class PolicySB:
     __metaclass__ = abc.ABCMeta
 	
-    def __init__(self, gym_env: GymMDP, algo: str, policy_train_episodes: int, experiment_episodes: int):
+    def __init__(self, gym_env: GymMDP, algo: str, policy_train_episodes: int, experiment_episodes: int, k_bins: int = 1):
 		
         # environment 
         self.gym_env = gym_env
         self.env_name = gym_env.env_name
         self.algo = algo
         self.policy_train_episodes = policy_train_episodes
+        self.k_bins = k_bins
         # Get the model class based on the algorithm
         self._model_class = self._get_model_class(algo)
         
@@ -25,6 +26,7 @@ class PolicySB:
         self.params['env_name'] = self.env_name
         self.params['algo'] = algo
         self.params['episodes'] = experiment_episodes
+        self.params['k_bins'] = k_bins
 
         self.params['num_actions'] = self.get_num_actions()
         self.params['size_a'] = self.params['num_actions']
@@ -34,6 +36,10 @@ class PolicySB:
         abstract_agent_save_path = "trained-abstract-agents/" + str(policy_train_episodes) + '/'
         if os.path.exists(abstract_agent_save_path) == False:
             os.makedirs(abstract_agent_save_path)
+        
+        # if action space is continuous in the environment it is discretized into k_bins
+        if k_bins > 1:
+            abstract_agent_save_path = abstract_agent_save_path + str(k_bins) + "_"
         
         self.params['save_path'] = abstract_agent_save_path + self.params['algo'] + '_' + self.params['env_name'] 
 
@@ -50,7 +56,9 @@ class PolicySB:
             path_to_trained_agents = '../../rl-trained-agents/'
         ## . if called as submodule or .. if called from experiments/
         path_to_trained_agents += str(policy_train_episodes) + '/'
-        
+        if k_bins > 1:
+            path_to_trained_agents += str(k_bins) + "_"
+
         print("this is the path to trained agents:", path_to_trained_agents)
         path_to_agent = path_to_trained_agents + algo + '_' + self.env_name
 

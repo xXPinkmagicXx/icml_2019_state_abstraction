@@ -50,7 +50,7 @@ import tensorflow as tf
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-def get_policy_sb3(gym_env: GymMDP, algo: str, policy_train_steps: int, experiment_episodes: int) -> PolicySB:
+def get_policy_sb3(gym_env: GymMDP, algo: str, policy_train_steps: int, experiment_episodes: int, k_bins: int) -> PolicySB:
     """
     Args:
         :param gym_env (GymMDP)
@@ -63,12 +63,11 @@ def get_policy_sb3(gym_env: GymMDP, algo: str, policy_train_steps: int, experime
     3. MountainCar-v0
     4. LunarLander-v2
     5. Pendulum-v1
+    6. MountainCarContinuous-v0
     """
     if gym_env.env_name == "MountainCar-v0":
         return mcp_sb.MountainCarPolicySB(gym_env, algo, policy_train_steps, experiment_episodes)
     
-    if gym_env.env_name == "MountainCarContinuous-v0":
-        return mcpc_sb.MountainCarContunuousPolicySB(gym_env, algo, policy_train_steps, experiment_episodes)
 
     if gym_env.env_name == "LunarLander-v2":
         return llp_sb.LunarLanderPolicySB(gym_env, algo, policy_train_steps, experiment_episodes)
@@ -78,13 +77,17 @@ def get_policy_sb3(gym_env: GymMDP, algo: str, policy_train_steps: int, experime
     
     if gym_env.env_name == "Acrobot-v1":
         return abp_sb.AcrobotPolicySB(gym_env, algo, policy_train_steps, experiment_episodes)
-
+    
+    # --------- Countinuous action space environments --------- #
+    if gym_env.env_name == "MountainCarContinuous-v0":
+        return mcpc_sb.MountainCarContunuousPolicySB(gym_env, algo, policy_train_steps, experiment_episodes, k_bins)
+    
     if gym_env.env_name == "Pendulum-v1":
-        return pp_sb.PendulumPolicySB(gym_env, algo, policy_train_steps, experiment_episodes)
+        return pp_sb.PendulumPolicySB(gym_env, algo, policy_train_steps, experiment_episodes, k_bins)
     
     return NotImplementedError("Policy not implemented for this environment")
 
-def get_mac_policy(gym_env: GymMDP, policy_time_episodes: int, experiment_episodes: int) -> Policy:
+def get_mac_policy(gym_env: GymMDP, policy_time_episodes: int, experiment_episodes: int, k_bins: int) -> Policy:
     """
     Args:
         :param gym_env (GymMDP) : Gym MDP object
@@ -111,10 +114,12 @@ def get_mac_policy(gym_env: GymMDP, policy_time_episodes: int, experiment_episod
 
     if gym_env.env_name == "LunarLander-v2":
         return llp.LunarLanderPolicy(gym_env, policy_time_episodes, experiment_episodes)
+    # --------- Countinuous action space environments --------- #
+    # TODO: Implement for MountainCarContinuous
     if gym_env.env_name == "MountainCarContinuous-v0":
         return mcpc.MountainCarContunuousPolicy(gym_env, policy_time_episodes, experiment_episodes)
     if gym_env.env_name == "Pendulum-v1":
-        return pp.PendulumPolicy(gym_env, policy_time_episodes, experiment_episodes)
+        return pp.PendulumPolicy(gym_env, policy_time_episodes, experiment_episodes, k_bins)
 
     return NotImplementedError("Policy not implemented for this environment")
 
@@ -302,11 +307,11 @@ def get_abstraction_networks(env_name: str, policySB: PolicySB, policy_mac: Poli
     
     return abstraction_network, abstraction_network_mac
 
-def get_policy(gym_env: GymMDP, algo: str, policy_train_episodes: int, experiment_episodes: int):
+def get_policy(gym_env: GymMDP, algo: str, policy_train_episodes: int, experiment_episodes: int, k_bins: int):
     if algo == "mac":
-        policy = get_mac_policy(gym_env, policy_train_episodes, experiment_episodes)
+        policy = get_mac_policy(gym_env, policy_train_episodes, experiment_episodes, k_bins)
     else: 
-        policy = get_policy_sb3(gym_env, algo, policy_train_episodes, experiment_episodes)
+        policy = get_policy_sb3(gym_env, algo, policy_train_episodes, experiment_episodes, k_bins)
     
     policy.params["num_mdps"] = 1
     policy.params["num_iterations_for_abstraction_learning"] = 11
@@ -341,7 +346,7 @@ def main(env_name: str, algo: str, policy_train_episodes: int, experiment_episod
     actions = list(gym_env.get_actions())
 
     ## Get policies
-    policy = get_policy(gym_env, algo, policy_train_episodes, experiment_episodes)
+    policy = get_policy(gym_env, algo, policy_train_episodes, experiment_episodes, k_bins)
 
     ## Get abstraction networks (can be none)
     if load_model:
@@ -408,7 +413,7 @@ def _read_file_and_get_results(file_path: str, episodes) -> list:
         txt = f.read()
     
     return txt.split(",")[:episodes]
-def get_and_save_results(policy: PolicySB, seed: int, training_time):
+def get_and_save_results(policy: PolicySB, seed: int, training_time) -> None:
     q_learning_agent = "Q-learning"
     env_name = "gym-" + policy.env_name 
     episodes = policy.params['episodes']

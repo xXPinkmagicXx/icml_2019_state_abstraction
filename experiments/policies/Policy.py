@@ -12,12 +12,13 @@ import os
 class Policy:
     __metaclass__ = abc.ABCMeta
 	
-    def __init__(self, gym_env: GymMDP, policy_train_episodes: int, experiment_episodes: int):
+    def __init__(self, gym_env: GymMDP, policy_train_episodes: int, experiment_episodes: int, k_bins: int = 1):
 		
         self.gym_env = gym_env
         self.params = self.get_params()
         self.env_name = self.params['env_name']
-		
+        self.algo = "mac"
+
         self.params['size_a'] = self.get_num_actions()
         self.params['algo'] = 'mac'
         self.params['policy_train_steps'] = policy_train_episodes
@@ -27,6 +28,10 @@ class Policy:
         if os.path.exists(abstract_agent_save_path) == False:
             os.makedirs(abstract_agent_save_path)
         
+        # if action space is continuous in the environment it is discretized into k_bins
+        if k_bins > 1:
+            abstract_agent_save_path = abstract_agent_save_path + str(k_bins) + "_"
+
         self.params['save_path'] = abstract_agent_save_path + "mac_" + self.env_name + '/'
         ## Get current working directory
         cwd = os.getcwd().split('\\')[-1]
