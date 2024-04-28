@@ -7,9 +7,9 @@ from policies.PolicySB import PolicySB
 
 class AcrobotPolicySB(PolicySB):
 	
-	def __init__(self, gym_env: GymMDP, algo: str = "ppo", policy_train_steps=100_000):
+	def __init__(self, gym_env: GymMDP, algo: str = "ppo", policy_train_episodes=100, experiment_episodes=100):
 		
-		super().__init__(gym_env, algo, policy_train_steps)
+		super().__init__(gym_env, algo, policy_train_episodes, experiment_episodes)
 	
 	def get_params(self):
 		

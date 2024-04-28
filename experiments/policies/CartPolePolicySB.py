@@ -8,9 +8,9 @@ from stable_baselines3 import DQN
 
 class CartPolePolicySB(PolicySB):
 	
-	def __init__(self, gym_env: GymMDP, algo: str = "ppo", policy_train_steps=100_000):
+	def __init__(self, gym_env: GymMDP, algo: str = "ppo", policy_train_episodes: int = 100, experiment_episodes: int = 100):
 		
-		super().__init__(gym_env, algo, policy_train_steps)
+		super().__init__(gym_env, algo, policy_train_episodes, experiment_episodes)
 	
 	def get_params(self):
 		
