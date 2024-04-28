@@ -17,7 +17,7 @@ import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 def get_config(env_name) -> dict:
-	pass
+	
 	# # Get the config for the environment
 	if env_name == "MountainCar-v0":
 		return icml_config.MOUNTAIN_CAR
@@ -43,7 +43,7 @@ def get_params(env, env_name, episodes, k_bins, seed, verbose) -> dict:
 
 	config['env'] = env
 	config['A'] = env.action_space.n
-	config['action_space']=env.action_space.n
+	config['n_actions'] = 1
 	config['k'] = k_bins
 	config['state_dimension']=env.observation_space.shape[0]
 	config['episodes'] = episodes

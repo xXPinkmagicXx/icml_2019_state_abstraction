@@ -24,6 +24,7 @@ import policies.CartPolePolicySB as cpp_sb
 
 import policies.MountainCarPolicy as mcp
 import policies.MountainCarPolicySB as mcp_sb
+import policies.MountainCarContinuousPolicy as mcpc
 import policies.MountainCarContinuousPolicySB as mcpc_sb
 
 import policies.AcrobotPolicy as abp
@@ -117,7 +118,7 @@ def get_mac_policy(gym_env: GymMDP, policy_time_episodes: int, experiment_episod
     # --------- Countinuous action space environments --------- #
     # TODO: Implement for MountainCarContinuous
     if gym_env.env_name == "MountainCarContinuous-v0":
-        return mcpc.MountainCarContunuousPolicy(gym_env, policy_time_episodes, experiment_episodes)
+        return mcpc.MountainCarContinuousPolicy(gym_env, policy_time_episodes, experiment_episodes, k_bins)
     if gym_env.env_name == "Pendulum-v1":
         return pp.PendulumPolicy(gym_env, policy_time_episodes, experiment_episodes, k_bins)
 
@@ -191,8 +192,10 @@ def create_abstraction_network(policy, num_samples=10000, x_train=None):
     Returns:
         NNStateAbstr object
     """
+    start_time = time.time()
     x_train, y_train = policy.sample_training_data(num_samples)
-    
+    end_time = time.time()
+    print("this is the time it took to sample the data", end_time - start_time)
     max_value = np.max(x_train)
     min_value = np.min(x_train)
     print("this is the max and min value", max_value, min_value)
@@ -336,6 +339,7 @@ def main(env_name: str, algo: str, policy_train_episodes: int, experiment_episod
     This function runs the learning experiment for the given environment and does state
     abstraction if true.
     """
+
     verbose = True
     gym_env = Get_GymMDP(env_name, k = k_bins)
     ## Set seed

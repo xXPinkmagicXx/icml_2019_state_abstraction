@@ -17,6 +17,7 @@ class Policy:
         self.gym_env = gym_env
         self.params = self.get_params()
         self.env_name = self.params['env_name']
+        self.policy_train_episodes = policy_train_episodes
         self.algo = "mac"
 
         self.params['size_a'] = self.get_num_actions()

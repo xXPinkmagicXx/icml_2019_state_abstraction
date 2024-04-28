@@ -8,7 +8,7 @@ import os
 
 class PendulumPolicy(Policy.Policy):
 	
-	def __init__(self, gym_env: GymMDP, policy_train_episodes: int, experiment_episodes: int, k_bin: int):
+	def __init__(self, gym_env: GymMDP, policy_train_episodes: int, experiment_episodes: int, k_bins: int):
 		
 		super().__init__(gym_env, policy_train_episodes, experiment_episodes, k_bins)
 		
