@@ -101,19 +101,20 @@ def get_mac_policy(gym_env: GymMDP, policy_time_episodes: int, experiment_episod
     """
 
     if gym_env.env_name == "CartPole-v0" or "CartPole-v1" == gym_env.env_name:
-        return cpp.CartPolePolicy(gym_env, policy_time_episodes)
+        return cpp.CartPolePolicy(gym_env, policy_time_episodes, experiment_episodes)
 
     if gym_env.env_name == "Acrobot-v1":
-        return abp.AcrobotPolicy(gym_env, policy_time_episodes)
+        return abp.AcrobotPolicy(gym_env, policy_time_episodes, experiment_episodes)
 
     if gym_env.env_name == "MountainCar-v0":
-        return mcp.MountainCarPolicy(gym_env, policy_time_episodes)
+        return mcp.MountainCarPolicy(gym_env, policy_time_episodes, experiment_episodes)
 
     if gym_env.env_name == "LunarLander-v2":
-        return llp.LunarLanderPolicy(gym_env, policy_time_episodes)
-
+        return llp.LunarLanderPolicy(gym_env, policy_time_episodes, experiment_episodes)
+    if gym_env.env_name == "MountainCarContinuous-v0":
+        return mcpc.MountainCarContunuousPolicy(gym_env, policy_time_episodes, experiment_episodes)
     if gym_env.env_name == "Pendulum-v1":
-        return pp.PendulumPolicy(gym_env, policy_time_episodes)
+        return pp.PendulumPolicy(gym_env, policy_time_episodes, experiment_episodes)
 
     return NotImplementedError("Policy not implemented for this environment")
 
@@ -213,8 +214,11 @@ def load_agent(env_name: str, algo: str, policy_train_episodes: int) -> NNStateA
     load_net.summary()
     nn_sa = NNStateAbstr(load_net)
     # Load training time
+    with open(save_name + "/abstraction_training_time.txt", "r") as f:
+        abstraction_training_time = f.read()
+
     print("loading complete...")
-    return nn_sa
+    return nn_sa, float(abstraction_training_time)
 
 def get_policies(gym_env: str, algo: str, policy_train_episodes: int):
     """
@@ -298,15 +302,16 @@ def get_abstraction_networks(env_name: str, policySB: PolicySB, policy_mac: Poli
     
     return abstraction_network, abstraction_network_mac
 
-def get_policy(gym_env: GymMDP, algo: str, policy_train_episodes: int):
+def get_policy(gym_env: GymMDP, algo: str, policy_train_episodes: int, experiment_episodes: int):
     if algo == "mac":
-        policy = get_mac_policy(gym_env, policy_train_episodes)
+        policy = get_mac_policy(gym_env, policy_train_episodes, experiment_episodes)
     else: 
-        policy = get_policy_sb3(gym_env, algo, policy_train_episodes)
+        policy = get_policy_sb3(gym_env, algo, policy_train_episodes, experiment_episodes)
     
     policy.params["num_mdps"] = 1
     policy.params["num_iterations_for_abstraction_learning"] = 11
     policy.params["steps"] = 20
+    
     return policy
 
 
@@ -336,7 +341,7 @@ def main(env_name: str, algo: str, policy_train_episodes: int, experiment_episod
     actions = list(gym_env.get_actions())
 
     ## Get policies
-    policy = get_policy(gym_env, algo, policy_train_episodes)
+    policy = get_policy(gym_env, algo, policy_train_episodes, experiment_episodes)
 
     ## Get abstraction networks (can be none)
     if load_model:

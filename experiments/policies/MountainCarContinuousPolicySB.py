@@ -26,7 +26,6 @@ class MountainCarContunuousPolicySB(PolicySB):
         params['abstraction_network_hidden_layers']=2
         params['abstraction_network_hidden_nodes']=64
         params['num_samples_from_demonstrator']=100
-        params['episodes'] = 50
         params['steps']=200
         params['num_instances']=100
         params['rl_learning_rate']=0.001
