@@ -456,7 +456,7 @@ def make_nn_sa_3(params: dict, x_train, y_train, verbose=True):
     # training the abstraction network
     start_time = time.time()
     history = abstraction_net.net.fit(x_train, y_train, batch_size=32, epochs=params['num_iterations_for_abstraction_learning'])
-    
+    end_time = time.time()
     # plot history
     # plt.plot(range(len(history.history['accuracy'])), history.history['accuracy'])
     # plt.xlabel('Epochs')
@@ -471,4 +471,9 @@ def make_nn_sa_3(params: dict, x_train, y_train, verbose=True):
     # Save model
     abstraction_net.save_model()
     
-    return abstraction_net
+    # save training time
+    abstraction_net_training_time = end_time - start_time
+    with open(params['save_path'] + "/abstraction_training_time.txt", "w") as f:
+        f.write(str(abstraction_net_training_time))
+
+    return abstraction_net, abstraction_net_training_time

@@ -12,7 +12,7 @@ import os
 class Policy:
     __metaclass__ = abc.ABCMeta
 	
-    def __init__(self, gym_env: GymMDP, policy_train_episodes: int):
+    def __init__(self, gym_env: GymMDP, policy_train_episodes: int, experiment_episodes: int):
 		
         self.gym_env = gym_env
         self.params = self.get_params()
@@ -21,6 +21,7 @@ class Policy:
         self.params['size_a'] = self.get_num_actions()
         self.params['algo'] = 'mac'
         self.params['policy_train_steps'] = policy_train_episodes
+        self.params['episodes'] = experiment_episodes
 
         abstract_agent_save_path = "trained-abstract-agents/" + str(policy_train_episodes) + '/'
         if os.path.exists(abstract_agent_save_path) == False:

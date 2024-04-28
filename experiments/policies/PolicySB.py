@@ -10,7 +10,7 @@ from stable_baselines3 import DQN, PPO, SAC, TD3, DDPG
 class PolicySB:
     __metaclass__ = abc.ABCMeta
 	
-    def __init__(self, gym_env: GymMDP, algo: str, policy_train_episodes: int):
+    def __init__(self, gym_env: GymMDP, algo: str, policy_train_episodes: int, experiment_episodes: int):
 		
         # environment 
         self.gym_env = gym_env
@@ -19,16 +19,18 @@ class PolicySB:
         self.policy_train_episodes = policy_train_episodes
         # Get the model class based on the algorithm
         self._model_class = self._get_model_class(algo)
-
+        
         # Get the parameters for the policy
         self.params = self.get_params()
         self.params['env_name'] = self.env_name
         self.params['algo'] = algo
+        self.params['episodes'] = experiment_episodes
+
         self.params['num_actions'] = self.get_num_actions()
         self.params['size_a'] = self.params['num_actions']
         self.params['policy_train_steps'] = policy_train_episodes
         self.params['plot_path'] = 'results/' + 'gym-'+ self.params['env_name'] + '/' + str(policy_train_episodes)
-        
+
         abstract_agent_save_path = "trained-abstract-agents/" + str(policy_train_episodes) + '/'
         if os.path.exists(abstract_agent_save_path) == False:
             os.makedirs(abstract_agent_save_path)

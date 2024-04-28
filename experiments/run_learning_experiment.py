@@ -50,7 +50,7 @@ import tensorflow as tf
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-def get_policy_sb3(gym_env: GymMDP, algo: str, policy_train_steps: int):
+def get_policy_sb3(gym_env: GymMDP, algo: str, policy_train_steps: int, experiment_episodes: int) -> PolicySB:
     """
     Args:
         :param gym_env (GymMDP)
@@ -65,26 +65,26 @@ def get_policy_sb3(gym_env: GymMDP, algo: str, policy_train_steps: int):
     5. Pendulum-v1
     """
     if gym_env.env_name == "MountainCar-v0":
-        return mcp_sb.MountainCarPolicySB(gym_env, algo, policy_train_steps)
+        return mcp_sb.MountainCarPolicySB(gym_env, algo, policy_train_steps, experiment_episodes)
     
     if gym_env.env_name == "MountainCarContinuous-v0":
-        return mcpc_sb.MountainCarContunuousPolicySB(gym_env, algo, policy_train_steps)
+        return mcpc_sb.MountainCarContunuousPolicySB(gym_env, algo, policy_train_steps, experiment_episodes)
 
     if gym_env.env_name == "LunarLander-v2":
-        return llp_sb.LunarLanderPolicySB(gym_env, algo, policy_train_steps)
+        return llp_sb.LunarLanderPolicySB(gym_env, algo, policy_train_steps, experiment_episodes)
     
     if gym_env.env_name == "CartPole-v0" or gym_env.env_name == "CartPole-v1":
-        return cpp_sb.CartPolePolicySB(gym_env, algo, policy_train_steps)
+        return cpp_sb.CartPolePolicySB(gym_env, algo, policy_train_steps, experiment_episodes)
     
     if gym_env.env_name == "Acrobot-v1":
-        return abp_sb.AcrobotPolicySB(gym_env, algo, policy_train_steps)
+        return abp_sb.AcrobotPolicySB(gym_env, algo, policy_train_steps, experiment_episodes)
 
     if gym_env.env_name == "Pendulum-v1":
-        return pp_sb.PendulumPolicySB(gym_env, algo, policy_train_steps)
+        return pp_sb.PendulumPolicySB(gym_env, algo, policy_train_steps, experiment_episodes)
     
     return NotImplementedError("Policy not implemented for this environment")
 
-def get_mac_policy(gym_env: GymMDP, policy_time_episodes: int) -> Policy:
+def get_mac_policy(gym_env: GymMDP, policy_time_episodes: int, experiment_episodes: int) -> Policy:
     """
     Args:
         :param gym_env (GymMDP) : Gym MDP object
@@ -185,7 +185,6 @@ def create_abstraction_network(policy, num_samples=10000, x_train=None):
     Returns:
         NNStateAbstr object
     """
-    start_time = time.time()
     x_train, y_train = policy.sample_training_data(num_samples)
     
     max_value = np.max(x_train)
@@ -194,13 +193,11 @@ def create_abstraction_network(policy, num_samples=10000, x_train=None):
     print("this si the shape of x_train", x_train[:2])
     print("this is the shape of y_train", y_train.shape, "with unique values", np.unique(y_train, return_counts=True))
     
-    abstraction_net = make_nn_sa_3(policy.params, x_train, y_train)
+    abstraction_net, abstraction_training_time = make_nn_sa_3(policy.params, x_train, y_train)
     
     StateAbsractionNetwork = NNStateAbstr(abstraction_net)
-    end_time = time.time()
-    training_time = end_time - start_time
     
-    return StateAbsractionNetwork, training_time
+    return StateAbsractionNetwork, abstraction_training_time
 
 def load_agent(env_name: str, algo: str, policy_train_episodes: int) -> NNStateAbstr:
     """
@@ -215,6 +212,7 @@ def load_agent(env_name: str, algo: str, policy_train_episodes: int) -> NNStateA
     load_net =  tf.keras.models.load_model(save_name)
     load_net.summary()
     nn_sa = NNStateAbstr(load_net)
+    # Load training time
     print("loading complete...")
     return nn_sa
 
@@ -313,7 +311,7 @@ def get_policy(gym_env: GymMDP, algo: str, policy_train_episodes: int):
 
 
 
-def main(env_name: str, algo: str, policy_train_episodes: int, k_bins=1, abstraction=True, load_model = False, run_expiriment=True,  verbose=False, seed=42):
+def main(env_name: str, algo: str, policy_train_episodes: int, experiment_episodes: int, k_bins=1, abstraction=True, load_model = False, run_expiriment=True,  verbose=False, seed=42):
     """
     Args:
         :param env_name (str): Name of the environment
@@ -342,7 +340,7 @@ def main(env_name: str, algo: str, policy_train_episodes: int, k_bins=1, abstrac
 
     ## Get abstraction networks (can be none)
     if load_model:
-        abstraction_network = load_agent(env_name, algo, policy_train_episodes)
+        abstraction_network, abstraction_training_time = load_agent(env_name, algo, policy_train_episodes)
     elif abstraction:
         abstraction_network, abstraction_training_time = create_abstraction_network(policy, policy.params["num_samples_from_demonstrator"])
     else:
@@ -389,7 +387,7 @@ def main(env_name: str, algo: str, policy_train_episodes: int, k_bins=1, abstrac
                             success_reward=1,
                             dir_for_plot=dir_for_plot)
         
-        get_and_save_results(policy, seed, training_time=experiment_times[0]+training_time)
+        get_and_save_results(policy, seed, training_time=experiment_times[0]+abstraction_training_time)
         
     else:
         print("Skipping experiment...")
@@ -418,25 +416,11 @@ def get_and_save_results(policy: PolicySB, seed: int, training_time):
     times = _read_file_and_get_results(retrieve_folder + "times/" + file_name, policy.params['episodes'])
     rewards = _read_file_and_get_results(retrieve_folder + file_name, policy.params['episodes'])
 
+    successes = [int(success) for success in successes]
     result = pd.DataFrame({"success": successes, "times": times, "rewards": rewards})
     # List of successes
 
     print("this is the success file txt:\n", "split into", successes)       
-    # success_file = pd.read_csv(retrieve_folder + "success/" + file_name, header=None, names=custom_header)
-    # times_file = pd.read_csv(retrieve_folder + "times/" + file_name, header=None , names=custom_header)
-    # reward_file = pd.read_csv(retrieve_folder + file_name, header=None, names=custom_header)
-    # print("This si the success file:\n", success_file)  
-    # per episode we log
-    # success, steps, current episode, reward
-    # result = pd.DataFrame(columns=["success", "steps", "episode", "reward"])
-    # for e in range(policy.params['episodes']):
-    #     success = success_file.iloc[:, e]
-    #     reward = reward_file.iloc[:,e]
-    #     print("This is the episode", e, "with reward: ", reward, "success: ", success)
-    #     result = result.append({"success": success, "steps": reward, "episode": e, "reward": reward}, ignore_index=True)
-    
-    # print("This is the result file:\n", result)
-    # print(success_file.head())
 
     ## Create save path
     ABSTRACTION = "icml"
@@ -449,11 +433,12 @@ def get_and_save_results(policy: PolicySB, seed: int, training_time):
     
     result.to_csv(new_save_folder + new_save_name + ".csv")
     
-    success_rate = result["success"].mean()
     
+    success_rate = np.mean(successes)
 
     result_info = pd.DataFrame({"success_rate": [success_rate], "training_time": [training_time], "episodes": [episodes], "seed": [seed], "agent": [model], })
     result_info.to_csv(new_save_folder + new_save_name + "_info.csv")
+
 if __name__ == "__main__":
     ## Take in arguments from the command line.
     ## task to run
