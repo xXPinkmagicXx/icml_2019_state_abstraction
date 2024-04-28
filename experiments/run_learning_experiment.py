@@ -1,9 +1,10 @@
 # Python imports.
-import sys
+import sys, os
 import random
 import tensorflow as tf
 import gymnasium as gym
 from datetime import datetime
+import time
 # simple_rl imports.
 from simple_rl.tasks import GymMDP
 from simple_rl.abstraction.AbstractionWrapperClass import AbstractionWrapper, ActionAbstraction
@@ -35,7 +36,7 @@ import policies.PendulumPolicy as pp
 import policies.PendulumPolicySB as pp_sb
 
 import numpy as np
-
+import pandas as pd
 # abstraction
 from .abstraction.NNStateAbstrClass import NNStateAbstr
 from .utils.experiment_utils import make_nn_sa, make_nn_sa_2, make_nn_sa_3
@@ -174,8 +175,8 @@ def run_episodes_from_nn(env_name, abstraction_net: NNStateAbstr, episodes=1, st
                 break
             eval_env.render()
 
-def create_abstraction_network(policy: PolicySB, num_samples=10000):
-
+def create_abstraction_network(policy, num_samples=10000, x_train=None):
+    
     """
     Args:
         :param policy (PolicySB): Policy object
@@ -184,7 +185,7 @@ def create_abstraction_network(policy: PolicySB, num_samples=10000):
     Returns:
         NNStateAbstr object
     """
-
+    start_time = time.time()
     x_train, y_train = policy.sample_training_data(num_samples)
     
     max_value = np.max(x_train)
@@ -196,33 +197,10 @@ def create_abstraction_network(policy: PolicySB, num_samples=10000):
     abstraction_net = make_nn_sa_3(policy.params, x_train, y_train)
     
     StateAbsractionNetwork = NNStateAbstr(abstraction_net)
+    end_time = time.time()
+    training_time = end_time - start_time
     
-    return StateAbsractionNetwork
-
-def create_abstraction_network_mac(policy: Policy, num_samples=10000, x_train=None):
-    
-    """
-    Args:
-        :param policy (PolicySB): Policy object
-        :param x_train (np.array): Training data
-        :param y_train (np.array): Labels
-    Returns:
-        NNStateAbstr object
-    """
-
-    x_train, y_train = policy.sample_training_data(num_samples)
-    
-    max_value = np.max(x_train)
-    min_value = np.min(x_train)
-    print("this is the max and min value", max_value, min_value)
-    print("this si the shape of x_train", x_train[:2])
-    print("this is the shape of y_train", y_train.shape, "with unique values", np.unique(y_train, return_counts=True))
-    
-    abstraction_net = make_nn_sa_3(policy.params, x_train, y_train)
-    
-    StateAbsractionNetwork = NNStateAbstr(abstraction_net)
-    
-    return StateAbsractionNetwork    
+    return StateAbsractionNetwork, training_time
 
 def load_agent(env_name: str, algo: str, policy_train_episodes: int) -> NNStateAbstr:
     """
@@ -333,6 +311,8 @@ def get_policy(gym_env: GymMDP, algo: str, policy_train_episodes: int):
     policy.params["steps"] = 20
     return policy
 
+
+
 def main(env_name: str, algo: str, policy_train_episodes: int, k_bins=1, abstraction=True, load_model = False, run_expiriment=True,  verbose=False, seed=42):
     """
     Args:
@@ -363,10 +343,8 @@ def main(env_name: str, algo: str, policy_train_episodes: int, k_bins=1, abstrac
     ## Get abstraction networks (can be none)
     if load_model:
         abstraction_network = load_agent(env_name, algo, policy_train_episodes)
-    elif abstraction and algo == "mac":
-        abstraction_network = create_abstraction_network_mac(policy,policy.params["num_samples_from_demonstrator"])
-    elif abstraction and algo != "mac":
-        abstraction_network = create_abstraction_network(policy, policy.params["num_samples_from_demonstrator"])
+    elif abstraction:
+        abstraction_network, abstraction_training_time = create_abstraction_network(policy, policy.params["num_samples_from_demonstrator"])
     else:
         print("No abstraction loaded or created...")
 
@@ -392,30 +370,90 @@ def main(env_name: str, algo: str, policy_train_episodes: int, k_bins=1, abstrac
     
 
     ## Agents in experiment
-    agent_list = [ql_agent, sa_agent]
-
+    agent_list = [sa_agent]
+    policy.params['episodes'] = 5
     # Timestamp for saving the experiment
     # Run the experiment
     if run_expiriment:
         print("Running experiment...")
         # dir_for_plot = str(datetime.now().time()).replace(":", "_").replace(".", "_")
         dir_for_plot = str(policy_train_episodes)
-        run_agents_on_mdp(agent_list,
-                        gym_env,
-                        instances=1,
-                        episodes=policy.params['episodes'],
-                        steps=policy.params['steps'],
-                        verbose=True,
-                        track_success=True,
-                        success_reward=1,
-                        dir_for_plot=dir_for_plot)
+        
+        experiment_times = run_agents_on_mdp(agent_list,
+                            gym_env,
+                            instances=1,
+                            episodes=policy.params['episodes'],
+                            steps=policy.params['steps'],
+                            verbose=True,
+                            track_success=True,
+                            success_reward=1,
+                            dir_for_plot=dir_for_plot)
+        
+        get_and_save_results(policy, seed, training_time=experiment_times[0]+training_time)
+        
     else:
         print("Skipping experiment...")
 
+def _read_file_and_get_results(file_path: str, episodes) -> list:
+    """
+    Args:
+        :param file_path (str): Path to the file
+    Returns:
+        List 
+    """
+    with open(file_path, "r") as f:
+        txt = f.read()
+    
+    return txt.split(",")[:episodes]
+def get_and_save_results(policy: PolicySB, seed: int, training_time):
+    q_learning_agent = "Q-learning"
+    env_name = "gym-" + policy.env_name 
+    episodes = policy.params['episodes']
 
+    retrieve_folder = "results/" + env_name + "/" + str(policy.policy_train_episodes) + "/"
+    file_name = q_learning_agent + "_phi_" + policy.algo + "_" + str(seed) + ".csv" 
+    
+    print("this is The retieve folder and file name", retrieve_folder, file_name)
+    successes = _read_file_and_get_results(retrieve_folder + "success/" + file_name, policy.params['episodes'])
+    times = _read_file_and_get_results(retrieve_folder + "times/" + file_name, policy.params['episodes'])
+    rewards = _read_file_and_get_results(retrieve_folder + file_name, policy.params['episodes'])
 
+    result = pd.DataFrame({"success": successes, "times": times, "rewards": rewards})
+    # List of successes
 
+    print("this is the success file txt:\n", "split into", successes)       
+    # success_file = pd.read_csv(retrieve_folder + "success/" + file_name, header=None, names=custom_header)
+    # times_file = pd.read_csv(retrieve_folder + "times/" + file_name, header=None , names=custom_header)
+    # reward_file = pd.read_csv(retrieve_folder + file_name, header=None, names=custom_header)
+    # print("This si the success file:\n", success_file)  
+    # per episode we log
+    # success, steps, current episode, reward
+    # result = pd.DataFrame(columns=["success", "steps", "episode", "reward"])
+    # for e in range(policy.params['episodes']):
+    #     success = success_file.iloc[:, e]
+    #     reward = reward_file.iloc[:,e]
+    #     print("This is the episode", e, "with reward: ", reward, "success: ", success)
+    #     result = result.append({"success": success, "steps": reward, "episode": e, "reward": reward}, ignore_index=True)
+    
+    # print("This is the result file:\n", result)
+    # print(success_file.head())
 
+    ## Create save path
+    ABSTRACTION = "icml"
+    new_save_folder = "results/" + ABSTRACTION + "/" + policy.env_name + "/" 
+    
+    model = ABSTRACTION + "_" + str(policy.policy_train_episodes) + "_" + policy.algo
+    new_save_name = model + "_" + str(episodes) + "_" + str(seed)
+    if not os.path.exists(new_save_folder):
+        os.makedirs(new_save_folder)
+    
+    result.to_csv(new_save_folder + new_save_name + ".csv")
+    
+    success_rate = result["success"].mean()
+    
+
+    result_info = pd.DataFrame({"success_rate": [success_rate], "training_time": [training_time], "episodes": [episodes], "seed": [seed], "agent": [model], })
+    result_info.to_csv(new_save_folder + new_save_name + "_info.csv")
 if __name__ == "__main__":
     ## Take in arguments from the command line.
     ## task to run

@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from matplotlib import colors as mcolors
 import random
 import gym
+import time
 
 # Other imports.
 import tensorflow as tf
@@ -359,9 +360,7 @@ def make_nn_sa(mdp_demo_policy_dict, sess, params, verbose=True, sample_type="ra
         if iteration_number % 100 == 0 and params['env_name'] == 'PuddleMDP':
             plot_learned_abstraction(abstraction_net,size_z,iteration_number)
     return abstraction_net
-
-        
-        
+      
 def make_nn_sa_2(sess, params: dict, samples_batch, verbose=True):
     '''
     Args:
@@ -455,6 +454,7 @@ def make_nn_sa_3(params: dict, x_train, y_train, verbose=True):
     print("Now training the abstraction network...")
         
     # training the abstraction network
+    start_time = time.time()
     history = abstraction_net.net.fit(x_train, y_train, batch_size=32, epochs=params['num_iterations_for_abstraction_learning'])
     
     # plot history
