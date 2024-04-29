@@ -165,10 +165,11 @@ class mac:
 			returns[t]=rewards[t]+self.params['gamma']*returns[t+1]
 		return returns
 	
-	def makePlotofReturns(self, returns, title="Returns")->None:
+	def makePlotofReturns(self, returns, title="Returns", show=False)->None:
 		plt.plot([i for i in range(len(returns))], returns, 'o')
 		plt.title(title)
-		plt.show()
+		if show:
+			plt.show()
 
 	def save_model(self) -> None:
 		

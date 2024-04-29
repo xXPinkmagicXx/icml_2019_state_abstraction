@@ -53,9 +53,15 @@ class abstraction_network_new():
 		
 		return li
 	
-	def save_model(self):
+	def save_model(self, abstraction_net_training_time):
 		
-		self.net.save(self.save_path)
+		print("Saving abstraction network to disk...")
+		print("This is the save path", self.save_path)
+		self.net.save(self.save_path)	
+		print("Saved abstraction network to disk")
+		with open(self.save_path + "/abstraction_training_time.txt", "w") as f:
+			f.write(str(abstraction_net_training_time))
+		print("Saved abstraction network training time to disk")
 	
 	def load_model(self, path):
 		

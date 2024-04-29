@@ -469,11 +469,8 @@ def make_nn_sa_3(params: dict, x_train, y_train, verbose=True):
     # print("Plot saved at:", params['save_path'] + "/history.png")
 
     # Save model
-    abstraction_net.save_model()
-    
-    # save training time
     abstraction_net_training_time = end_time - start_time
-    with open(params['save_path'] + "/abstraction_training_time.txt", "w") as f:
-        f.write(str(abstraction_net_training_time))
+    abstraction_net.save_model(abstraction_net_training_time)
+    
 
     return abstraction_net, abstraction_net_training_time

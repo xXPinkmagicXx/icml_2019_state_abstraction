@@ -32,8 +32,12 @@ class Policy:
         # if action space is continuous in the environment it is discretized into k_bins
         if k_bins > 1:
             abstract_agent_save_path = abstract_agent_save_path + str(k_bins) + "_"
-
-        self.params['save_path'] = abstract_agent_save_path + "mac_" + self.env_name + '/'
+        # Save path cannot end in /, as it is used to save the model with keras
+        self.params['save_path'] = abstract_agent_save_path + "mac_" + self.env_name 
+        if not os.path.exists(self.params['save_path']):
+            os.makedirs(self.params['save_path'])
+            print("Created directory: ", self.params['save_path'])
+        
         ## Get current working directory
         cwd = os.getcwd().split('\\')[-1]
 		

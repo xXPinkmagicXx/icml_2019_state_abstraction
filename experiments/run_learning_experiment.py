@@ -44,6 +44,8 @@ from .utils.experiment_utils import make_nn_sa, make_nn_sa_2, make_nn_sa_3
 from .abstraction.abstraction_network_new import abstraction_network_new
 
 import tensorflow as tf
+tf.compat.v1.enable_v2_behavior()
+tf.compat.v1.enable_eager_execution()
 # To make code compatible with old code implemented in tensorflow 1.x
 # tf.compat.v1.disable_v2_behavior()
 # tf.compat.v1.disable_eager_execution()
@@ -219,11 +221,14 @@ def load_agent(env_name: str, algo: str, policy_train_episodes: int) -> NNStateA
     print("loading pre-trained agent with algo", algo, "and environment", env_name)
     save_name = "trained-abstract-agents/"+ str(policy_train_episodes) + '/' + algo + "_" + env_name
     load_net =  tf.keras.models.load_model(save_name)
-    load_net.summary()
     nn_sa = NNStateAbstr(load_net)
     # Load training time
-    with open(save_name + "/abstraction_training_time.txt", "r") as f:
-        abstraction_training_time = f.read()
+    if os.path.exists(save_name + "/abstraction_training_time.txt"):
+        with open(save_name + "/abstraction_training_time.txt", "r") as f:
+            abstraction_training_time = f.read()
+    else:
+        print("No training time found...")
+        abstraction_training_time = 0
 
     print("loading complete...")
     return nn_sa, float(abstraction_training_time)
@@ -341,6 +346,8 @@ def main(env_name: str, algo: str, policy_train_episodes: int, experiment_episod
     """
 
     verbose = True
+    debug = True
+    
     gym_env = Get_GymMDP(env_name, k = k_bins)
     ## Set seed
     # gym_env.env.seed(seed)
@@ -356,6 +363,8 @@ def main(env_name: str, algo: str, policy_train_episodes: int, experiment_episod
     if load_model:
         abstraction_network, abstraction_training_time = load_agent(env_name, algo, policy_train_episodes)
     elif abstraction:
+        if debug:
+            policy.params["num_samples_from_demonstrator"] = 100
         abstraction_network, abstraction_training_time = create_abstraction_network(policy, policy.params["num_samples_from_demonstrator"])
     else:
         print("No abstraction loaded or created...")
@@ -383,7 +392,8 @@ def main(env_name: str, algo: str, policy_train_episodes: int, experiment_episod
 
     ## Agents in experiment
     agent_list = [sa_agent]
-    policy.params['episodes'] = 5
+    if debug:
+        policy.params['episodes'] = 5
     # Timestamp for saving the experiment
     # Run the experiment
     if run_expiriment:
