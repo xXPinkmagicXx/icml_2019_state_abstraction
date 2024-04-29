@@ -320,11 +320,7 @@ def get_policy(gym_env: GymMDP, algo: str, policy_train_episodes: int, experimen
         policy = get_mac_policy(gym_env, policy_train_episodes, experiment_episodes, k_bins)
     else: 
         policy = get_policy_sb3(gym_env, algo, policy_train_episodes, experiment_episodes, k_bins)
-    
     policy.params["num_mdps"] = 1
-    policy.params["num_iterations_for_abstraction_learning"] = 11
-    policy.params["steps"] = 20
-    
     return policy
 
 

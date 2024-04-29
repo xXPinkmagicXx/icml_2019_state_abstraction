@@ -22,7 +22,7 @@ class abstraction_network:
 				h=tf.keras.layers.Dense(
 		            units = params['abstraction_network_hidden_nodes'],
 		            activation = tf.nn.relu)(h)
-				
+					
 
 			self.logits=tf.keras.layers.Dense(
 	            # inputs = h,
