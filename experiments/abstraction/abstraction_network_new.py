@@ -33,7 +33,9 @@ class abstraction_network_new():
 		
 		# # hidden layers
 		self.net.add(tf.keras.layers.Dense(self.num_nodes, activation='relu', input_dim=self.obs_size))
-		self.net.add(tf.keras.layers.Dense(self.num_nodes, activation='relu'))
+		for _ in range(params['abstraction_network_hidden_layers']-1):
+		
+			self.net.add(tf.keras.layers.Dense(self.num_nodes, activation='relu'))
 		
 		# output layer
 		self.net.add(tf.keras.layers.Dense(self.output_nodes, activation=self.activation_output))
