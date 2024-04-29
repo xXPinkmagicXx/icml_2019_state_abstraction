@@ -30,9 +30,13 @@ class PolicySB:
 
         self.params['num_actions'] = self.get_num_actions()
         self.params['size_a'] = self.params['num_actions']
-        self.params['policy_train_steps'] = policy_train_episodes
+        self.params['policy_train_episodes'] = policy_train_episodes
         self.params['plot_path'] = 'results/' + 'gym-'+ self.params['env_name'] + '/' + str(policy_train_episodes)
+        self.params['results_folder_path'] = 'results/' + 'gym-'+ self.params['env_name'] + '/' + str(policy_train_episodes) + '/'
 
+        model =  str(self.k_bins) + "_" + str(self.algo) if self.k_bins > 1 else str(self.algo)  
+        self.params['results_save_name'] = "Q-learning_phi_" + model
+        
         abstract_agent_save_path = "trained-abstract-agents/" + str(policy_train_episodes) + '/'
         if os.path.exists(abstract_agent_save_path) == False:
             os.makedirs(abstract_agent_save_path)
@@ -45,7 +49,7 @@ class PolicySB:
         if not os.path.exists(self.params['save_path']):
             os.makedirs(self.params['save_path'])
             print("Created directory: ", self.params['save_path'])
-            
+
         ## Get current working directory
         cwd = os.getcwd().split('\\')[-1]
 		
@@ -150,13 +154,15 @@ class PolicySB:
         """
         x = []
         y = []
-        for _ in range(num_samples):
+        for n in range(num_samples):
             cur_state = self.gym_env.env.observation_space.sample()
             self.gym_env.env.state = cur_state
             self.model.env.state = cur_state
             best_action = self.demo_policy(cur_state)
             x.append(cur_state)
             y.append(best_action)
+            if n % 1000 == 0:
+                print("Sampled ", n, " samples. out of ", num_samples, " samples.")
 
         # normalize and conver the data
         x_train = tf.keras.utils.normalize(np.array(x), axis=0)

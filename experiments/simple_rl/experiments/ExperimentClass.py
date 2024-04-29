@@ -268,6 +268,7 @@ class Experiment(object):
             for x in range(num_times_to_write):
                 self.write_datum_to_file(agent, sum(self.rewards[agent]))
                 self.write_datum_to_file(agent, sum(self.times[agent]), extra_dir="times/")
+                self.write_datum_to_file(agent, len(self.rewards[agent]), extra_dir="steps/")
                 if self.track_success:
                     self.write_datum_to_file(agent, int(self.rewards[agent][-1] >= self.success_reward), extra_dir="success/")
         else:

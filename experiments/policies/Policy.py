@@ -19,15 +19,19 @@ class Policy:
         self.env_name = self.params['env_name']
         self.policy_train_episodes = policy_train_episodes
         self.algo = "mac"
+        self.k_bins = k_bins
 
         self.params['size_a'] = self.get_num_actions()
         self.params['algo'] = 'mac'
         self.params['policy_train_steps'] = policy_train_episodes
         self.params['episodes'] = experiment_episodes
-
+        self.params['k_bins'] = k_bins
         abstract_agent_save_path = "trained-abstract-agents/" + str(policy_train_episodes) + '/'
         if os.path.exists(abstract_agent_save_path) == False:
             os.makedirs(abstract_agent_save_path)
+
+        model =  str(self.k_bins) + "_" + str(self.algo) if self.k_bins > 1 else str(self.algo)  
+        self.params['results_save_name'] = "Q-learning_phi_" + model
         
         # if action space is continuous in the environment it is discretized into k_bins
         if k_bins > 1:

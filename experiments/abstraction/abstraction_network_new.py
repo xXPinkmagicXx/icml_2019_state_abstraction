@@ -12,7 +12,7 @@ class abstraction_network_new():
 	def __init__(self, params, num_abstract_states):
 		
 		self.save_path = params['save_path']
-		self.train_step_size = params['policy_train_steps'] # the number of steps the pre-trained policy is trained for
+		self.policy_train_episodes = params['policy_train_episodes'] # the number of steps the pre-trained policy is trained for
 		self.obs_size = params['obs_size']
 		self.action_size = params['size_a'] 
 		self.num_nodes = params['abstraction_network_hidden_nodes']
@@ -57,7 +57,8 @@ class abstraction_network_new():
 		
 		print("Saving abstraction network to disk...")
 		print("This is the save path", self.save_path)
-		self.net.save(self.save_path)	
+		tf.keras.models.save_model(self.net, self.save_path, save_format='tf')
+		# self.net.save(self.save_path)	
 		print("Saved abstraction network to disk")
 		with open(self.save_path + "/abstraction_training_time.txt", "w") as f:
 			f.write(str(abstraction_net_training_time))

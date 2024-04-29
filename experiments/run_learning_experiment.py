@@ -198,11 +198,11 @@ def create_abstraction_network(policy, num_samples=10000, x_train=None):
     x_train, y_train = policy.sample_training_data(num_samples)
     end_time = time.time()
     print("this is the time it took to sample the data", end_time - start_time)
-    max_value = np.max(x_train)
-    min_value = np.min(x_train)
-    print("this is the max and min value", max_value, min_value)
-    print("this si the shape of x_train", x_train[:2])
-    print("this is the shape of y_train", y_train.shape, "with unique values", np.unique(y_train, return_counts=True))
+    # max_value = np.max(x_train)
+    # min_value = np.min(x_train)
+    # print("this is the max and min value", max_value, min_value)
+    # print("this si the shape of x_train", x_train[:2])
+    # print("this is the shape of y_train", y_train.shape, "with unique values", np.unique(y_train, return_counts=True))
     
     abstraction_net, abstraction_training_time = make_nn_sa_3(policy.params, x_train, y_train)
     
@@ -329,7 +329,17 @@ def get_policy(gym_env: GymMDP, algo: str, policy_train_episodes: int, experimen
 
 
 
-def main(env_name: str, algo: str, policy_train_episodes: int, experiment_episodes: int, k_bins=1, abstraction=True, load_model = False, run_expiriment=True,  verbose=False, seed=42):
+def main(
+        env_name: str,
+        algo: str,
+        policy_train_episodes: int,
+        experiment_episodes: int,
+        k_bins: int,
+        abstraction=True,
+        load_model = False,
+        run_expiriment=True, 
+        verbose=False,
+        seed=42):
     """
     Args:
         :param env_name (str): Name of the environment
@@ -346,13 +356,13 @@ def main(env_name: str, algo: str, policy_train_episodes: int, experiment_episod
     """
 
     verbose = True
-    debug = True
+    debug = False
     
     gym_env = Get_GymMDP(env_name, k = k_bins)
     ## Set seed
     # gym_env.env.seed(seed)
     random.seed(seed)
-
+    np.random.seed(seed)
     ## Get actions and features
     actions = list(gym_env.get_actions())
 
@@ -382,10 +392,12 @@ def main(env_name: str, algo: str, policy_train_episodes: int, experiment_episod
     agent_params = {"alpha":policy.params['rl_learning_rate'],"epsilon":0.1,"actions":actions}
     
     if abstraction_network is not None:
+        # include k_bins if the action space is discretized
+        name_ext = "_phi_" + str(policy.k_bins) + "_" + str(algo) + "_" + str(seed) if k_bins > 1 else "_phi_" + str(algo) + "_" + str(seed) 
         sa_agent = AbstractionWrapper(QLearningAgent,
                                   agent_params=agent_params,
                                   state_abstr=abstraction_network,
-                                  name_ext="_phi_"+ str(algo) + "_" + str(seed))
+                                  name_ext=name_ext)
     else:
         print("skipping experiment for abstraction...")
     
@@ -433,18 +445,21 @@ def get_and_save_results(policy: PolicySB, seed: int, training_time) -> None:
     episodes = policy.params['episodes']
 
     retrieve_folder = "results/" + env_name + "/" + str(policy.policy_train_episodes) + "/"
-    file_name = q_learning_agent + "_phi_" + policy.algo + "_" + str(seed) + ".csv" 
+    file_name = policy.params['results_save_name'] + "_" + str(seed) + ".csv" 
     
     print("this is The retieve folder and file name", retrieve_folder, file_name)
     successes = _read_file_and_get_results(retrieve_folder + "success/" + file_name, policy.params['episodes'])
     times = _read_file_and_get_results(retrieve_folder + "times/" + file_name, policy.params['episodes'])
     rewards = _read_file_and_get_results(retrieve_folder + file_name, policy.params['episodes'])
-
+    steps = _read_file_and_get_results(retrieve_folder + "steps/" + file_name, policy.params['episodes'])
+    
     successes = [int(success) for success in successes]
-    result = pd.DataFrame({"success": successes, "times": times, "rewards": rewards})
+    steps = [int(step) for step in steps]
+    # steps = [int(step) for step in steps]
+    result = pd.DataFrame({"success": successes, "times": times, "rewards": rewards, "steps": steps})
     # List of successes
 
-    print("this is the success file txt:\n", "split into", successes)       
+    # print("this is the success file txt:\n", "split into", successes)       
 
     ## Create save path
     ABSTRACTION = "icml"
@@ -457,10 +472,16 @@ def get_and_save_results(policy: PolicySB, seed: int, training_time) -> None:
     
     result.to_csv(new_save_folder + new_save_name + ".csv")
     
-    
     success_rate = np.mean(successes)
 
-    result_info = pd.DataFrame({"success_rate": [success_rate], "training_time": [training_time], "episodes": [episodes], "seed": [seed], "agent": [model], })
+    result_info = pd.DataFrame({
+        "agent": [model], 
+        "episodes": [episodes],
+        "total_steps": [np.sum(steps)],
+        "success_rate": [success_rate],
+        "training_time": [training_time],
+        "seed": [seed],
+        })
     result_info.to_csv(new_save_folder + new_save_name + "_info.csv")
 
 if __name__ == "__main__":
