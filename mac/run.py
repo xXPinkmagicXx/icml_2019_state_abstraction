@@ -36,12 +36,13 @@ def get_config(env_name) -> dict:
 	else:
 		raise ValueError("Invalid environment name")
 
-def get_params(env, env_name, episodes, k_bins, seed, verbose) -> dict:
+def get_params(env, env_name, env_render, episodes, k_bins, seed, verbose) -> dict:
 
 	## Get the config for the environment
 	config = get_config(env_name)
 
 	config['env'] = env
+	config['env_render'] = env_render
 	config['A'] = env.action_space.n
 	config['n_actions'] = 1
 	config['k'] = k_bins
@@ -56,7 +57,7 @@ def get_params(env, env_name, episodes, k_bins, seed, verbose) -> dict:
 	
 	return config
 
-def main(env_name: str, episodes=200, k_bins=1, seed=42, verbose=False):
+def main(env_name: str, episodes=200, k_bins=1, seed=42, verbose=False, render=True):
 	
 	## The neural nets are created in version 1 of tensorflow
 	## This is to ensure compatibility and the code runs faster  
@@ -65,13 +66,15 @@ def main(env_name: str, episodes=200, k_bins=1, seed=42, verbose=False):
 
 	# Params for all environments.
 	env = gym.make(env_name)
+	env_render = gym.make(env_name, render_mode="human")
 	# How to discretize the action space for the environment
 	## Discretize the action space for Pendulum-v0 and MountainCarContinuous
 	if isinstance(env.action_space, gym.spaces.Box):
 		env = discretizing_wrapper(env, k_bins)
+		env_render = discretizing_wrapper(env_render, k_bins)
 	
 	# Get the config for the environment
-	params = get_params(env, env_name, episodes, k_bins, seed, verbose)
+	params = get_params(env, env_name, env_render, episodes, k_bins, seed, verbose)
 
 	# Params for specific environments.
 	## ensure results are reproducible
@@ -96,7 +99,10 @@ def main(env_name: str, episodes=200, k_bins=1, seed=42, verbose=False):
 	start_time = time.time()
 	returns, rewards = agent.train()
 	end_time = time.time()
-
+	
+	# render one episode
+	agent.interactOneEpisode(render=True)
+	
 	with open(agent.learned_policy_path + "_time.txt", 'w') as f:
 		f.write(str(end_time - start_time))
 	

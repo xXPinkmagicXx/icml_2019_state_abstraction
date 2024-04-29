@@ -73,12 +73,12 @@ class mac:
 
 			# Accumulated rewards
 			accumulated_rewards += numpy.sum(rewards)
-			if episode%200==0:
+			if episode % 200 == 0:
 				self.save_model()
 				if self.params["verbose"]:
 					print("Saved latest policy network to disk")
 
-			if episode%250==0:
+			if episode % 250 == 0:
 				self.params['env'].render()
 			#log performance
 			if episode % 10 == 0:
@@ -93,7 +93,7 @@ class mac:
 			self.train_critic(states, actions, returns, episode)
 
 			self.actor.train(states, self.critic)
-		
+				
 		# save the model when training is over
 		self.save_model()
 		print("Saved latest policy network to disk")
@@ -115,14 +115,15 @@ class mac:
 		elif self.params['critic_train_type']=='model_free_critic_TD':
 			self.critic.train_model_free_TD(self.memory,self.actor,self.params,self.params,episode)
 
-	def interactOneEpisode(self):
+	
+	def interactOneEpisode(self, render=False):
 		'''
 			given the mac agent and an environment, executes their
 			interaction for an episode, and then returns important information
 			used for training.
 		'''
-
-		s0, _ = self.params['env'].reset()
+		env_string = "env_render" if render else "env"
+		s0, _ = self.params[env_string].reset()
 		rewards = []
 		states = []
 		actions = []
@@ -130,29 +131,37 @@ class mac:
 		s=s0
 		while True:
 			a = self.actor.select_action(s)
-			s_p , r , terminated, truncated , info = self.params['env'].step(a)
+			s_p , r , terminated, truncated , info = self.params[env_string].step(a)
 			
 			states.append(s)
 			actions.append(a)
-			rewards.append(r)
+
+			# reward shaping, applies shaping if defined or returns the reward as is
+			shaped_reward = self.reward_shaping(s, r)
+			rewards.append(shaped_reward)
 			# update for next iteration
 			
 			s, t = (s_p,t+1)
 
 			# when done
 			if truncated or terminated :
-				
+				reward_goal = 0
 				if terminated and self.params["verbose"]:
 					# maybe reward function here
 					print("Reached the goal!")
 				
 				# we actually store the terminal state!
 				states.append(s_p)
-				a=self.actor.select_action(s_p)
+				a = self.actor.select_action(s_p)
 				actions.append(a),
-				rewards.append(0)
+				
+				if terminated:
+					reward_goal = self.reward_shaping_goal(s_p)
+				
+				rewards.append(reward_goal)
 				break
-
+			if render:
+				self.params[env_string].render()
 		returns = self.rewardToReturn(rewards)
 
 		return states, actions, returns, rewards
@@ -181,112 +190,33 @@ class mac:
 		# serialize weights to HDF5
 		self.actor.network.save_weights(self.learned_policy_path + ".h5")
 
-	def rewardToMounainCar(self, current_state, next_state, reward, action, episode):
+	def reward_shaping(self, current_state, current_reward):
+		'''
+		Here we can define a reward shaping, to be used for every step.
+		'''
+		if self.params['env_name'] == "MountainCar-v0":
+			return self.rewardVelocityMountainCar(current_state[1])
 		
-		valley = -0.5
-		velocity_max = 0.07
-		velocity_min = -0.07
-		goal_position = 0.5
-		action_right = action == 2
-		no_action = action == 1
-		
-		## Simple reward reaching left hight 
-
-		## Exp reward for position
-
-		## Exp reward for velocity when crossing valley
-
-		## Potential energi reward
-
-		if self.params["env_name"] == "MountainCar-v0":
-			## moving right
-			# pos_change = (next_state[0] - current_state[0])
-			# moving_right = pos_change > 0
-			
-			# reward for position
-			# pos_reward = self.rewardPositionMountainCar(next_state[0])
-			# vel_valley_reward = self.rewardVelocityWhenCrossingValley(current_state, next_state)
-			# vel_reward = self.rewardVelocityMountainCar(current_state[1])
-			# reward += pos_reward + vel_valley_reward + vel_reward
-
-			# potential_energy = self.findPotentialEnergyMountainCar(current_state[0])
-			# kinetic_energy = self.findKineticEnergyMountainCar(current_state[1])
-			vel_reward = self.rewardVelocityMountainCar(current_state[1])
-			reward += vel_reward   
-
-			# Reward for reaching the goal
-			if next_state[0] >= 0.5:
-				reward = 1000
-
-			# r += position_reward + velocity_reward
-			if self.params["verbose"] and episode%100==0 or episode==1:
-				# print("posistion: ",corrected,"velocity",s_p[1],"action: ",a,"reward =",position_reward, "+", velocity_reward)
-				print("posistion: ",next_state, "velocity",next_state[1],"action: ",action,"reward: ",reward ,"velocity_reward:", vel_reward)
-			# position= max(0, 0.5 - abs(s_p[0] - 0.5))  # Reward for being close to the goal position
-			# velocity= max(0, 0.07 - abs(s_p[1]))
-		
-		return reward
-	def findPotentialEnergyMountainCar(self, pos):
-		m = 1000
-		g = 0.0025
-		# The funciton of the mountain road
-		h = numpy.sin(numpy.pi * pos) + 1
-
-		# Correct pos to be 0 in valley
-		potential_energy = m * g * (h *100)
-		# Reward for potential energy
-		
-		return potential_energy
-	def findKineticEnergyMountainCar(self, velocity):
-		m = 1000
-		velocity_ratio = abs(velocity) / 0.07
-		velocity_percentage = velocity_ratio * 100
-		kinetic_energy = 0.5 * m * abs(velocity_ratio)**2
-		# Reward for kinetik energy
-		return kinetic_energy
+		# if no shaping return current reward
+		return current_reward
+	
+	def reward_shaping_goal(self, current_state):
+		'''
+		Here we can define a reward shaping function.
+		'''
+		if self.params['env_name'] == "MountainCar-v1":
+			return 1000
+		# if no shaping return 0, which is default
+		if self.params["env_name"] == "Acrobot-v1":
+			return 1000
+		if self.params["env_name"] == "Pendulum-v1":
+			# if upright and low velocity
+			if abs(current_state[1]) < 0.1 and abs(current_state[2]) < 0.1:
+				return 1000
+		return 0
 
 	def rewardVelocityMountainCar(self, current_velocity):
-		valley = -0.5
-		velocity_max = 0.07
-		velocity_min = -0.07
-		velocity_reward = 0
-		
-		velocity_ratio = abs(current_velocity) / velocity_max
-		velocity_reward = (2+ velocity_ratio)**2
-
 		# Reward for velocity
-		return velocity_reward
+		return 100 * abs(current_velocity)
 
 
-	def rewardVelocityWhenCrossingValley(self, current_state, next_state):
-		valley = -0.5
-		velocity_max = 0.07
-		velocity_min = -0.07
-		current_pos = current_state[0]
-		next_pos = next_state[0]
-		current_velocity = current_state[1]
-		next_velocity = next_state[1]
-		velocity_reward = 0
-		velocity_ratio = 0
-		# Reward for velocity when crossing valley
-		if current_pos < valley and next_pos >= valley:
-			
-			velocity_ratio = next_velocity / velocity_max
-			velocity_reward = 100 * velocity_ratio
-		
-		elif current_pos > valley and next_pos <= valley:
-			
-			velocity_ratio = next_velocity / velocity_min
-			velocity_reward = 100 * velocity_ratio
-
-		return velocity_reward
-	def rewardPositionMountainCar(self, pos):
-		valley = -0.5
-		# Correct pos to be 0 in valley
-		corrected_pos = pos - valley
-		
-		# Reward for being close to the goal position
-		pos_reward = (1 / (1-abs(corrected_pos)**2))
-		
-		return pos_reward
-		
