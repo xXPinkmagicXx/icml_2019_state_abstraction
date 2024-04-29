@@ -23,7 +23,7 @@ class Policy:
 
         self.params['size_a'] = self.get_num_actions()
         self.params['algo'] = 'mac'
-        self.params['policy_train_steps'] = policy_train_episodes
+        self.params['policy_train_episodes'] = policy_train_episodes
         self.params['episodes'] = experiment_episodes
         self.params['k_bins'] = k_bins
         abstract_agent_save_path = "trained-abstract-agents/" + str(policy_train_episodes) + '/'
