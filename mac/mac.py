@@ -83,9 +83,14 @@ class mac:
 
 			if episode % 250 == 0:
 				self.params['env'].render()
+			
 			#log performance
-			if episode % 10 == 0:
-				print(episode,"return in last 10 episodes",numpy.mean(li_returns[-10:]), "with accumulated rewards", accumulated_rewards)
+			if self.params["verbose"]:
+				print("episode: ",episode, numpy.mean(li_returns[-1]), "with accumulated rewards", accumulated_rewards)
+			
+			# if episode % 10 == 0:
+			# 	if self.params["verbose"]:
+			# 		print(episode,"return in last 10 episodes",numpy.mean(li_returns[-10:]), "with accumulated rewards", accumulated_rewards)
 
 			li_returns.append(returns[0])
 			li_rewards.append(numpy.sum(rewards))
@@ -199,8 +204,8 @@ class mac:
 		if self.params['env_name'] == "MountainCarContinuous-v0":
 			return current_reward + self.rewardVelocityMountainCar(current_state[1])
 		
-		# if self.params['env_name'] == "Pendulum-v1":
-		# 	return current_reward + self.reward_Upright_Pendulum(current_state)
+		if self.params['env_name'] == "Pendulum-v1":
+			return current_reward + self.reward_Upright_Pendulum(current_state)
 
 		# if no shaping return current reward
 		return current_reward
