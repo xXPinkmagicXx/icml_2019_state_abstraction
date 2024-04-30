@@ -409,7 +409,8 @@ def main(
         # dir_for_plot = str(datetime.now().time()).replace(":", "_").replace(".", "_")
         dir_for_plot = str(policy_train_episodes)
         
-        experiment_times = run_agents_on_mdp(agent_list,
+        experiment_times = run_agents_on_mdp(
+                            agent_list,
                             gym_env,
                             instances=1,
                             episodes=policy.params['episodes'],

@@ -48,7 +48,7 @@ class GymMDP(MDP):
    
         return param_dict
 
-    def _reward_func(self, state, action):
+    def _reward_func(self, state: GymState, action):
         '''
         Args:
             state (AtariState)
@@ -58,11 +58,17 @@ class GymMDP(MDP):
             (float)
         '''
         obs, reward, terminated, truncated, info = self.env.step(action)
-
+        
+        reward = self._reward_shaping(state, reward)
+        
+        # Reward shaping end of episode
+        if terminated or truncated:
+            reward = self._reward_shaping_end(state, terminated, truncated)
+        
         if self.render and (self.render_every_n_episodes == 0 or self.episode % self.render_every_n_episodes == 0):
             self.env.render()
 
-        self.next_state = GymState(obs, is_terminal=terminated)
+        self.next_state = GymState(obs, is_terminal=(terminated or truncated))
 
         return reward
 
@@ -76,6 +82,53 @@ class GymMDP(MDP):
             (State)
         '''
         return self.next_state
+
+    def _reward_shaping(self, state: GymState, reward):
+        '''
+        Args:
+            state (AtariState)
+            reward (float)
+
+        Returns
+            (float)
+        Summary:
+            Does reward shaping if necessary. Otherwise, returns the reward as is.
+        '''
+        if self.env_name == "MountainCar-v1":
+            return self._reward_MountainCar(state.data[1])
+        
+        return reward
+    
+    def _reward_MountainCar(self, currentVelocity):
+        return 100 * abs(currentVelocity)
+    
+    def _reward_shaping_end(self, state: GymState, terminated, truncated):
+        '''
+        Args:
+            state (AtariState)
+
+        Returns
+            (float)
+        Summary:
+            Reward shaping for when the agent reaches the goal.
+            If no reward shaping is necessary, return 0 (default).
+        '''
+        if self.env_name == "CartPole-v1":
+            # if terminated and pole angle is more than 12 degrees or out of bounds
+            if terminated:
+                return -1000
+        if self.env_name == "MountainCar-v1":
+            return 1000
+        if self.env_name == "Acrobot-v1":
+            return 1000
+        if self.env_name == "Pendulum-v1":
+            # if upright and low velocity
+            y = state.data[1]
+            velocity = state.data[2]
+            if abs(y) < 0.1 and abs(velocity) < 0.1:
+                return 1000
+        
+        return 0
 
     def reset(self):
         self.env.reset()

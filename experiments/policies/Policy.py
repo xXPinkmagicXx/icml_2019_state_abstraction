@@ -52,7 +52,8 @@ class Policy:
         elif cwd == "Bachelor-Project":
             path_to_learned_policy = './icml_2019_state_abstraction/mac/learned_policy/'	
         ## . if called as submodule or .. if called from experiments/
-        
+        path_to_learned_policy += str(self.policy_train_episodes) + "/"
+
         self.loaded_model = self._load_model(path_to_learned_policy)
         self.demo_policy = self.expert_policy
         self.num_mdps = 1

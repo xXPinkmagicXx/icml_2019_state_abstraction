@@ -3,7 +3,7 @@ import numpy
 import sys,random
 import tensorflow as tf
 # Disable extensive logging
-tf.keras.utils.disable_interactive_logging()
+# tf.keras.utils.disable_interactive_logging()
 import gymnasium as gym
 from keras import backend as K
 import matplotlib.pyplot as plt
@@ -85,8 +85,8 @@ def main(env_name: str, episodes=200, k_bins=1, seed=42, verbose=False, render=T
 	tf.compat.v1.set_random_seed(seed)
 
 	# set session
-	session_conf = tf.compat.v1.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1)
-	sess = tf.compat.v1.Session(graph=tf.compat.v1.get_default_graph(), config=session_conf)
+	# session_conf = tf.compat.v1.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1)
+	# sess = tf.compat.v1.Session(graph=tf.compat.v1.get_default_graph(), config=session_conf)
 	# tf.compat.v1.keras.set_session(sess)
 
 	if verbose:
