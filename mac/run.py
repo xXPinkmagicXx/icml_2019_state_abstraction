@@ -16,47 +16,59 @@ from Code.icml import icml_config
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-def get_config(env_name) -> dict:
+# def get_config(env_name) -> dict:
 	
-	# # Get the config for the environment
-	if env_name == "MountainCar-v0":
-		return icml_config.MOUNTAIN_CAR
-	if env_name == "CartPole-v0" or env_name == "CartPole-v1":
-		return icml_config.CARTPOLE
-	elif env_name == "Acrobot-v1":
-		return icml_config.ACROBOT
-	elif env_name == "LunarLander-v2":
-		return icml_config.LUNAR_LANDER
-	# Continuous action space
-	elif env_name == "Pendulum-v1":
-		return icml_config.PENDULUM
-	elif env_name == "MountainCarContinuous-v0":
-		return icml_config.MOUNTAIN_CAR_CONTINUOUS
-	elif env_name == "Swimmer-v4":
-		return icml_config.SWIMMER
-	else:
-		raise ValueError("Invalid environment name")
+# 	# # Get the config for the environment
+# 	if env_name == "MountainCar-v0":
+# 		return icml_config.MOUNTAIN_CAR
+# 	if env_name == "CartPole-v0" or env_name == "CartPole-v1":
+# 		return icml_config.CARTPOLE
+# 	elif env_name == "Acrobot-v1":
+# 		return icml_config.ACROBOT
+# 	elif env_name == "LunarLander-v2":
+# 		return icml_config.LUNAR_LANDER
+# 	# Continuous action space
+# 	elif env_name == "Pendulum-v1":
+# 		return icml_config.PENDULUM
+# 	elif env_name == "MountainCarContinuous-v0":
+# 		return icml_config.MOUNTAIN_CAR_CONTINUOUS
+# 	elif env_name == "Swimmer-v4":
+# 		return icml_config.SWIMMER
+# 	else:
+# 		raise ValueError("Invalid environment name")
 
-def get_params(env, env_name, env_render, episodes, n_actions, k_bins, seed, verbose) -> dict:
+# def get_params(env, env_name, env_render, episodes, n_actions, k_bins, seed, verbose) -> dict:
 
-	## Get the config for the environment
-	config = get_config(env_name)
+# 	## Get the config for the environment
+# 	config = get_config(env_name)
 
-	config['env'] = env
-	config['env_render'] = env_render
-	config['n_actions'] = n_actions
-	config['A'] = env.action_space.n
-	config['k'] = k_bins
-	config['state_dimension']=env.observation_space.shape[0]
-	config['episodes'] = episodes
-	config['seed'] = seed
-	config['verbose'] = verbose
-	config['k_bins'] = k_bins
-	config['env_name'] = env_name
-	config['gamma'] = 0.99
-	config['plot'] = False
+# 	config['env'] = env
+# 	config['env_render'] = env_render
+# 	config['n_actions'] = n_actions
+# 	config['A'] = env.action_space.n
+# 	config['k'] = k_bins
+# 	config['state_dimension']=env.observation_space.shape[0]
+# 	config['episodes'] = episodes
+# 	config['seed'] = seed
+# 	config['verbose'] = verbose
+# 	config['k_bins'] = k_bins
+# 	config['env_name'] = env_name
+# 	config['gamma'] = 0.99
+# 	config['plot'] = False
 	
-	return config
+# 	return config
+
+def main_from_config(config: dict, seed=None, verbose=False):
+
+	main(
+		config['env_name'],
+		episodes=config['episodes'],
+		k_bins=config['k_bins'],
+		seed=seed,
+		train=config['train'],
+		verbose=verbose,
+		config=config
+	)
 
 def main(
 		env_name: str,
@@ -65,7 +77,9 @@ def main(
 		seed=42,
 		train=True,
 		verbose=False,
-		render=True):
+		render=True,
+		config=None
+		):
 	
 	## The neural nets are created in version 1 of tensorflow
 	## This is to ensure compatibility and the code runs faster  
@@ -89,8 +103,24 @@ def main(
 	n_actions = env.action_space.n if n_actions_continuous is None else n_actions_continuous
 	# Get the config for the environment
 	# Params for specific environments.
-	params = get_params(env, env_name, env_render, episodes, n_actions, k_bins, seed, verbose)
-	
+	# if config is None:
+	# 	params = get_params(env, env_name, env_render, episodes, n_actions, k_bins, seed, verbose)
+	# else:
+	params = config
+	params['env'] = env
+	params['env_render'] = env_render
+	params['n_actions'] = n_actions
+	params['A'] = env.action_space.n
+	params['k'] = k_bins
+	params['state_dimension']=env.observation_space.shape[0]
+	params['episodes'] = episodes
+	params['seed'] = seed
+	params['verbose'] = verbose
+	params['k_bins'] = k_bins
+	params['env_name'] = env_name
+	params['gamma'] = 0.99
+	params['plot'] = False
+
 	# set seeds to ensure results are reproducible
 	numpy.random.seed(seed)
 	random.seed(seed)
