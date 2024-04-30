@@ -6,6 +6,7 @@ import sys
 import os
 from collections import deque
 import time
+import numpy as np
 import matplotlib.pyplot as plt
 
 class mac:
@@ -59,11 +60,13 @@ class mac:
 		li_acc_rewards=[]
 		li_time = []
 		accumulated_rewards= 0
-
+		print("Is verbose", self.params["verbose"])
 		for episode in range(1,self.params['episodes']):
 			# Do one episode of interaction
 			states, actions, returns, rewards = self.interactOneEpisode()
 
+			if self.params["verbose"]:
+				print("This is the actions taken", np.unique(actions, return_counts=True))
 			# Update epsilon for epsilon greedy policy
 			# print("This is the epsilon in actor", self.actor.params['epsilon'], "this is the epsilon in mac", self.epsilon)
 			self.actor.params['epsilon'] = max(1 - episode/(self.params["episodes"]*self.epsilon), 0.01)
@@ -146,17 +149,13 @@ class mac:
 			# when done
 			if truncated or terminated :
 				reward_goal = 0
-				if terminated and self.params["verbose"]:
-					# maybe reward function here
-					print("Reached the goal!")
 				
 				# we actually store the terminal state!
 				states.append(s_p)
 				a = self.actor.select_action(s_p)
 				actions.append(a),
 				
-				if terminated:
-					reward_goal = self.reward_shaping_goal(s_p)
+				reward_end = self.reward_shaping_end(s_p, terminated, truncated)
 				
 				rewards.append(reward_goal)
 				break
@@ -200,11 +199,11 @@ class mac:
 		# if no shaping return current reward
 		return current_reward
 	
-	def reward_shaping_goal(self, current_state):
+	def reward_shaping_end(self, current_state, terminated, truncated):
 		'''
 		Here we can define a reward shaping function.
 		'''
-		if self.params['env_name'] == "MountainCar-v1":
+		if self.params['env_name'] == "MountainCar-v0":
 			return 1000
 		# if no shaping return 0, which is default
 		if self.params["env_name"] == "Acrobot-v1":
@@ -213,6 +212,12 @@ class mac:
 			# if upright and low velocity
 			if abs(current_state[1]) < 0.1 and abs(current_state[2]) < 0.1:
 				return 1000
+		if self.params["env_name"] == "CartPole-v1":
+			# if terminated pole angle is more than 12 degrees or out of bounds
+			if terminated:
+				return -1000
+			else: 
+				return 1
 		return 0
 
 	def rewardVelocityMountainCar(self, current_velocity):

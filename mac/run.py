@@ -75,7 +75,7 @@ def main(env_name: str, episodes=200, k_bins=1, seed=42, verbose=False, render=T
 	
 	# Get the config for the environment
 	params = get_params(env, env_name, env_render, episodes, k_bins, seed, verbose)
-
+	
 	# Params for specific environments.
 	## ensure results are reproducible
 	
@@ -94,7 +94,7 @@ def main(env_name: str, episodes=200, k_bins=1, seed=42, verbose=False, render=T
 	#create a MAC agent and run
 		
 	agent = mac(params)
-
+	
 	# train the agent and time it
 	start_time = time.time()
 	returns, rewards = agent.train()
