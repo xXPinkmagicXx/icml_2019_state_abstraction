@@ -442,17 +442,16 @@ def make_nn_sa_3(params: dict, x_train, y_train, verbose=True):
         a_in_z = enumeration_policy(size_z,size_a,num_mdps)
 
     num_abstract_states = size_z
-    print("This is the number of abstract states:", num_abstract_states)
+    if verbose:
+        print("This is the number of abstract states:", num_abstract_states)
     ## Create abstraction network
     abstraction_net = abstraction_network_new(params, num_abstract_states)
     
     ## print
     if verbose:
-        print("env_name:", params['env_name'])
+        print("Now training the abstraction network...")
 
     ## Do training
-    print("Now training the abstraction network...")
-        
     # training the abstraction network
     tqdm_callback = tfa.callbacks.TQDMProgressBar(leave_epoch_progress=False, show_epoch_progress=False, leave_overall_progress=True, show_overall_progress=True)
     start_time = time.time()

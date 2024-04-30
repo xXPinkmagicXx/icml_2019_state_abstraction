@@ -164,7 +164,7 @@ def run_episodes_sb(env_name, policy: PolicySB, episodes=1, steps=500):
                 break
             eval_env.render()
 
-def run_episodes_from_nn(env_name, abstraction_net: NNStateAbstr, episodes=1, steps=500):
+def run_episodes_from_nn(env_name, abstraction_net: NNStateAbstr, episodes=1, steps=500, verbose=True):
     """
     Args:
         :param gym_env (GymMDP)
@@ -177,9 +177,13 @@ def run_episodes_from_nn(env_name, abstraction_net: NNStateAbstr, episodes=1, st
             action = abstraction_net.phi(State(obs))
             obs, reward, terminated, truncated, info = eval_env.step(action.data)
             if terminated or truncated:
-                print("terminated", terminated, "truncated", truncated, "after steps", s)
+                
+                if verbose:
+                    print("terminated", terminated, "truncated", truncated, "after steps", s)
+                
                 obs, info = eval_env.reset()
                 break
+
             eval_env.render()
 
 def create_abstraction_network(policy, num_samples=10000, x_train=None, verbose=True):
@@ -195,7 +199,8 @@ def create_abstraction_network(policy, num_samples=10000, x_train=None, verbose=
     start_time = time.time()
     x_train, y_train = policy.sample_training_data(num_samples, verbose)
     end_time = time.time()
-    print("this is the time it took to sample the data", end_time - start_time)
+    if verbose:
+        print("this is the time it took to sample the data", end_time - start_time)
     # max_value = np.max(x_train)
     # min_value = np.min(x_train)
     # print("this is the max and min value", max_value, min_value)
@@ -208,7 +213,7 @@ def create_abstraction_network(policy, num_samples=10000, x_train=None, verbose=
     
     return StateAbsractionNetwork, abstraction_training_time
 
-def load_agent(env_name: str, algo: str, policy_train_episodes: int) -> NNStateAbstr:
+def load_agent(env_name: str, algo: str, policy_train_episodes: int, verbose=True) -> NNStateAbstr:
     """
     Args:
         :param env_name (str): Name of the environment
@@ -216,7 +221,7 @@ def load_agent(env_name: str, algo: str, policy_train_episodes: int) -> NNStateA
     Returns:
         NNStateAbstr object
     """
-    print("loading pre-trained agent with algo", algo, "and environment", env_name)
+
     save_name = "trained-abstract-agents/"+ str(policy_train_episodes) + '/' + algo + "_" + env_name
     load_net =  tf.keras.models.load_model(save_name)
     nn_sa = NNStateAbstr(load_net)
@@ -225,10 +230,11 @@ def load_agent(env_name: str, algo: str, policy_train_episodes: int) -> NNStateA
         with open(save_name + "/abstraction_training_time.txt", "r") as f:
             abstraction_training_time = f.read()
     else:
-        print("No training time found...")
+        if verbose:
+            print("No training time found...")
         abstraction_training_time = 0
-
-    print("loading complete...")
+    if verbose:
+        print("loading complete...")
     return nn_sa, float(abstraction_training_time)
 
 def get_policies(gym_env: str, algo: str, policy_train_episodes: int):
@@ -368,7 +374,7 @@ def main(
 
     ## Get abstraction networks (can be none)
     if load_model:
-        abstraction_network, abstraction_training_time = load_agent(env_name, algo, policy_train_episodes)
+        abstraction_network, abstraction_training_time = load_agent(env_name, algo, policy_train_episodes, verbose)
     elif abstraction:
         if debug:
             policy.params["num_samples_from_demonstrator"] = 100
@@ -396,7 +402,8 @@ def main(
                                   state_abstr=abstraction_network,
                                   name_ext=name_ext)
     else:
-        print("skipping experiment for abstraction...")
+        if verbose:
+            print("skipping experiment for abstraction...")
     
 
     ## Agents in experiment
@@ -406,7 +413,8 @@ def main(
     # Timestamp for saving the experiment
     # Run the experiment
     if run_expiriment:
-        print("Running experiment...")
+        if verbose:
+            print("Running experiment...")
         # dir_for_plot = str(datetime.now().time()).replace(":", "_").replace(".", "_")
         dir_for_plot = str(policy_train_episodes)
         
@@ -426,10 +434,11 @@ def main(
         
 
     else:
-        print("Skipping experiment...")
+        if verbose:
+            print("Skipping experiment...")
     
     if (run_expiriment or load_model or abstraction) and render:
-       run_episodes_from_nn(env_name, abstraction_network, steps=1000) 
+       run_episodes_from_nn(env_name, abstraction_network, steps=1000, verbose=verbose) 
 
 def _read_file_and_get_results(file_path: str, episodes) -> list:
     """
@@ -442,7 +451,7 @@ def _read_file_and_get_results(file_path: str, episodes) -> list:
         txt = f.read()
     
     return txt.split(",")[:episodes]
-def get_and_save_results(policy: PolicySB, seed: int, training_time) -> None:
+def get_and_save_results(policy: PolicySB, seed: int, training_time, verbose=True) -> None:
     q_learning_agent = "Q-learning"
     env_name = "gym-" + policy.env_name 
     episodes = policy.params['episodes']
@@ -450,7 +459,9 @@ def get_and_save_results(policy: PolicySB, seed: int, training_time) -> None:
     retrieve_folder = "results/" + env_name + "/" + str(policy.policy_train_episodes) + "/"
     file_name = policy.params['results_save_name'] + "_" + str(seed) + ".csv" 
     
-    print("this is The retieve folder and file name", retrieve_folder, file_name)
+    if verbose:
+        print("this is The retieve folder and file name", retrieve_folder, file_name)
+    
     successes = _read_file_and_get_results(retrieve_folder + "success/" + file_name, policy.params['episodes'])
     times = _read_file_and_get_results(retrieve_folder + "times/" + file_name, policy.params['episodes'])
     rewards = _read_file_and_get_results(retrieve_folder + file_name, policy.params['episodes'])
