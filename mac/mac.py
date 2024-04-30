@@ -203,10 +203,10 @@ class mac:
 		'''
 		Here we can define a reward shaping function.
 		'''
-		if self.params['env_name'] == "MountainCar-v0":
+		if self.params['env_name'] == "MountainCar-v0" and terminated:
 			return 1000
 		# if no shaping return 0, which is default
-		if self.params["env_name"] == "Acrobot-v1":
+		if self.params["env_name"] == "Acrobot-v1" and terminated:
 			return 1000
 		if self.params["env_name"] == "Pendulum-v1":
 			# if upright and low velocity
