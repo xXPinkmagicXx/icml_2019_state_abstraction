@@ -31,6 +31,7 @@ class GymMDP(MDP):
         self.render_every_n_episodes = render_every_n_episodes
         self.episode = 0
         self.env_name = gym_env.spec.id
+        self.max_steps = gym_env.spec.max_episode_steps
         env = gym_env
         
         self.env = env

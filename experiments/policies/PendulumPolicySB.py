@@ -14,17 +14,15 @@ class PendulumPolicySB(PolicySB):
 		
 	def get_params(self):
 		params={}
-		params['multitask'] = False
-		params['env_name'] = "Pendulum-v0"
+		params['env_name'] = "Pendulum-v1"
 		params['obs_size'] = 3
-		params['num_iterations_for_abstraction_learning'] = 500
+		
+		params['num_iterations_for_abstraction_learning'] = 200
 		params['learning_rate_for_abstraction_learning'] = 0.005
 		params['abstraction_network_hidden_layers'] = 2
 		params['abstraction_network_hidden_nodes'] = 200
 		params['num_samples_from_demonstrator'] = 10000
-		params['episodes'] = 200
-		params['steps']=200 # is truncated at 200 in gym environment
-		params['num_instances']=5
+		
 		params['rl_learning_rate']=0.005
 
 		return params

@@ -110,15 +110,18 @@ def main(
 		
 		with open(agent.learned_policy_path + "_time.txt", 'w') as f:
 			f.write(str(end_time - start_time))
+		
+		if verbose:
+			print("this is the returns: ", returns)
+			print("this is the rewards: ", rewards)
 	
 	# render one episode after training
 	if render:
+		# to make the policy deterministic
+		agent.params['episilon'] = 0.0
 		agent.interactOneEpisode(render=True)
 	
 	
-	if verbose:
-		print("this is the returns: ", returns)
-		print("this is the rewards: ", rewards)
 
 if __name__ == "__main__":
 	

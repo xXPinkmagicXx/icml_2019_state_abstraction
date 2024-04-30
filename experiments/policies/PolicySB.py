@@ -145,7 +145,7 @@ class PolicySB:
 
         return samples
     
-    def sample_training_data(self, num_samples = 10000):
+    def sample_training_data(self, num_samples = 10000, verbose = True):
         """
         Args:
             num_samples (int): Number of samples to collect
@@ -161,7 +161,7 @@ class PolicySB:
             best_action = self.demo_policy(cur_state)
             x.append(cur_state)
             y.append(best_action)
-            if n % 1000 == 0:
+            if n % 1000 == 0 and verbose:
                 print("Sampled ", n, " samples. out of ", num_samples, " samples.")
 
         # normalize and conver the data

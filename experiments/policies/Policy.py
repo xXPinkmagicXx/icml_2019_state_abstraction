@@ -112,7 +112,7 @@ class Policy:
             y_train = np.array(y_train)
         
         return x_train, y_train
-    def sample_training_data(self, num_samples=10_000):
+    def sample_training_data(self, num_samples=10_000, verbose=True):
         '''
         Args:
             self (Policy: class)
@@ -129,7 +129,7 @@ class Policy:
             best_action = self.demo_policy(cur_state)
             x.append(cur_state)
             y.append(best_action)
-            if n % 1000 == 0:
+            if n % 1000 == 0 and verbose:
                 print("Sampled ", n, " samples. out of ", num_samples, " samples.")
         # normalize and conver the data
         x_train = tf.keras.utils.normalize(np.array(x), axis=0)

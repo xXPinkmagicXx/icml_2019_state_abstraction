@@ -182,7 +182,7 @@ def run_episodes_from_nn(env_name, abstraction_net: NNStateAbstr, episodes=1, st
                 break
             eval_env.render()
 
-def create_abstraction_network(policy, num_samples=10000, x_train=None):
+def create_abstraction_network(policy, num_samples=10000, x_train=None, verbose=True):
     
     """
     Args:
@@ -193,7 +193,7 @@ def create_abstraction_network(policy, num_samples=10000, x_train=None):
         NNStateAbstr object
     """
     start_time = time.time()
-    x_train, y_train = policy.sample_training_data(num_samples)
+    x_train, y_train = policy.sample_training_data(num_samples, verbose)
     end_time = time.time()
     print("this is the time it took to sample the data", end_time - start_time)
     # max_value = np.max(x_train)
@@ -319,6 +319,8 @@ def get_policy(gym_env: GymMDP, algo: str, policy_train_episodes: int, experimen
     else: 
         policy = get_policy_sb3(gym_env, algo, policy_train_episodes, experiment_episodes, k_bins)
     policy.params["num_mdps"] = 1
+    # environment can max run for 1000 steps (LunarLander-v2, MountainCarContinuous-v0)
+    policy.params["steps"] = 1000
     return policy
 
 
@@ -370,7 +372,7 @@ def main(
     elif abstraction:
         if debug:
             policy.params["num_samples_from_demonstrator"] = 100
-        abstraction_network, abstraction_training_time = create_abstraction_network(policy, policy.params["num_samples_from_demonstrator"])
+        abstraction_network, abstraction_training_time = create_abstraction_network(policy, policy.params["num_samples_from_demonstrator"], verbose)
     else:
         print("No abstraction loaded or created...")
 
