@@ -58,7 +58,14 @@ def get_params(env, env_name, env_render, episodes, n_actions, k_bins, seed, ver
 	
 	return config
 
-def main(env_name: str, episodes=200, k_bins=1, seed=42, verbose=False, render=True):
+def main(
+		env_name: str,
+		episodes=200,
+		k_bins=1,
+		seed=42,
+		train=True,
+		verbose=False,
+		render=True):
 	
 	## The neural nets are created in version 1 of tensorflow
 	## This is to ensure compatibility and the code runs faster  
@@ -75,7 +82,10 @@ def main(env_name: str, episodes=200, k_bins=1, seed=42, verbose=False, render=T
 		n_actions_continuous = env.action_space.shape[0]
 		env = discretizing_wrapper(env, k_bins)
 		env_render = discretizing_wrapper(env_render, k_bins)
-	
+	else:
+		# in case k_bins was set and the action space is not continuous
+		k_bins = 1
+
 	n_actions = env.action_space.n if n_actions_continuous is None else n_actions_continuous
 	# Get the config for the environment
 	# Params for specific environments.
@@ -93,15 +103,18 @@ def main(env_name: str, episodes=200, k_bins=1, seed=42, verbose=False, render=T
 	agent = mac(params)
 	
 	# train the agent and time it
-	start_time = time.time()
-	returns, rewards = agent.train()
-	end_time = time.time()
+	if train:
+		start_time = time.time()
+		returns, rewards = agent.train()
+		end_time = time.time()
+		
+		with open(agent.learned_policy_path + "_time.txt", 'w') as f:
+			f.write(str(end_time - start_time))
 	
 	# render one episode after training
-	agent.interactOneEpisode(render=True)
+	if render:
+		agent.interactOneEpisode(render=True)
 	
-	with open(agent.learned_policy_path + "_time.txt", 'w') as f:
-		f.write(str(end_time - start_time))
 	
 	if verbose:
 		print("this is the returns: ", returns)

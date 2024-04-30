@@ -65,8 +65,8 @@ class mac:
 			# Do one episode of interaction
 			states, actions, returns, rewards = self.interactOneEpisode()
 
-			if self.params["verbose"]:
-				print("This is the actions taken", np.unique(actions, return_counts=True))
+			# if self.params["verbose"]:
+			# 	print("This is the actions taken", np.unique(actions, return_counts=True))
 			# Update epsilon for epsilon greedy policy
 			# print("This is the epsilon in actor", self.actor.params['epsilon'], "this is the epsilon in mac", self.epsilon)
 			self.actor.params['epsilon'] = max(1 - episode/(self.params["episodes"]*self.epsilon), 0.01)
@@ -84,9 +84,6 @@ class mac:
 			if episode % 250 == 0:
 				self.params['env'].render()
 			
-			#log performance
-			if self.params["verbose"]:
-				print("episode: ",episode, numpy.mean(li_returns[-1]), "with accumulated rewards", accumulated_rewards)
 			
 			# if episode % 10 == 0:
 			# 	if self.params["verbose"]:
@@ -97,9 +94,12 @@ class mac:
 			li_acc_rewards.append(accumulated_rewards)
 			sys.stdout.flush()
 
+			#log performance
+			if self.params["verbose"]:
+				print("episode: ",episode, "with returns:", numpy.mean(li_returns[-1]), " and accumulated rewards", accumulated_rewards)
+			
 			#train the Q network
 			self.train_critic(states, actions, returns, episode)
-
 			self.actor.train(states, self.critic)
 				
 		# save the model when training is over
@@ -108,8 +108,9 @@ class mac:
 
 		print("training is finished successfully!")
 		# Return the rewards 
-		self.makePlotofReturns(rewards)
-		self.makePlotofReturns(li_acc_rewards, title="Accumulated rewards")
+  		
+		# self.makePlotofReturns(rewards)
+		# self.makePlotofReturns(li_acc_rewards, title="Accumulated rewards")
 		
 		return li_returns, li_rewards
 

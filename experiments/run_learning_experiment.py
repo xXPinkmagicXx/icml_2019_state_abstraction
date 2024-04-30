@@ -331,7 +331,8 @@ def main(
         k_bins: int,
         abstraction=True,
         load_model = False,
-        run_expiriment=True, 
+        run_expiriment=True,
+        render=True, 
         verbose=False,
         seed=42):
     """
@@ -425,7 +426,7 @@ def main(
     else:
         print("Skipping experiment...")
     
-    if run_expiriment or load_model or abstraction:
+    if (run_expiriment or load_model or abstraction) and render:
        run_episodes_from_nn(env_name, abstraction_network, steps=1000) 
 
 def _read_file_and_get_results(file_path: str, episodes) -> list:
