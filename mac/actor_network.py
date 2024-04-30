@@ -35,7 +35,7 @@ class actor:
 
         model.add(Dense(units=self.params['A'], activation='softmax'))
         model.compile(loss=objective,
-                      optimizer=Adam(lr=self.params['actor_lr'])
+                      optimizer=Adam(learning_rate=self.params['actor_lr'])
                      )
         return model
 

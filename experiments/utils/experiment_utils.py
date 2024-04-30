@@ -7,7 +7,6 @@ matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 from matplotlib import colors as mcolors
 import random
-import gym
 import time
 
 # Other imports.

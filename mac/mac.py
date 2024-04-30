@@ -194,8 +194,14 @@ class mac:
 		Here we can define a reward shaping, to be used for every step.
 		'''
 		if self.params['env_name'] == "MountainCar-v0":
-			return self.rewardVelocityMountainCar(current_state[1])
+			return current_reward + self.rewardVelocityMountainCar(current_state[1])
 		
+		if self.params['env_name'] == "MountainCarContinuous-v0":
+			return current_reward + self.rewardVelocityMountainCar(current_state[1])
+		
+		# if self.params['env_name'] == "Pendulum-v1":
+		# 	return current_reward + self.reward_Upright_Pendulum(current_state)
+
 		# if no shaping return current reward
 		return current_reward
 	
@@ -205,19 +211,29 @@ class mac:
 		'''
 		if self.params['env_name'] == "MountainCar-v0" and terminated:
 			return 1000
-		# if no shaping return 0, which is default
 		if self.params["env_name"] == "Acrobot-v1" and terminated:
 			return 1000
+		
 		if self.params["env_name"] == "Pendulum-v1":
 			# if upright and low velocity
-			if abs(current_state[1]) < 0.1 and abs(current_state[2]) < 0.1:
+			x, y, velocity = current_state
+			if abs(y) < 0.1 and x > 0 and abs(velocity) < 0.1:
 				return 1000
+			
 		if self.params["env_name"] == "CartPole-v1":
 			# if terminated pole angle is more than 12 degrees or out of bounds
 			if terminated:
 				return -1000
 			else: 
 				return 1
+		
+		# if no shaping return 0, which is default
+		return 0
+	def reward_Upright_Pendulum(self, current_state):
+		# Reward for being upright
+		x, y, velocity = current_state
+		if abs(y) < 0.2 and x > 0 and abs(velocity) < 0.2:
+			return 10
 		return 0
 
 	def rewardVelocityMountainCar(self, current_velocity):

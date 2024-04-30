@@ -1,5 +1,5 @@
 import numpy as np
-import gym
+import gymnasium as gym
 from gym import wrappers
 import tensorflow as tf
 import json, sys, os
