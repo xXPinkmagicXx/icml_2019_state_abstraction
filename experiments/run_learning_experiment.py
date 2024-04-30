@@ -47,9 +47,7 @@ import tensorflow as tf
 tf.compat.v1.enable_v2_behavior()
 tf.compat.v1.enable_eager_execution()
 # To make code compatible with old code implemented in tensorflow 1.x
-# tf.compat.v1.disable_v2_behavior()
-# tf.compat.v1.disable_eager_execution()
-
+tf.keras.utils.disable_interactive_logging()
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
@@ -421,9 +419,14 @@ def main(
                             dir_for_plot=dir_for_plot)
         
         get_and_save_results(policy, seed, training_time=experiment_times[0]+abstraction_training_time)
+    
         
+
     else:
         print("Skipping experiment...")
+    
+    if run_expiriment or load_model or abstraction:
+       run_episodes_from_nn(env_name, abstraction_network, steps=1000) 
 
 def _read_file_and_get_results(file_path: str, episodes) -> list:
     """
