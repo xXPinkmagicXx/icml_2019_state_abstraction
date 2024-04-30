@@ -116,7 +116,7 @@ def get_mac_policy(gym_env: GymMDP, policy_time_episodes: int, experiment_episod
     if gym_env.env_name == "LunarLander-v2":
         return llp.LunarLanderPolicy(gym_env, policy_time_episodes, experiment_episodes)
     # --------- Countinuous action space environments --------- #
-    # TODO: Implement for MountainCarContinuous
+    
     if gym_env.env_name == "MountainCarContinuous-v0":
         return mcpc.MountainCarContinuousPolicy(gym_env, policy_time_episodes, experiment_episodes, k_bins)
     if gym_env.env_name == "Pendulum-v1":
@@ -483,6 +483,14 @@ def get_and_save_results(policy: PolicySB, seed: int, training_time) -> None:
         "seed": [seed],
         })
     result_info.to_csv(new_save_folder + new_save_name + "_info.csv")
+
+def Get_Success_Rate(policy, rewards, ) -> list:
+    """
+    Args:
+        :param policy (PolicySB): Policy object
+        :param seed (int): Seed for reproducibility
+    """
+    pass
 
 if __name__ == "__main__":
     ## Take in arguments from the command line.

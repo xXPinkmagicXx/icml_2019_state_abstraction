@@ -94,13 +94,23 @@ class GymMDP(MDP):
         Summary:
             Does reward shaping if necessary. Otherwise, returns the reward as is.
         '''
-        if self.env_name == "MountainCar-v1":
-            return self._reward_MountainCar(state.data[1])
+        if self.env_name == "MountainCar-v0" or self.env_name == "MountainCarContinuous-v0":
+            return reward + self._reward_MountainCar(state.data[1])
         
+        if self.env_name == "Pendulum-v1":
+            return reward + self._reward_Pendulum(state)
+            
+
         return reward
     
     def _reward_MountainCar(self, currentVelocity):
         return 100 * abs(currentVelocity)
+    
+    def _reward_Pendulum(self, state: GymState):
+        x, y, velocity = state.data
+        if abs(y) < 0.2 and x > 0 and abs(velocity) < 0.2:
+            return 10
+        return 0
     
     def _reward_shaping_end(self, state: GymState, terminated, truncated):
         '''
@@ -119,13 +129,13 @@ class GymMDP(MDP):
                 return -1000
         if self.env_name == "MountainCar-v1":
             return 1000
-        if self.env_name == "Acrobot-v1":
+        if self.env_name == "Acrobot-v1" and terminated:
             return 1000
         if self.env_name == "Pendulum-v1":
             # if upright and low velocity
-            y = state.data[1]
-            velocity = state.data[2]
-            if abs(y) < 0.1 and abs(velocity) < 0.1:
+            x, y, velocity = state.data
+
+            if abs(y) < 0.1 and x > 0 and abs(velocity) < 0.1:
                 return 1000
         
         return 0
