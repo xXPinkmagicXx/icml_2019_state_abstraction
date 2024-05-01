@@ -58,26 +58,27 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 	
 # 	return config
 
-def main_from_config(config: dict, seed=None, verbose=False):
+def main_from_config(config: dict, seed=None, verbose=False, time_limit_sec=None):
 
 	main(
 		config['env_name'],
-		episodes=config['episodes'],
+		episodes=config['policy_episodes'],
 		k_bins=config['k_bins'],
-		seed=seed,
 		train=config['train'],
+		seed=seed,
 		verbose=verbose,
-		config=config
-	)
+		config=config,
+		time_limit_sec=time_limit_sec)
 
 def main(
 		env_name: str,
-		episodes=200,
-		k_bins=1,
-		seed=42,
+		episodes: int,
+		k_bins: int,
+		seed: int=None,
 		train=True,
 		verbose=False,
 		render=True,
+		time_limit_sec=None,
 		config=None
 		):
 	
@@ -103,9 +104,6 @@ def main(
 	n_actions = env.action_space.n if n_actions_continuous is None else n_actions_continuous
 	# Get the config for the environment
 	# Params for specific environments.
-	# if config is None:
-	# 	params = get_params(env, env_name, env_render, episodes, n_actions, k_bins, seed, verbose)
-	# else:
 	params = config
 	params['env'] = env
 	params['env_render'] = env_render
@@ -135,7 +133,7 @@ def main(
 	# train the agent and time it
 	if train:
 		start_time = time.time()
-		returns, rewards = agent.train()
+		returns, rewards = agent.train(time_limit_sec)
 		end_time = time.time()
 		
 		with open(agent.learned_policy_path + "_time.txt", 'w') as f:

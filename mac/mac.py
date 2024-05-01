@@ -14,12 +14,13 @@ class mac:
 	a class representing the Mean Actor-Critic algorithm.
 	It contains and actor and a critic + a train function.
 	'''
-	def __init__(self,params):
+	def __init__(self,params, time_limit_sec: int=None):
 		'''
 		This initializes MAC agent by creating an actor
 		a critic.
 		'''
 		self.params=params
+		self.time_limit_sec = time_limit_sec
 		self.memory = deque(maxlen=self.params['max_buffer_size'])
 		self.actor=actor(self.params)
 		self.critic=critic(self.params)
@@ -60,8 +61,14 @@ class mac:
 		li_acc_rewards=[]
 		li_time = []
 		accumulated_rewards= 0
+		start_time = time.time()
 		print("Is verbose", self.params["verbose"])
 		for episode in range(1,self.params['episodes']):
+			
+			if self.time_limit_sec is not None:
+				# break when time limit is reached
+				if time.time() - start_time > self.time_limit_sec:
+					break
 			# Do one episode of interaction
 			states, actions, returns, rewards = self.interactOneEpisode()
 
