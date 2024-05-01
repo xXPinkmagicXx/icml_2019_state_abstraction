@@ -16,16 +16,12 @@ class CartPolePolicySB(PolicySB):
 		
 		params={}
 		params['env_name']="CartPole-v1"
-		params['multitask']=False
-		params['obs_size']=4
-		params['num_iterations_for_abstraction_learning'] = 100
-		params['learning_rate_for_abstraction_learning']=0.001
-		params['abstraction_network_hidden_layers']=2
-		params['abstraction_network_hidden_nodes']=40
+		params['obs_size'] = 4
+		params['num_iterations_for_abstraction_learning'] = 500
+		params['learning_rate_for_abstraction_learning'] = 0.001
+		params['abstraction_network_hidden_layers'] = 2
+		params['abstraction_network_hidden_nodes'] = 40
 		params['num_samples_from_demonstrator'] = 5000
-		params['episodes'] = 50
-		params['steps']=200
-		params['num_instances']=100
-		params['rl_learning_rate']=0.001
+		params['rl_learning_rate'] = 0.001
     
 		return params
