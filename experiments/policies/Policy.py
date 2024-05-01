@@ -16,6 +16,7 @@ class Policy:
 		
         self.gym_env = gym_env
         self.params = self.get_params()
+        print("this is the env name: ", self.params['env_name'])
         self.env_name = self.params['env_name']
         self.policy_train_episodes = policy_train_episodes
         self.algo = "mac"
@@ -29,8 +30,12 @@ class Policy:
         abstract_agent_save_path = "trained-abstract-agents/" + str(policy_train_episodes) + '/'
         if os.path.exists(abstract_agent_save_path) == False:
             os.makedirs(abstract_agent_save_path)
-
-        model =  str(self.k_bins) + "_" + str(self.algo) if self.k_bins > 1 else str(self.algo)  
+        print("this is k_bins: ", k_bins)
+        if self.k_bins > 1:
+            model =  str(self.k_bins) + "_" + str(self.algo)
+        else:
+            model =  str(self.algo)
+        # model =  str(self.k_bins) + "_" + str(self.algo) if self.k_bins > 1 else str(self.algo)  
         self.params['results_save_name'] = "Q-learning_phi_" + model
         
         # if action space is continuous in the environment it is discretized into k_bins
@@ -53,7 +58,8 @@ class Policy:
             path_to_learned_policy = './icml_2019_state_abstraction/mac/learned_policy/'	
         ## . if called as submodule or .. if called from experiments/
         path_to_learned_policy += str(self.policy_train_episodes) + "/"
-
+        if self.k_bins > 1:
+            path_to_learned_policy += str(self.k_bins) + "_"
         self.loaded_model = self._load_model(path_to_learned_policy)
         self.demo_policy = self.expert_policy
         self.num_mdps = 1
@@ -129,7 +135,7 @@ class Policy:
             best_action = self.demo_policy(cur_state)
             x.append(cur_state)
             y.append(best_action)
-            if n % 1000 == 0 and verbose:
+            if verbose and n % 1000 == 0:
                 print("Sampled ", n, " samples. out of ", num_samples, " samples.")
         # normalize and conver the data
         x_train = tf.keras.utils.normalize(np.array(x), axis=0)

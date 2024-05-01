@@ -16,26 +16,7 @@ from Code.icml import icml_config
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-# def get_config(env_name) -> dict:
-	
-# 	# # Get the config for the environment
-# 	if env_name == "MountainCar-v0":
-# 		return icml_config.MOUNTAIN_CAR
-# 	if env_name == "CartPole-v0" or env_name == "CartPole-v1":
-# 		return icml_config.CARTPOLE
-# 	elif env_name == "Acrobot-v1":
-# 		return icml_config.ACROBOT
-# 	elif env_name == "LunarLander-v2":
-# 		return icml_config.LUNAR_LANDER
-# 	# Continuous action space
-# 	elif env_name == "Pendulum-v1":
-# 		return icml_config.PENDULUM
-# 	elif env_name == "MountainCarContinuous-v0":
-# 		return icml_config.MOUNTAIN_CAR_CONTINUOUS
-# 	elif env_name == "Swimmer-v4":
-# 		return icml_config.SWIMMER
-# 	else:
-# 		raise ValueError("Invalid environment name")
+
 
 # def get_params(env, env_name, env_render, episodes, n_actions, k_bins, seed, verbose) -> dict:
 
@@ -61,10 +42,11 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 def main_from_config(config: dict, seed=None, verbose=False, time_limit_sec=None):
 
 	main(
-		config['env_name'],
+		config['gym_name'],
 		episodes=config['policy_episodes'],
 		k_bins=config['k_bins'],
 		train=config['train'],
+		render=config['render_policy'],
 		seed=seed,
 		verbose=verbose,
 		config=config,
@@ -86,6 +68,10 @@ def main(
 	## This is to ensure compatibility and the code runs faster  
 	tf.compat.v1.disable_v2_behavior()
 	tf.compat.v1.disable_eager_execution()
+	if config is not None:
+		if config["debug"] == True:
+			verbose = True
+			episodes = 3
 
 	# Params for all environments.
 	env = gym.make(env_name)
@@ -118,6 +104,7 @@ def main(
 	params['env_name'] = env_name
 	params['gamma'] = 0.99
 	params['plot'] = False
+	params['time_limit_sec'] = time_limit_sec
 
 	# set seeds to ensure results are reproducible
 	numpy.random.seed(seed)
@@ -133,7 +120,7 @@ def main(
 	# train the agent and time it
 	if train:
 		start_time = time.time()
-		returns, rewards = agent.train(time_limit_sec)
+		returns, rewards = agent.train()
 		end_time = time.time()
 		
 		with open(agent.learned_policy_path + "_time.txt", 'w') as f:
@@ -146,7 +133,10 @@ def main(
 	# render one episode after training
 	if render:
 		# to make the policy deterministic
-		agent.params['episilon'] = 0.0
+  
+		if not train:
+			agent.load_model()
+		agent.params['epsilon'] = 0.0
 		agent.interactOneEpisode(render=True)
 	
 	

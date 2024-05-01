@@ -8,19 +8,22 @@ from collections import deque
 import time
 import numpy as np
 import matplotlib.pyplot as plt
+from tqdm import tqdm
+from keras.models import model_from_json
+
 
 class mac:
 	'''
 	a class representing the Mean Actor-Critic algorithm.
 	It contains and actor and a critic + a train function.
 	'''
-	def __init__(self,params, time_limit_sec: int=None):
+	def __init__(self, params):
 		'''
 		This initializes MAC agent by creating an actor
 		a critic.
 		'''
 		self.params=params
-		self.time_limit_sec = time_limit_sec
+		self.time_limit_sec = self.params["time_limit_sec"]
 		self.memory = deque(maxlen=self.params['max_buffer_size'])
 		self.actor=actor(self.params)
 		self.critic=critic(self.params)
@@ -37,7 +40,10 @@ class mac:
 		if not os.path.exists(learned_policy_path + str(self.params['episodes'])+'/'):
 			os.makedirs(learned_policy_path + str(self.params['episodes'])+'/')
 		
-		self.learned_policy_path = learned_policy_path  + str(self.params['episodes']) + '/' + self.params['env_name'] 
+		self.learned_policy_path = learned_policy_path  + str(self.params['episodes']) + '/' 
+		if self.params["k_bins"] > 1:
+			self.learned_policy_path += str(self.params["k_bins"]) + "_"
+		self.learned_policy_path += self.params["env_name"] 
 
 	def add_2_memory(self,states,actions,rewards):
 		T=len(states)
@@ -103,7 +109,7 @@ class mac:
 
 			#log performance
 			if self.params["verbose"]:
-				print("episode: ",episode, "with returns:", numpy.mean(li_returns[-1]), " and accumulated rewards", accumulated_rewards)
+				print("episode: ",episode, "out of", self.params["episodes"] , "with returns:", numpy.mean(li_returns[-1]), " and accumulated rewards", accumulated_rewards, "steps:", len(rewards))
 			
 			#train the Q network
 			self.train_critic(states, actions, returns, episode)
@@ -202,6 +208,16 @@ class mac:
 		# serialize weights to HDF5
 		self.actor.network.save_weights(self.learned_policy_path + ".h5")
 
+	def load_model(self) -> None:
+		# load json and create model
+		json_file = open(self.learned_policy_path + ".json", 'r')
+		loaded_model_json = json_file.read()
+		json_file.close()
+		self.actor.network = model_from_json(loaded_model_json)
+		# load weights into new model
+		self.actor.network.load_weights(self.learned_policy_path + ".h5")
+		if self.params["verbose"]:
+			print("Loaded model from disk")
 	def reward_shaping(self, current_state, current_reward):
 		'''
 		Here we can define a reward shaping, to be used for every step.

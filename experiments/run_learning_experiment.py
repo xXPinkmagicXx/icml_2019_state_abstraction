@@ -262,6 +262,7 @@ def main(
         run_expiriment=True,
         render=True, 
         verbose=False,
+        debug=False,
         seed=42):
     """
     Args:
@@ -277,10 +278,10 @@ def main(
     This function runs the learning experiment for the given environment and does state
     abstraction if true.
     """
-
-    verbose = True
-    debug = False
-    
+    if debug:
+        verbose = True
+        policy_train_episodes = 3
+        
     gym_env = Get_GymMDP(env_name, k = k_bins, time_limit_sec=time_limit_sec)
     ## Set seed
     # gym_env.env.seed(seed)
@@ -298,6 +299,8 @@ def main(
     elif abstraction:
         if debug:
             policy.params["num_samples_from_demonstrator"] = 100
+            policy.params["num_iterations_for_abstraction_learning"] = 3
+            policy.params["steps"] = 10
         abstraction_network, abstraction_training_time = create_abstraction_network(policy, policy.params["num_samples_from_demonstrator"], verbose)
     else:
         print("No abstraction loaded or created...")

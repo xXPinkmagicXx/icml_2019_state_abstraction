@@ -318,10 +318,10 @@ def run_single_agent_on_mdp(agent: Agent, mdp, episodes, steps, experiment: Expe
     if time_limit_sec is not None:
         start_time = time.time()
     # For each episode.
-    for episode in tqdm(range(1, episodes + 1)):
+    for episode in range(1, episodes + 1):
 
         cumulative_episodic_reward = 0
-        
+
         # break if time limit is reached
         if time_limit_sec is not None and time.time() - start_time > time_limit_sec:
             break
@@ -395,14 +395,14 @@ def run_single_agent_on_mdp(agent: Agent, mdp, episodes, steps, experiment: Expe
         # Process experiment info at end of episode.
         if experiment is not None:
             experiment.end_of_episode(agent)
-
             # agent.agent.save_q_func("models/icml/q_func.pkl")
+
         # Reset the MDP, tell the agent the episode is over.
         mdp.reset()
         agent.end_of_episode()
 
-        if verbose:
-            print("\n")
+        # if verbose:
+        #     print("\n")
 
     # Process that learning instance's info at end of learning.
     if experiment is not None:

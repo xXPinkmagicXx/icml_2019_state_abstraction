@@ -17,7 +17,7 @@ class CartPolePolicy(Policy.Policy):
 		params={}
 		params['env_name']="CartPole-v1"
 		params['obs_size'] = 4
-		params['num_iterations_for_abstraction_learning'] = 500
+		params['num_iterations_for_abstraction_learning'] = 300
 		params['learning_rate_for_abstraction_learning'] = 0.001
 		params['abstraction_network_hidden_layers'] = 2
 		params['abstraction_network_hidden_nodes'] = 40

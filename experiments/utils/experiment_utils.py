@@ -449,13 +449,13 @@ def make_nn_sa_3(params: dict, x_train, y_train, verbose=True):
     
     ## print
     if verbose:
-        print("Now training the abstraction network...")
+        print("Now training the abstraction network for", params["num_iterations_for_abstraction_learning"], "epochs")
 
     ## Do training
     # training the abstraction network
-    tqdm_callback = tfa.callbacks.TQDMProgressBar(leave_epoch_progress=False, show_epoch_progress=False, leave_overall_progress=True, show_overall_progress=True)
+    # tqdm_callback = tfa.callbacks.TQDMProgressBar(leave_epoch_progress=False, show_epoch_progress=False, leave_overall_progress=True, show_overall_progress=True)
     start_time = time.time()
-    history = abstraction_net.net.fit(x_train, y_train, batch_size=32, callbacks=[tqdm_callback], epochs=params['num_iterations_for_abstraction_learning'])
+    history = abstraction_net.net.fit(x_train, y_train, batch_size=32, epochs=params['num_iterations_for_abstraction_learning'])
     end_time = time.time()
     # plot history
     # plt.plot(range(len(history.history['accuracy'])), history.history['accuracy'])

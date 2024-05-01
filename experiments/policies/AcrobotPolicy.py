@@ -14,7 +14,6 @@ class AcrobotPolicy(Policy.Policy):
 	def get_params(self):
 		params={}
 		## steps in acrobot above 500 is truncated
-		steps = 500
 		learning_rate = 0.005
 		## Env
 		params['env_name']= "Acrobot-v1"
@@ -23,12 +22,10 @@ class AcrobotPolicy(Policy.Policy):
 		## Abstraction
 		params['num_iterations_for_abstraction_learning'] = 100
 		params['learning_rate_for_abstraction_learning'] = learning_rate
-		params['abstraction_network_hidden_layers']=2
-		params['abstraction_network_hidden_nodes']=200
-		params['num_samples_from_demonstrator']=15000
+		params['abstraction_network_hidden_layers'] = 2
+		params['abstraction_network_hidden_nodes'] = 200
+		params['num_samples_from_demonstrator']= 15000
 		
-		params['steps'] = steps
-		params['num_instances'] = 1
 		params['rl_learning_rate'] = learning_rate
 
 		return params
