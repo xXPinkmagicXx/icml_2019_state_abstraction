@@ -298,8 +298,9 @@ def run_agents_on_mdp(agents,
     print("-------------\n")
 
     experiment.make_plots(open_plot=open_plot)
+    return list(time_dict.values())
 
-def run_single_agent_on_mdp(agent, mdp, episodes, steps, experiment=None, verbose=False, track_disc_reward=False, reset_at_terminal=False, resample_at_terminal=False):
+def run_single_agent_on_mdp(agent: Agent, mdp, episodes, steps, experiment: Experiment=None, verbose=False, track_disc_reward=False, reset_at_terminal=False, resample_at_terminal=False):
     '''
     Summary:
         Main loop of a single MDP experiment.
@@ -385,7 +386,7 @@ def run_single_agent_on_mdp(agent, mdp, episodes, steps, experiment=None, verbos
 
         # A final update.
         action = agent.act(state, reward)
-
+        
         # Process experiment info at end of episode.
         if experiment is not None:
             experiment.end_of_episode(agent)

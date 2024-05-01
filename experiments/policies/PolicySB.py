@@ -10,29 +10,45 @@ from stable_baselines3 import DQN, PPO, SAC, TD3, DDPG
 class PolicySB:
     __metaclass__ = abc.ABCMeta
 	
-    def __init__(self, gym_env: GymMDP, algo: str, policy_train_steps=100_000):
+    def __init__(self, gym_env: GymMDP, algo: str, policy_train_episodes: int, experiment_episodes: int, k_bins: int = 1):
 		
         # environment 
         self.gym_env = gym_env
         self.env_name = gym_env.env_name
         self.algo = algo
+        self.policy_train_episodes = policy_train_episodes
+        self.k_bins = k_bins
         # Get the model class based on the algorithm
         self._model_class = self._get_model_class(algo)
-
+        
         # Get the parameters for the policy
         self.params = self.get_params()
         self.params['env_name'] = self.env_name
         self.params['algo'] = algo
+        self.params['episodes'] = experiment_episodes
+        self.params['k_bins'] = k_bins
+
         self.params['num_actions'] = self.get_num_actions()
         self.params['size_a'] = self.params['num_actions']
-        self.params['policy_train_steps'] = policy_train_steps
-        self.params['plot_path'] = 'results/' + 'gym-'+ self.params['env_name'] + '/' + str(policy_train_steps)
+        self.params['policy_train_episodes'] = policy_train_episodes
+        self.params['plot_path'] = 'results/' + 'gym-'+ self.params['env_name'] + '/' + str(policy_train_episodes)
+        self.params['results_folder_path'] = 'results/' + 'gym-'+ self.params['env_name'] + '/' + str(policy_train_episodes) + '/'
+
+        model =  str(self.k_bins) + "_" + str(self.algo) if self.k_bins > 1 else str(self.algo)  
+        self.params['results_save_name'] = "Q-learning_phi_" + model
         
-        abstract_agent_save_path = "trained-abstract-agents/" + str(policy_train_steps) + '/'
+        abstract_agent_save_path = "trained-abstract-agents/" + str(policy_train_episodes) + '/'
         if os.path.exists(abstract_agent_save_path) == False:
             os.makedirs(abstract_agent_save_path)
         
+        # if action space is continuous in the environment it is discretized into k_bins
+        if k_bins > 1:
+            abstract_agent_save_path = abstract_agent_save_path + str(k_bins) + "_"
+        
         self.params['save_path'] = abstract_agent_save_path + self.params['algo'] + '_' + self.params['env_name'] 
+        if not os.path.exists(self.params['save_path']):
+            os.makedirs(self.params['save_path'])
+            print("Created directory: ", self.params['save_path'])
 
         ## Get current working directory
         cwd = os.getcwd().split('\\')[-1]
@@ -46,8 +62,10 @@ class PolicySB:
         elif cwd == "experiments":
             path_to_trained_agents = '../../rl-trained-agents/'
         ## . if called as submodule or .. if called from experiments/
-        path_to_trained_agents += str(policy_train_steps) + '/'
-        
+        path_to_trained_agents += str(policy_train_episodes) + '/'
+        if k_bins > 1:
+            path_to_trained_agents += str(k_bins) + "_"
+
         print("this is the path to trained agents:", path_to_trained_agents)
         path_to_agent = path_to_trained_agents + algo + '_' + self.env_name
 
@@ -121,14 +139,13 @@ class PolicySB:
             # Get demo action.
             best_action = self.demo_policy(cur_state)
             # print("this is the best action:", best_action)
-            if i % 100 == 0:
-                print("this is the best action:", best_action)
-                print("Appending this to the sample", (cur_state, best_action, 0))
+            if i % 1000 == 0:
+                print("this is the number of samples:", i, "out of", num_samples, "samples.")
             samples.append((cur_state, best_action, 0))
 
         return samples
     
-    def sample_training_data(self, num_samples = 10000):
+    def sample_training_data(self, num_samples = 10000, verbose = True):
         """
         Args:
             num_samples (int): Number of samples to collect
@@ -137,13 +154,15 @@ class PolicySB:
         """
         x = []
         y = []
-        for _ in range(num_samples):
+        for n in range(num_samples):
             cur_state = self.gym_env.env.observation_space.sample()
             self.gym_env.env.state = cur_state
             self.model.env.state = cur_state
             best_action = self.demo_policy(cur_state)
             x.append(cur_state)
             y.append(best_action)
+            if n % 1000 == 0 and verbose:
+                print("Sampled ", n, " samples. out of ", num_samples, " samples.")
 
         # normalize and conver the data
         x_train = tf.keras.utils.normalize(np.array(x), axis=0)

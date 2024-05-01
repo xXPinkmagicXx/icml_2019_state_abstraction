@@ -11,9 +11,9 @@ class LunarLanderPolicySB(PolicySB):
 	This class loads the pre-trained model for LunarLander-v2 environment.
 	"""
 
-	def __init__(self, gym_env: GymMDP, algo: str = "ppo", policy_train_steps=100_000):
+	def __init__(self, gym_env: GymMDP, algo: str = "ppo", policy_train_episodes: int = 100, experiment_episodes: int = 100):
 		
-		super().__init__(gym_env, algo, policy_train_steps)
+		super().__init__(gym_env, algo, policy_train_episodes, experiment_episodes)
 		
 	def get_params(self):
 		params={}
@@ -24,11 +24,9 @@ class LunarLanderPolicySB(PolicySB):
 		params['learning_rate_for_abstraction_learning'] = 0.005
 		params['abstraction_network_hidden_layers'] = 2
 		params['abstraction_network_hidden_nodes'] = 200
-		params['num_samples_from_demonstrator'] = 10000
+		params['num_samples_from_demonstrator'] = 20000
 		params['episodes'] = 200
-		params['steps']=1000
-		params['num_instances']=5
-		params['rl_learning_rate']=0.005
+		params['rl_learning_rate'] = 0.005
 
 		return params
 	

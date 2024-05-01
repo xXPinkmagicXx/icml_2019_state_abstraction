@@ -35,7 +35,7 @@ class actor:
 
         model.add(Dense(units=self.params['A'], activation='softmax'))
         model.compile(loss=objective,
-                      optimizer=Adam(lr=self.params['actor_lr'])
+                      optimizer=Adam(learning_rate=self.params['actor_lr'])
                      )
         return model
 
@@ -45,10 +45,10 @@ class actor:
             using the neural net, and then draws an action a~\pi(.|s)
         '''
             
-        pr=self.network.predict(numpy.array(state).reshape(1,self.params['state_dimension']))[0]
-        ## Reshape the pr to action x k
-        if not self.params["k"] == 1:
-            pr = np.array(pr).reshape(self.params['k'], self.params['action_space'])
+        pr = self.network.predict(numpy.array(state).reshape(1,self.params['state_dimension']))[0]
+        ## Reshape the pr to n_action x k
+        if not self.params["k"] == 1 and not self.params['A'] == 1:
+            pr = np.array(pr).reshape(self.params['k'], self.params['n_actions'])
         
         # if self.params["verbose"] == True:
         #     # print("this is the state: ", state)
@@ -60,10 +60,10 @@ class actor:
         epsilon = self.params['epsilon']
         if numpy.random.random() < epsilon:
             # if k is 1, then we have a single action space
-            if self.params["k"] == 1:
-                a = np.random.choice(range( self.params['A']))
+            if self.params["k"] == 1 or self.params['n_actions'] == 1:
+                a = np.random.choice(range(self.params['A']))
             else:
-                a = np.random.choice(range(self.params['k']), self.params['action_space'])
+                a = np.random.choice(range(self.params['k']), self.params['A'])
             # if self.params["verbose"] == True:
             #     print("this is the selected_action: ", a)
         else:

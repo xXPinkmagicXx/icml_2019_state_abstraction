@@ -3,7 +3,6 @@ import os
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
-from torchvision import datasets, transforms
 import sys
 import numpy as np
 
@@ -12,7 +11,7 @@ class abstraction_network_new():
 	def __init__(self, params, num_abstract_states):
 		
 		self.save_path = params['save_path']
-		self.train_step_size = params['policy_train_steps'] # the number of steps the pre-trained policy is trained for
+		self.policy_train_episodes = params['policy_train_episodes'] # the number of steps the pre-trained policy is trained for
 		self.obs_size = params['obs_size']
 		self.action_size = params['size_a'] 
 		self.num_nodes = params['abstraction_network_hidden_nodes']
@@ -33,7 +32,9 @@ class abstraction_network_new():
 		
 		# # hidden layers
 		self.net.add(tf.keras.layers.Dense(self.num_nodes, activation='relu', input_dim=self.obs_size))
-		self.net.add(tf.keras.layers.Dense(self.num_nodes, activation='relu'))
+		for _ in range(params['abstraction_network_hidden_layers']-1):
+		
+			self.net.add(tf.keras.layers.Dense(self.num_nodes, activation='relu'))
 		
 		# output layer
 		self.net.add(tf.keras.layers.Dense(self.output_nodes, activation=self.activation_output))
@@ -53,9 +54,16 @@ class abstraction_network_new():
 		
 		return li
 	
-	def save_model(self):
+	def save_model(self, abstraction_net_training_time):
 		
-		self.net.save(self.save_path)
+		print("Saving abstraction network to disk...")
+		print("This is the save path", self.save_path)
+		tf.keras.models.save_model(self.net, self.save_path, save_format='tf')
+		# self.net.save(self.save_path)	
+		print("Saved abstraction network to disk")
+		with open(self.save_path + "/abstraction_training_time.txt", "w") as f:
+			f.write(str(abstraction_net_training_time))
+		print("Saved abstraction network training time to disk")
 	
 	def load_model(self, path):
 		

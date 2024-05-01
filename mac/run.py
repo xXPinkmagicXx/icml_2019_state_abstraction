@@ -2,293 +2,156 @@ from .mac import mac
 import numpy
 import sys,random
 import tensorflow as tf
+# Disable extensive logging
+# tf.keras.utils.disable_interactive_logging()
 import gymnasium as gym
-# from keras import backend as K
 from keras import backend as K
 import matplotlib.pyplot as plt
-
-
+import time
+import os
 # Import action wrapper
 from .ActionWrapper import discretizing_wrapper
 from .HyperParameters import AlgorithmParameters, MetaParameters, make_parameters
-
-
-
+from Code.icml import icml_config
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-def main(env_name: str, time_steps=10_000, k_bins=1, seed=42, verbose=False):
+# def get_config(env_name) -> dict:
 	
-	# tf.compat.v1.disable_v2_behavior()
-	# tf.compat.v1.disable_eager_execution()
+# 	# # Get the config for the environment
+# 	if env_name == "MountainCar-v0":
+# 		return icml_config.MOUNTAIN_CAR
+# 	if env_name == "CartPole-v0" or env_name == "CartPole-v1":
+# 		return icml_config.CARTPOLE
+# 	elif env_name == "Acrobot-v1":
+# 		return icml_config.ACROBOT
+# 	elif env_name == "LunarLander-v2":
+# 		return icml_config.LUNAR_LANDER
+# 	# Continuous action space
+# 	elif env_name == "Pendulum-v1":
+# 		return icml_config.PENDULUM
+# 	elif env_name == "MountainCarContinuous-v0":
+# 		return icml_config.MOUNTAIN_CAR_CONTINUOUS
+# 	elif env_name == "Swimmer-v4":
+# 		return icml_config.SWIMMER
+# 	else:
+# 		raise ValueError("Invalid environment name")
 
-	#get and set hyper-parameters
-	print("default environment is Lunar Lander ...")
+# def get_params(env, env_name, env_render, episodes, n_actions, k_bins, seed, verbose) -> dict:
+
+# 	## Get the config for the environment
+# 	config = get_config(env_name)
+
+# 	config['env'] = env
+# 	config['env_render'] = env_render
+# 	config['n_actions'] = n_actions
+# 	config['A'] = env.action_space.n
+# 	config['k'] = k_bins
+# 	config['state_dimension']=env.observation_space.shape[0]
+# 	config['episodes'] = episodes
+# 	config['seed'] = seed
+# 	config['verbose'] = verbose
+# 	config['k_bins'] = k_bins
+# 	config['env_name'] = env_name
+# 	config['gamma'] = 0.99
+# 	config['plot'] = False
+	
+# 	return config
+
+def main_from_config(config: dict, seed=None, verbose=False):
+
+	main(
+		config['env_name'],
+		episodes=config['episodes'],
+		k_bins=config['k_bins'],
+		seed=seed,
+		train=config['train'],
+		verbose=verbose,
+		config=config
+	)
+
+def main(
+		env_name: str,
+		episodes=200,
+		k_bins=1,
+		seed=42,
+		train=True,
+		verbose=False,
+		render=True,
+		config=None
+		):
+	
+	## The neural nets are created in version 1 of tensorflow
+	## This is to ensure compatibility and the code runs faster  
+	tf.compat.v1.disable_v2_behavior()
+	tf.compat.v1.disable_eager_execution()
 
 	# Params for all environments.
 	env = gym.make(env_name)
-	
+	env_render = gym.make(env_name, render_mode="human")
 	# How to discretize the action space for the environment
-	k = k_bins
-	## Discretize the action space for Pendulum-v0
+	## Discretize the action space for Pendulum and MountainCarContinuous
+	n_actions_continuous = None
 	if isinstance(env.action_space, gym.spaces.Box):
-		k = 100
+		n_actions_continuous = env.action_space.shape[0]
+		env = discretizing_wrapper(env, k_bins)
+		env_render = discretizing_wrapper(env_render, k_bins)
+	else:
+		# in case k_bins was set and the action space is not continuous
+		k_bins = 1
 
-		env = discretizing_wrapper(env, k)
-
+	n_actions = env.action_space.n if n_actions_continuous is None else n_actions_continuous
+	# Get the config for the environment
 	# Params for specific environments.
-	if env_name =='CartPole-v0' or env_name == 'CartPole-v1':
-		
-		meta_params = MetaParameters(
-			env=env,
-			env_name=env_name,
-			time_steps=time_steps,
-			gamma=0.99,
-			seed=seed)
-		
-		print("this is the observation space", env.observation_space.shape[0])
-		alg_params = AlgorithmParameters(
-			max_buffer_size=10000,
-			state_dimension=env.observation_space.shape[0],
-			action_space=env.action_space.n,
-			k=1,
-			epsilon=0.3,
-			actor_num_h=1,
-			actor_h=64,
-			actor_lr=0.001,
-			critic_num_h=1,
-			critic_h=32,
-			critic_lr=0.01,
-			critic_batch_size=32,
-			critic_num_epochs=40,
-			critic_target_net_freq=1,
-			critic_train_type='model_free_critic_TD',
-			verbose=verbose)
+	# if config is None:
+	# 	params = get_params(env, env_name, env_render, episodes, n_actions, k_bins, seed, verbose)
+	# else:
+	params = config
+	params['env'] = env
+	params['env_render'] = env_render
+	params['n_actions'] = n_actions
+	params['A'] = env.action_space.n
+	params['k'] = k_bins
+	params['state_dimension']=env.observation_space.shape[0]
+	params['episodes'] = episodes
+	params['seed'] = seed
+	params['verbose'] = verbose
+	params['k_bins'] = k_bins
+	params['env_name'] = env_name
+	params['gamma'] = 0.99
+	params['plot'] = False
 
-	if  env_name =='LunarLander-v2':
-
-		meta_params = MetaParameters(
-			env=env,
-			env_name="LunarLander-v2",
-			max_learning_episodes=3000,
-			gamma=0.99,
-			seed=seed)
-		
-		alg_params = AlgorithmParameters(
-			max_buffer_size=10000,
-			state_dimension=len(env.reset()),
-			action_space=env.action_space.n,
-			k=k,
-			epsilon=0.3,
-			actor_num_h=2,
-			actor_h=128,
-			actor_lr=0.00025,
-			critic_num_h=2,
-			critic_h=128,
-			critic_lr=0.005,
-			critic_batch_size=32,
-			critic_num_epochs=10,
-			critic_target_net_freq=1,
-			critic_train_type='model_free_critic_TD',
-			verbose=verbose)
-
-	if env_name == 'Acrobot-v1':
-		
-		meta_params = MetaParameters(
-			env=env,
-			env_name="Acrobot-v1",
-			max_learning_episodes=3000,
-			gamma=0.99,
-			seed=seed)
-		
-		alg_params = AlgorithmParameters(
-			max_buffer_size=10000,
-			state_dimension=len(env.reset()),
-			action_space=env.action_space.n,
-			k=k,
-			epsilon=0.3,
-			actor_num_h=2,
-			actor_h=128,
-			actor_lr=0.00025,
-			critic_num_h=2,
-			critic_h=128,
-			critic_lr=0.005,
-			critic_batch_size=32,
-			critic_num_epochs=10,
-			critic_target_net_freq=1,
-			critic_train_type='model_free_critic_TD',
-			verbose=verbose)
-
-	if env_name =='MountainCar-v0':
-		
-		meta_params = MetaParameters(
-			env=env,
-			env_name="MountainCar-v0",
-			time_steps=time_steps,
-			gamma=0.8,
-			seed=seed)
-
-		alg_params = AlgorithmParameters(
-			max_buffer_size=10000,
-			state_dimension=len(env.reset()[0]),
-			action_space=env.action_space.n,
-			epsilon=0.3,
-			actor_num_h=2,
-			actor_h=64,
-			actor_lr=0.001,
-			critic_num_h=2,
-			critic_h=64,
-			critic_lr=0.001,
-			critic_batch_size=32,
-			critic_num_epochs=10,
-			critic_target_net_freq=1,
-			critic_train_type='model_free_critic_TD'
-		)
-
-	if env_name == "Pendulum-v1":
-		# The episode truncates at 200 time steps.
-		meta_params = MetaParameters(
-			env=env,
-			env_name="Pendulum-v1",
-			time_steps=time_steps,
-			gamma=0.99,
-			seed=seed)
-
-		alg_params = AlgorithmParameters(
-			max_buffer_size=10000,
-			state_dimension=3,
-			action_space=k,
-			epsilon=0.3,
-			actor_num_h=2,
-			actor_h=64,
-			actor_lr=0.0001,
-			critic_num_h=2,
-			critic_h=64,
-			critic_lr=0.001,
-			critic_batch_size=32,
-			critic_num_epochs=10,
-			critic_target_net_freq=1,
-			critic_train_type='model_free_critic_TD')
-
-	if env_name == "MountainCarContinuous-v0":
-		meta_params = MetaParameters(
-			env=env,
-			env_name="MountainCarContinuous-v0",
-			time_steps=time_steps,
-			gamma=0.8,
-			seed=seed)
-
-		alg_params = AlgorithmParameters(
-			max_buffer_size=10000,
-			state_dimension=len(env.observation_space.shape[0]),
-			action_space= k,
-			epsilon=0.6,
-			actor_num_h=2,
-			actor_h=40,
-			actor_lr=0.01,
-			critic_num_h=2,
-			critic_h=40,
-			critic_lr=0.01,
-			critic_batch_size=64,
-			critic_num_epochs=10,
-			critic_target_net_freq=1,
-			critic_train_type='model_free_critic_monte_carlo')
-
-	if env_name == "Swimmer-v4":
-		meta_params = MetaParameters(
-			env=env,
-			env_name="Swimmer-v4",
-			max_learning_episodes=2000,
-			gamma=0.99,
-			seed=seed)
-
-		alg_params = AlgorithmParameters(
-			max_buffer_size=10000,
-			state_dimension=8,
-			action_space= 2,
-			k=k,
-			epsilon=0.3,
-			actor_num_h=2,
-			actor_h=128,
-			actor_lr=0.0001,
-			critic_num_h=2,
-			critic_h=128,
-			critic_lr=0.001,
-			critic_batch_size=32,
-			critic_num_epochs=10,
-			critic_target_net_freq=1,
-			critic_train_type='model_free_critic_TD',
-			verbose=verbose)
-		
-	## ensure results are reproducible
-	
-	# set seeds
+	# set seeds to ensure results are reproducible
 	numpy.random.seed(seed)
 	random.seed(seed)
-	if not isinstance(meta_params, MetaParameters):
-		meta_params['env'].seed(seed)
 	tf.compat.v1.set_random_seed(seed)
-
-	# set session
-	session_conf = tf.compat.v1.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1)
-	sess = tf.compat.v1.Session(graph=tf.compat.v1.get_default_graph(), config=session_conf)
-	# tf.compat.v1.keras.set_session(sess)
 
 	if verbose:
 		print("this is the action space", env.action_space)
-	#create a MAC agent and run
-	action_space = env.action_space.n
-	state_dimension = len(env.reset())
-	actor_lr = [0.01]
-	critic_lr = [0.01]
-	critic_batch_size = [32]
-	critic_train_type = ['model_free_critic_TD', 'model_free_critic_monte_carlo']
-	epsilon = [0.3, 0.1, 0.5]
-	max_buffer_size = [10000]
-
-	actor_h = [128]
-	critic_h = [128]
-
-	algo_parameter_list = make_parameters(
-							action_space,
-							state_dimension,
-							k,
-							actor_h,
-							critic_h,
-							actor_lr,
-							critic_lr,
-							critic_batch_size,
-							critic_train_type,
-							epsilon,
-							max_buffer_size)
-
-	DO_PARAMETER_SEARCH = False
-
-	# alg_params.verbose = True
-
-	if DO_PARAMETER_SEARCH:
-		print("Starting parameter search...")
-		for alg_param in algo_parameter_list:
-			
-			print(str(alg_param))
-			params = {**alg_param.to_Dictionary(), **meta_params.to_Dictionary()}
-			agent = mac(alg_param.to_Dictionary())
-			agent.train()
-	else:
-		
-		print("Starting normal training...")
-		params = {**alg_params.to_Dictionary(), **meta_params.to_Dictionary()}
-		params["verbose"] = True
-		agent = mac(params)
-		returns, rewards = agent.train()
-
-		print("this is the returns: ", returns)
-		print("this is the rewards: ", rewards)
-		## make plot of returns pr time step
-		plt.plot([i for i in range(len(returns))], returns)
-		plt.show()
 	
-	#create a MAC agent and run
+	# create a MAC agent and run
+	agent = mac(params)
+	
+	# train the agent and time it
+	if train:
+		start_time = time.time()
+		returns, rewards = agent.train()
+		end_time = time.time()
+		
+		with open(agent.learned_policy_path + "_time.txt", 'w') as f:
+			f.write(str(end_time - start_time))
+		
+		if verbose:
+			print("this is the returns: ", returns)
+			print("this is the rewards: ", rewards)
+	
+	# render one episode after training
+	if render:
+		# to make the policy deterministic
+		agent.params['episilon'] = 0.0
+		agent.interactOneEpisode(render=True)
+	
+	
 
 if __name__ == "__main__":
 	

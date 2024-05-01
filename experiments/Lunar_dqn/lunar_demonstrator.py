@@ -1,5 +1,5 @@
 import tensorflow as tf
-import gym
+import gymnasium as gym
 import numpy
 
 

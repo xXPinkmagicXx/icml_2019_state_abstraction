@@ -7,9 +7,9 @@ import policies.Policy as Policy
 
 class AcrobotPolicy(Policy.Policy):
 	
-	def __init__(self, gym_env: GymMDP, policy_train_steps: int):
+	def __init__(self, gym_env: GymMDP, policy_train_steps: int, experiment_episodes: int):
 		
-		super().__init__(gym_env, policy_train_steps)
+		super().__init__(gym_env, policy_train_steps, experiment_episodes)
 	
 	def get_params(self):
 		params={}
@@ -21,16 +21,15 @@ class AcrobotPolicy(Policy.Policy):
 		params['multitask']=False
 		params['obs_size']=6
 		## Abstraction
-		params['num_iterations_for_abstraction_learning']= steps
-		params['learning_rate_for_abstraction_learning']=learning_rate
+		params['num_iterations_for_abstraction_learning'] = 100
+		params['learning_rate_for_abstraction_learning'] = learning_rate
 		params['abstraction_network_hidden_layers']=2
 		params['abstraction_network_hidden_nodes']=200
 		params['num_samples_from_demonstrator']=15000
 		
-		params['episodes'] = 250
-		params['steps']=steps
-		params['num_instances']=1
-		params['rl_learning_rate']=learning_rate
+		params['steps'] = steps
+		params['num_instances'] = 1
+		params['rl_learning_rate'] = learning_rate
 
 		return params
 	

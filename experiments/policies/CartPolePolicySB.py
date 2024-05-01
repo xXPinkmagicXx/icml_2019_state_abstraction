@@ -8,9 +8,9 @@ from stable_baselines3 import DQN
 
 class CartPolePolicySB(PolicySB):
 	
-	def __init__(self, gym_env: GymMDP, algo: str = "ppo", policy_train_steps=100_000):
+	def __init__(self, gym_env: GymMDP, algo: str = "ppo", policy_train_episodes: int = 100, experiment_episodes: int = 100):
 		
-		super().__init__(gym_env, algo, policy_train_steps)
+		super().__init__(gym_env, algo, policy_train_episodes, experiment_episodes)
 	
 	def get_params(self):
 		
@@ -18,11 +18,11 @@ class CartPolePolicySB(PolicySB):
 		params['env_name']="CartPole-v1"
 		params['multitask']=False
 		params['obs_size']=4
-		params['num_iterations_for_abstraction_learning']=500
+		params['num_iterations_for_abstraction_learning'] = 100
 		params['learning_rate_for_abstraction_learning']=0.001
 		params['abstraction_network_hidden_layers']=2
 		params['abstraction_network_hidden_nodes']=40
-		params['num_samples_from_demonstrator']=5000
+		params['num_samples_from_demonstrator'] = 5000
 		params['episodes'] = 50
 		params['steps']=200
 		params['num_instances']=100
