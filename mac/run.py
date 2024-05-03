@@ -66,8 +66,6 @@ def main(
 	
 	## The neural nets are created in version 1 of tensorflow
 	## This is to ensure compatibility and the code runs faster  
-	tf.compat.v1.disable_v2_behavior()
-	tf.compat.v1.disable_eager_execution()
 	if config is not None:
 		if config["debug"] == True:
 			verbose = True
