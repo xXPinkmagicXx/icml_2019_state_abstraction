@@ -3,7 +3,7 @@ import os
 import sys
 import numpy as np
 import matplotlib
-matplotlib.use('TkAgg')
+# matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 from matplotlib import colors as mcolors
 import random
