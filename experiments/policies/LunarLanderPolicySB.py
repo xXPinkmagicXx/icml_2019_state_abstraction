@@ -17,16 +17,14 @@ class LunarLanderPolicySB(PolicySB):
 		
 	def get_params(self):
 		params={}
-		params['multitask'] = False
 		params['env_name'] = "LunarLander-v2"
 		params['obs_size'] = 8
 		params['num_iterations_for_abstraction_learning'] = 500
 		params['learning_rate_for_abstraction_learning'] = 0.005
 		params['abstraction_network_hidden_layers'] = 2
 		params['abstraction_network_hidden_nodes'] = 200
-		params['num_samples_from_demonstrator'] = 20000
-		params['episodes'] = 200
-		params['rl_learning_rate'] = 0.005
+		params['num_samples_from_demonstrator'] = 10000
+		params['rl_learning_rate']=0.005
 
 		return params
 	

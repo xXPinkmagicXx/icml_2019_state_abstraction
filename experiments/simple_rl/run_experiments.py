@@ -22,6 +22,7 @@ import sys
 import copy
 import numpy as np
 from collections import defaultdict
+from tqdm import tqdm
 
 # Non-standard imports.
 from simple_rl.planning import ValueIteration
@@ -313,44 +314,48 @@ def run_single_agent_on_mdp(agent: Agent, mdp, episodes, steps, experiment: Expe
 
     value_per_episode = [0] * episodes
     gamma = mdp.get_gamma()
-
+    time_limit_sec = mdp.get_time_limit()
+    if time_limit_sec is not None:
+        start_time = time.time()
     # For each episode.
     for episode in range(1, episodes + 1):
 
         cumulative_episodic_reward = 0
 
-        if verbose:
-            # Print episode numbers out nicely.
-            sys.stdout.write("\tEpisode %s of %s" % (episode, episodes))
-            sys.stdout.write("\b" * len("\tEpisode %s of %s" % (episode, episodes)))
-            sys.stdout.flush()
+        # break if time limit is reached
+        if time_limit_sec is not None and time.time() - start_time > time_limit_sec:
+            break
+        # if verbose:
+        #     # Print episode numbers out nicely.
+        #     sys.stdout.write("\tEpisode %s of %s" % (episode, episodes))
+        #     sys.stdout.write("\b" * len("\tEpisode %s of %s" % (episode, episodes)))
+        #     sys.stdout.flush()
 
         # Compute initial state/reward.
         state = mdp.get_init_state()
         reward = 0
-        episode_start_time = time.time()
 
         # Extra printing if verbose.
-        if verbose:
-            print()
-            sys.stdout.flush()
-            prog_bar_len = _make_step_progress_bar()
+        # if verbose:
+            # print()
+            # sys.stdout.flush()
+            # prog_bar_len = _make_step_progress_bar()
         for step in range(1, steps + 1):
-            if verbose and int(prog_bar_len*float(step) / steps) > int(prog_bar_len*float(step-1) / steps):
-                _increment_bar()
+            # if verbose and int(prog_bar_len*float(step) / steps) > int(prog_bar_len*float(step-1) / steps):
+            #     _increment_bar()
 
             # step time
             step_start = time.time()
             # print("this is step number: ", step)
-            
+
             # Compute the agent's policy.
             action = agent.act(state, reward)
 
             # Terminal check.
             if state.is_terminal():
 
-                if verbose:
-                    sys.stdout.write(str(step))
+                # if verbose:
+                    # sys.stdout.write(str(step))
                     # sys.stdout.write("x")
                 if episodes == 1 and not reset_at_terminal and experiment is not None and action != "terminate":
                     # Self loop if we're not episodic or resetting and in a terminal state.
@@ -386,17 +391,18 @@ def run_single_agent_on_mdp(agent: Agent, mdp, episodes, steps, experiment: Expe
 
         # A final update.
         action = agent.act(state, reward)
-        
+
         # Process experiment info at end of episode.
         if experiment is not None:
             experiment.end_of_episode(agent)
+            # agent.agent.save_q_func("models/icml/q_func.pkl")
 
         # Reset the MDP, tell the agent the episode is over.
         mdp.reset()
         agent.end_of_episode()
 
-        if verbose:
-            print("\n")
+        # if verbose:
+        #     print("\n")
 
     # Process that learning instance's info at end of learning.
     if experiment is not None:
@@ -580,14 +586,14 @@ def _get_params_from_lines(lines, start_index):
         # Grab param name, value, and type.
         next_line = [item.strip() for item in lines[i].split("=")]
         param_name, param_val, param_type = next_line[0], next_line[1], next_line[2][next_line[2].find("'") + 1 : next_line[2].rfind("'")]
-        
+
         if param_type == "bool":
             param_val = bool(param_val == "True")
         elif param_type == "tuple":
             param_val = make_tuple(param_val)
         elif param_type == "list":
             param_val = ast.literal_eval(param_val)
-        else:         
+        else:
             param_val = eval(param_type)(param_val)
         agent_param_dict[param_name] = param_val
 
@@ -656,7 +662,7 @@ def main():
 
     # Setup agents.
     from simple_rl.agents import RandomAgent, QLearningAgent
-    
+
     random_agent = RandomAgent(actions)
     qlearner_agent = QLearningAgent(actions, gamma=gamma, explore="uniform")
     agents = [qlearner_agent, random_agent]

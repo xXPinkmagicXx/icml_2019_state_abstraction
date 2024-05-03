@@ -33,7 +33,7 @@ class NNStateAbstr(StateAbstraction):
         # print("this is the pred", pred, "and the list", pr_z_given_s)
         
         if self.binary_classification:
-            print("this is the pred", pred)
+            # print("this is the pred", pred)
             abstr_state_index = float(pred > 0.5)
         else:
             abstr_state_index = np.argmax(pr_z_given_s)

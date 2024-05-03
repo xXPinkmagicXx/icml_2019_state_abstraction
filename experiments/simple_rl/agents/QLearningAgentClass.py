@@ -5,6 +5,9 @@ import random
 import numpy
 import time
 from collections import defaultdict
+import pickle
+import gzip
+import os
 
 # Other imports.
 from simple_rl.agents.AgentClass import Agent
@@ -12,7 +15,7 @@ from simple_rl.agents.AgentClass import Agent
 class QLearningAgent(Agent):
     ''' Implementation for a Q Learning Agent '''
 
-    def __init__(self, actions, name="Q-learning", alpha=0.1, gamma=0.99, epsilon=0.1, explore="uniform", anneal=False):
+    def __init__(self, actions, name="Q-learning", alpha=0.1, gamma=0.99, epsilon=0.1, explore="uniform", time_limit_sec=None, anneal=False):
         '''
         Args:
             actions (list): Contains strings denoting the actions.
@@ -27,6 +30,7 @@ class QLearningAgent(Agent):
 
         # Set/initialize parameters and other relevant classwide data
         self.alpha, self.alpha_init = alpha, alpha
+        self.time_limit_sec = time_limit_sec
         self.epsilon, self.epsilon_init = epsilon, epsilon
         self.step_number = 0
         self.anneal = anneal
@@ -75,6 +79,7 @@ class QLearningAgent(Agent):
             and performs updates given (s=self.prev_state,
             a=self.prev_action, r=reward, s'=state)
         '''
+    
         if learning:
             self.update(self.prev_state, self.prev_action, reward, state)
         
@@ -242,6 +247,16 @@ class QLearningAgent(Agent):
         self.episode_number = 0
         self.q_func = defaultdict(lambda : defaultdict(lambda: self.default_q))
         Agent.reset(self)
+
+    def save_q_func(self, path):
+        os.makedirs(path, exist_ok=True)
+        with gzip.open(path, 'wb') as f:
+            pickle.dump(self.q_func, f)
+    
+    def load_q_func(self, path):
+        
+        with gzip.open(path, 'rb') as f:
+            self.q_func = pickle.load(f)
 
     def end_of_episode(self):
         '''

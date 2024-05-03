@@ -19,7 +19,7 @@ class GymMDP(MDP):
     ''' Class for Gym MDPs '''
 
 
-    def __init__(self, gym_env, render=False, render_every_n_episodes=0, k=20):
+    def __init__(self, gym_env, render=False, render_every_n_episodes=0, time_limit_sec=None):
         '''
         Args:
             env_name (str)
@@ -33,6 +33,7 @@ class GymMDP(MDP):
         self.env_name = gym_env.spec.id
         self.max_steps = gym_env.spec.max_episode_steps
         env = gym_env
+        self.time_limit_sec = time_limit_sec
         
         self.env = env
         self.render = render
@@ -48,6 +49,9 @@ class GymMDP(MDP):
         param_dict["env_name"] = self.env_name
    
         return param_dict
+
+    def get_time_limit(self):
+        return self.time_limit_sec
 
     def _reward_func(self, state: GymState, action):
         '''
