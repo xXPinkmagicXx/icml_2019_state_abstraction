@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 from matplotlib import colors as mcolors
 import random
 import time
-import tensorflow_addons as tfa
 
 # Other imports.
 import tensorflow as tf
