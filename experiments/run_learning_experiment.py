@@ -44,6 +44,7 @@ from .utils.experiment_utils import make_nn_sa, make_nn_sa_2, make_nn_sa_3
 from .abstraction.abstraction_network_new import abstraction_network_new
 
 import tensorflow as tf
+import keras
 tf.compat.v1.enable_v2_behavior()
 tf.compat.v1.enable_eager_execution()
 # To make code compatible with old code implemented in tensorflow 1.x
@@ -223,7 +224,7 @@ def load_agent(env_name: str, algo: str, policy_train_episodes: int, verbose=Tru
     """
 
     save_name = "trained-abstract-agents/"+ str(policy_train_episodes) + '/' + algo + "_" + env_name
-    load_net =  tf.keras.models.load_model(save_name)
+    load_net =  keras.models.load_model(save_name)
     nn_sa = NNStateAbstr(load_net)
     # Load training time
     if os.path.exists(save_name + "/abstraction_training_time.txt"):

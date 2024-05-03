@@ -1,7 +1,7 @@
 import keras
 import sys
 from simple_rl.tasks import GymMDP
-from keras.models import model_from_json
+# from keras.models import model_from_json
 import tensorflow as tf
 import numpy as np
 import abc
@@ -48,13 +48,14 @@ class Policy:
             print("Created directory: ", self.params['save_path'])
         
         ## Get current working directory
-        cwd = os.getcwd().split('\\')[-1]
-		
+        cwd = os.getcwd()
+        print("this is the cwd: ", cwd)
+        
         path_to_learned_policy = './mac/learned_policy/'
 		# If called as submodule or .. if called from experiments/
-        if cwd == "icml_2019_state_abstraction":
+        if "icml_2019_state_abstraction" in cwd:
             path_to_learned_policy = './mac/learned_policy/'
-        elif cwd == "Bachelor-Project":
+        elif "Bachelor-Project" in cwd:
             path_to_learned_policy = './icml_2019_state_abstraction/mac/learned_policy/'	
         ## . if called as submodule or .. if called from experiments/
         path_to_learned_policy += str(self.policy_train_episodes) + "/"
@@ -75,17 +76,8 @@ class Policy:
             () a loaded model
         
         """
-        # json file
-        json_file_name = path_to_learned_policy + self.env_name + '.json'
-        json_file = open(json_file_name, 'r')
-        # Load Model
-        loaded_model_json = json_file.read()
-        json_file.close()
-
         # Load weights into new model
-        loaded_model = model_from_json(loaded_model_json)
-        weights_file_name = path_to_learned_policy + self.env_name + '.h5'
-        loaded_model.load_weights(weights_file_name)
+        loaded_model = keras.models.load_model(path_to_learned_policy + self.env_name + '.h5', compile=False)
         
         # return the loaded model
         return loaded_model
