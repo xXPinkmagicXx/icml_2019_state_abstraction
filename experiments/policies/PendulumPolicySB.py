@@ -8,9 +8,15 @@ import os
 
 class PendulumPolicySB(PolicySB):
 	
-	def __init__(self, gym_env: GymMDP, algo: str, policy_train_episodes: int, experiment_episodes: int, k_bins: int):
+	def __init__(self, gym_env: GymMDP, algo: str, policy_train_episodes: int, experiment_episodes: int, k_bins: int, seed: int):
 		
-		super().__init__(gym_env, algo, policy_train_episodes, experiment_episodes, k_bins)
+		super().__init__(
+			gym_env=gym_env,
+			algo=algo,
+			policy_train_episodes=policy_train_episodes,
+			experiment_episodes=experiment_episodes,
+			k_bins=k_bins,
+			seed=seed)
 		
 	def get_params(self):
 		params={}
