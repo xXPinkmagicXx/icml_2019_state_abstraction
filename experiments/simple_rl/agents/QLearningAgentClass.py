@@ -8,7 +8,7 @@ from collections import defaultdict
 import pickle
 import gzip
 import os
-
+import json
 # Other imports.
 from simple_rl.agents.AgentClass import Agent
 
@@ -63,6 +63,10 @@ class QLearningAgent(Agent):
     # --------------------------------
     # ---- CENTRAL ACTION METHODS ----
     # --------------------------------
+
+    def _get_q_function_as_dict(self):
+        regular_dict = {str(outer_key.data): dict(inner_dict) for outer_key, inner_dict in self.q_func.items()}
+        return regular_dict
 
     def act(self, state, reward, learning=True):
         '''
@@ -249,9 +253,9 @@ class QLearningAgent(Agent):
         Agent.reset(self)
 
     def save_q_func(self, path):
-        os.makedirs(path, exist_ok=True)
-        with gzip.open(path, 'wb') as f:
-            pickle.dump(self.q_func, f)
+        regular_dict = self._get_q_function_as_dict()
+        with open(path + ".json", 'w') as f:
+            json.dump(regular_dict, f)
     
     def load_q_func(self, path):
         

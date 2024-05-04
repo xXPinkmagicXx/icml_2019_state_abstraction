@@ -144,7 +144,11 @@ def Get_GymMDP(env_name, k: int, seed: int, time_limit_sec=None, render=False):
     if isinstance(gym_env.env.action_space, gym.spaces.Box):
         gym_env = discretizing_wrapper(gym_env, k)   
     
-    gym_env = GymMDP(gym_env, render=False, time_limit_sec=time_limit_sec)
+    gym_env = GymMDP(
+        gym_env=gym_env,
+        render=render,
+        seed=seed,
+        time_limit_sec=time_limit_sec)
     
     return gym_env
 
@@ -166,13 +170,13 @@ def run_episodes_sb(env_name, policy: PolicySB, episodes=1, steps=500):
                 break
             eval_env.render()
 
-def run_episodes_from_nn(env_name, abstraction_net: NNStateAbstr, episodes=1, steps=500, verbose=True):
+def run_episodes_from_nn(env_name, abstraction_net: NNStateAbstr, seed: int,episodes=1, steps=500, verbose=True):
     """
     Args:
         :param gym_env (GymMDP)
         :param policy (Policy OR PolicySB)
     """
-    eval_env = Get_GymMDP(env_name, k = 20, render=True).env
+    eval_env = Get_GymMDP(env_name, k = 20, seed=seed,  render=True).env
     obs, info = eval_env.reset()
     for e in range(episodes):
         for s in range(steps):
@@ -251,7 +255,6 @@ def get_policy(gym_env: GymMDP, algo: str, policy_train_episodes: int, experimen
     return policy
 
 
-
 def main(
         env_name: str,
         algo: str,
@@ -284,7 +287,7 @@ def main(
         verbose = True
         policy_train_episodes = 3
         
-    gym_env = Get_GymMDP(env_name, k = k_bins, time_limit_sec=time_limit_sec)
+    gym_env = Get_GymMDP(env_name, k = k_bins, seed=seed, time_limit_sec=time_limit_sec)
     ## Set seed
     # gym_env.env.seed(seed)
     random.seed(seed)
@@ -364,7 +367,7 @@ def main(
             print("Skipping experiment...")
     
     if (run_expiriment or load_model or abstraction) and render:
-       run_episodes_from_nn(env_name, abstraction_network, steps=1000, verbose=verbose) 
+       run_episodes_from_nn(env_name, abstraction_network, seed=seed, steps=1000, verbose=verbose) 
 
 def _read_file_and_get_results(file_path: str, episodes) -> list:
     """

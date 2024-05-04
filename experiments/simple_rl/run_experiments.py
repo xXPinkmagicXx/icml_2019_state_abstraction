@@ -396,9 +396,12 @@ def run_single_agent_on_mdp(agent: Agent, mdp, episodes, steps, experiment: Expe
         if experiment is not None:
             experiment.end_of_episode(agent)
             env_name = mdp.env_name 
-            seed = mdp.seed
-            agent_path = "models/" + "icml/" + env_name + "/" + agent.name + "_" + str(seed)   + ".pkl"
-            agent.agent.save_q_func("models/icml/q_func.pkl")
+            # path, save as pikle file ".pkl" is added in the save funtion 
+            if not os.path.exists("models/" + "icml/" + env_name + "/"):
+                os.makedirs("models/" + "icml/" + env_name + "/")
+                
+            agent_path = "models/" + "icml/" + env_name + "/" + agent.name 
+            agent.agent.save_q_func(agent_path)
 
         # Reset the MDP, tell the agent the episode is over.
         mdp.reset()
