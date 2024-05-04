@@ -311,15 +311,9 @@ def main(
     else:
         print("No abstraction loaded or created...")
 
-    ## Run one episode of the environment
-    # run_episodes_sb(env_name, policy)
-    # run_episodes_from_nn(env_name, abstraction_net=abstraction_network)
     # Make agents
     ## TODO: LinearQagent and number of features does not wor
-    # num_features = gym_env.get_num_state_feats()
-    # print("this is the number of features: ", num_features)
-    demo_agent = FixedPolicyAgent(policy.demo_policy)
-    ql_agent = QLearningAgent(actions=actions)
+    # demo_agent = FixedPolicyAgent(policy.demo_policy)
     # ql_agent = QLearningAgent(actions)
     name_ext = "_phi_" + str(policy.k_bins) + "_" + str(algo) + "_" + str(seed) if k_bins > 1 else "_phi_" + str(algo) + "_" + str(seed) 
     load_agent_path = "models/icml/" + env_name + "/" + str(5) + "/" "Q-learning" + name_ext

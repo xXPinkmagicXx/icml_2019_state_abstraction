@@ -226,9 +226,6 @@ class QLearningAgent(Agent):
         Returns:
             (float): denoting the q value of the (@state, @action) pair.
         '''
-        print("state:", type(state))
-        print("action:", type(action))
-        print("self.q_function:", self.q_func)
         return self.q_func[state][action]
 
     def get_action_distr(self, state, beta=0.2):
@@ -258,8 +255,6 @@ class QLearningAgent(Agent):
         Agent.reset(self)
 
     def _get_q_function_as_dict(self):
-        for outer_key, inner_dict in self.q_func.items():
-            print("This is outer key",type(outer_key.get_data()))
         regular_dict = {int(outer_key.get_data()): dict(inner_dict) for outer_key, inner_dict in self.q_func.items()}
         return regular_dict
     
