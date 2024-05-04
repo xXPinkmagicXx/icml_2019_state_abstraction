@@ -103,6 +103,7 @@ def main(
 	params['gamma'] = 0.99
 	params['plot'] = False
 	params['time_limit_sec'] = time_limit_sec
+	params["seed"] = seed
 
 	# set seeds to ensure results are reproducible
 	numpy.random.seed(seed)

@@ -43,7 +43,7 @@ class mac:
 		self.learned_policy_path = learned_policy_path  + str(self.params['episodes']) + '/' 
 		if self.params["k_bins"] > 1:
 			self.learned_policy_path += str(self.params["k_bins"]) + "_"
-		self.learned_policy_path += self.params["env_name"] 
+		self.learned_policy_path += self.params["env_name"] + "_" + str(self.params["seed"])
 
 	def add_2_memory(self,states,actions,rewards):
 		T=len(states)
