@@ -1,6 +1,7 @@
 # Python imports.
 import sys, os
 import random
+from matplotlib.pyplot import show
 import tensorflow as tf
 import gymnasium as gym
 from datetime import datetime
@@ -350,6 +351,7 @@ def main(
                             steps=policy.params['steps'],
                             verbose=True,
                             track_success=True,
+                            open_plot=False,
                             success_reward=1,
                             dir_for_plot=dir_for_plot)
         
