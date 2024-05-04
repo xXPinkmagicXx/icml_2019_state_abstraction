@@ -6,7 +6,6 @@ import tensorflow as tf
 # tf.keras.utils.disable_interactive_logging()
 import gymnasium as gym
 from keras import backend as K
-import matplotlib.pyplot as plt
 import time
 import os
 # Import action wrapper
@@ -67,7 +66,7 @@ def main(
 	## The neural nets are created in version 1 of tensorflow
 	## This is to ensure compatibility and the code runs faster  
 	if config is not None:
-		if config["debug"] == True:
+		if config['debug'] == True:
 			verbose = True
 			episodes = 3
 
@@ -103,6 +102,7 @@ def main(
 	params['gamma'] = 0.99
 	params['plot'] = False
 	params['time_limit_sec'] = time_limit_sec
+	params["seed"] = seed
 
 	# set seeds to ensure results are reproducible
 	numpy.random.seed(seed)

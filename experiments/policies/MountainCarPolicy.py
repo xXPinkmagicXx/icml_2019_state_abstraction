@@ -8,9 +8,13 @@ import os
 
 class MountainCarPolicy(Policy.Policy):
 	
-	def __init__(self, gym_env: GymMDP, policy_train_episodes: int, experiment_episodes: int):
+	def __init__(self, gym_env: GymMDP, policy_train_episodes: int, experiment_episodes: int, seed: int):
 
-		super().__init__(gym_env, policy_train_episodes, experiment_episodes)
+		super().__init__(
+			gym_env=gym_env,
+			policy_train_episodes=policy_train_episodes,
+			experiment_episodes=experiment_episodes,
+			seed=seed)
 		
 	def get_params(self):
 		

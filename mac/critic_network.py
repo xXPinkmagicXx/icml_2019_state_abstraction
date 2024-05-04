@@ -1,7 +1,4 @@
-import keras.layers
-import keras.optimizers
 import numpy as np
-from keras.models import Sequential
 import sys
 import tensorflow as tf
 import numpy, random
@@ -22,7 +19,7 @@ class critic:
            optimizer is Adam
         '''
 
-        model = Sequential()
+        model = keras.Sequential()
         
         model.add(keras.layers.Dense(units=self.params['critic_h'],
                         activation='relu',
@@ -34,7 +31,7 @@ class critic:
 
         model.add(keras.layers.Dense(units=self.params['A'], activation='linear'))
         model.compile(loss='mse',
-                      optimizer=keras.optimizers.Adam(lr=self.params['critic_lr'])
+                      optimizer=keras.optimizers.Adam(learning_rate=self.params['critic_lr'])
                      )
         return model
 

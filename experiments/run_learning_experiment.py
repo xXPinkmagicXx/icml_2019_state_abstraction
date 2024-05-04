@@ -1,6 +1,7 @@
 # Python imports.
 import sys, os
 import random
+from matplotlib.pyplot import show
 import tensorflow as tf
 import gymnasium as gym
 from datetime import datetime
@@ -52,7 +53,7 @@ tf.keras.utils.disable_interactive_logging()
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-def get_policy_sb3(gym_env: GymMDP, algo: str, policy_train_steps: int, experiment_episodes: int, k_bins: int) -> PolicySB:
+def get_policy_sb3(gym_env: GymMDP, algo: str, policy_train_steps: int, experiment_episodes: int, k_bins: int, seed: int) -> PolicySB:
     """
     Args:
         :param gym_env (GymMDP)
@@ -68,28 +69,28 @@ def get_policy_sb3(gym_env: GymMDP, algo: str, policy_train_steps: int, experime
     6. MountainCarContinuous-v0
     """
     if gym_env.env_name == "MountainCar-v0":
-        return mcp_sb.MountainCarPolicySB(gym_env, algo, policy_train_steps, experiment_episodes)
+        return mcp_sb.MountainCarPolicySB(gym_env, algo, policy_train_steps, experiment_episodes, seed)
     
 
     if gym_env.env_name == "LunarLander-v2":
-        return llp_sb.LunarLanderPolicySB(gym_env, algo, policy_train_steps, experiment_episodes)
+        return llp_sb.LunarLanderPolicySB(gym_env, algo, policy_train_steps, experiment_episodes, seed)
     
     if gym_env.env_name == "CartPole-v0" or gym_env.env_name == "CartPole-v1":
-        return cpp_sb.CartPolePolicySB(gym_env, algo, policy_train_steps, experiment_episodes)
+        return cpp_sb.CartPolePolicySB(gym_env, algo, policy_train_steps, experiment_episodes, seed)
     
     if gym_env.env_name == "Acrobot-v1":
-        return abp_sb.AcrobotPolicySB(gym_env, algo, policy_train_steps, experiment_episodes)
+        return abp_sb.AcrobotPolicySB(gym_env, algo, policy_train_steps, experiment_episodes, seed)
     
     # --------- Countinuous action space environments --------- #
     if gym_env.env_name == "MountainCarContinuous-v0":
-        return mcpc_sb.MountainCarContunuousPolicySB(gym_env, algo, policy_train_steps, experiment_episodes, k_bins)
+        return mcpc_sb.MountainCarContunuousPolicySB(gym_env, algo, policy_train_steps, experiment_episodes, k_bins, seed)
     
     if gym_env.env_name == "Pendulum-v1":
-        return pp_sb.PendulumPolicySB(gym_env, algo, policy_train_steps, experiment_episodes, k_bins)
+        return pp_sb.PendulumPolicySB(gym_env, algo, policy_train_steps, experiment_episodes, k_bins, seed)
     
     return NotImplementedError("Policy not implemented for this environment")
 
-def get_mac_policy(gym_env: GymMDP, policy_time_episodes: int, experiment_episodes: int, k_bins: int) -> Policy:
+def get_mac_policy(gym_env: GymMDP, policy_time_episodes: int, experiment_episodes: int, k_bins: int, seed: int) -> Policy:
     """
     Args:
         :param gym_env (GymMDP) : Gym MDP object
@@ -106,22 +107,22 @@ def get_mac_policy(gym_env: GymMDP, policy_time_episodes: int, experiment_episod
     """
 
     if gym_env.env_name == "CartPole-v0" or "CartPole-v1" == gym_env.env_name:
-        return cpp.CartPolePolicy(gym_env, policy_time_episodes, experiment_episodes)
+        return cpp.CartPolePolicy(gym_env, policy_time_episodes, experiment_episodes, seed)
 
     if gym_env.env_name == "Acrobot-v1":
-        return abp.AcrobotPolicy(gym_env, policy_time_episodes, experiment_episodes)
+        return abp.AcrobotPolicy(gym_env, policy_time_episodes, experiment_episodes, seed)
 
     if gym_env.env_name == "MountainCar-v0":
-        return mcp.MountainCarPolicy(gym_env, policy_time_episodes, experiment_episodes)
+        return mcp.MountainCarPolicy(gym_env, policy_time_episodes, experiment_episodes, seed)
 
     if gym_env.env_name == "LunarLander-v2":
-        return llp.LunarLanderPolicy(gym_env, policy_time_episodes, experiment_episodes)
+        return llp.LunarLanderPolicy(gym_env, policy_time_episodes, experiment_episodes, seed)
     # --------- Countinuous action space environments --------- #
     
     if gym_env.env_name == "MountainCarContinuous-v0":
-        return mcpc.MountainCarContinuousPolicy(gym_env, policy_time_episodes, experiment_episodes, k_bins)
+        return mcpc.MountainCarContinuousPolicy(gym_env, policy_time_episodes, experiment_episodes, k_bins, seed)
     if gym_env.env_name == "Pendulum-v1":
-        return pp.PendulumPolicy(gym_env, policy_time_episodes, experiment_episodes, k_bins)
+        return pp.PendulumPolicy(gym_env, policy_time_episodes, experiment_episodes, k_bins, seed)
 
     return NotImplementedError("Policy not implemented for this environment")
 
@@ -214,7 +215,7 @@ def create_abstraction_network(policy, num_samples=10000, x_train=None, verbose=
     
     return StateAbsractionNetwork, abstraction_training_time
 
-def load_agent(env_name: str, algo: str, policy_train_episodes: int, verbose=True) -> NNStateAbstr:
+def load_agent(env_name: str, algo: str, policy_train_episodes: int, seed: int, verbose: bool) -> NNStateAbstr:
     """
     Args:
         :param env_name (str): Name of the environment
@@ -223,7 +224,7 @@ def load_agent(env_name: str, algo: str, policy_train_episodes: int, verbose=Tru
         NNStateAbstr object
     """
 
-    save_name = "trained-abstract-agents/"+ str(policy_train_episodes) + '/' + algo + "_" + env_name
+    save_name = "trained-abstract-agents/"+ str(policy_train_episodes) + '/' + algo + "_" + env_name + "_" + str(seed)
     load_net =  keras.models.load_model(save_name)
     nn_sa = NNStateAbstr(load_net)
     # Load training time
@@ -239,11 +240,11 @@ def load_agent(env_name: str, algo: str, policy_train_episodes: int, verbose=Tru
     return nn_sa, float(abstraction_training_time)
 
 
-def get_policy(gym_env: GymMDP, algo: str, policy_train_episodes: int, experiment_episodes: int, k_bins: int):
+def get_policy(gym_env: GymMDP, algo: str, policy_train_episodes: int, experiment_episodes: int, k_bins: int, seed: int):
     if algo == "mac":
-        policy = get_mac_policy(gym_env, policy_train_episodes, experiment_episodes, k_bins)
+        policy = get_mac_policy(gym_env, policy_train_episodes, experiment_episodes, k_bins, seed)
     else: 
-        policy = get_policy_sb3(gym_env, algo, policy_train_episodes, experiment_episodes, k_bins)
+        policy = get_policy_sb3(gym_env, algo, policy_train_episodes, experiment_episodes, k_bins, seed)
     policy.params["num_mdps"] = 1
     # environment can max run for 1000 steps (LunarLander-v2, MountainCarContinuous-v0)
     policy.params["steps"] = 1000
@@ -264,7 +265,7 @@ def main(
         render=True, 
         verbose=False,
         debug=False,
-        seed=42):
+        seed: int = 42):
     """
     Args:
         :param env_name (str): Name of the environment
@@ -292,11 +293,11 @@ def main(
     actions = list(gym_env.get_actions())
 
     ## Get policies
-    policy = get_policy(gym_env, algo, policy_train_episodes, experiment_episodes, k_bins)
+    policy = get_policy(gym_env, algo, policy_train_episodes, experiment_episodes, k_bins, seed)
 
     ## Get abstraction networks (can be none)
     if load_model:
-        abstraction_network, abstraction_training_time = load_agent(env_name, algo, policy_train_episodes, verbose)
+        abstraction_network, abstraction_training_time = load_agent(env_name, algo, policy_train_episodes, seed, verbose)
     elif abstraction:
         if debug:
             policy.params["num_samples_from_demonstrator"] = 100
@@ -350,6 +351,7 @@ def main(
                             steps=policy.params['steps'],
                             verbose=True,
                             track_success=True,
+                            open_plot=False,
                             success_reward=1,
                             dir_for_plot=dir_for_plot)
         

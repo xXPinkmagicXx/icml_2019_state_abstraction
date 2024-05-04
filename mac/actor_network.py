@@ -1,7 +1,5 @@
-import keras.layers
-import keras.optimizers
 import numpy as np
-from keras.models import Sequential
+from keras import Sequential
 import sys
 import tensorflow as tf
 import numpy

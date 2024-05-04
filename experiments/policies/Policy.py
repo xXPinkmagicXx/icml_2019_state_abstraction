@@ -12,7 +12,7 @@ import os
 class Policy:
     __metaclass__ = abc.ABCMeta
 	
-    def __init__(self, gym_env: GymMDP, policy_train_episodes: int, experiment_episodes: int, k_bins: int = 1):
+    def __init__(self, gym_env: GymMDP, policy_train_episodes: int, experiment_episodes: int, seed: int, k_bins: int = 1):
 		
         self.gym_env = gym_env
         self.params = self.get_params()
@@ -21,6 +21,7 @@ class Policy:
         self.policy_train_episodes = policy_train_episodes
         self.algo = "mac"
         self.k_bins = k_bins
+        self.seed = seed
 
         self.params['size_a'] = self.get_num_actions()
         self.params['algo'] = 'mac'
@@ -47,7 +48,21 @@ class Policy:
             os.makedirs(self.params['save_path'])
             print("Created directory: ", self.params['save_path'])
         
-        ## Get current working directory
+        self.loaded_model = self._load_model()
+        self.demo_policy = self.expert_policy
+        self.num_mdps = 1
+    
+    def get_num_actions(self):
+        return len(list(self.gym_env.get_actions()))
+
+
+    def _load_trained_policy(self):
+        
+        self.path_to_learned_policy = self._get_path_to_learned_policy()
+        loaded_model = self._load_model(self.path_to_learned_policy)
+        return loaded_model
+    
+    def _get_path_to_learned_policy(self):
         cwd = os.getcwd()
         print("this is the cwd: ", cwd)
         
@@ -61,13 +76,9 @@ class Policy:
         path_to_learned_policy += str(self.policy_train_episodes) + "/"
         if self.k_bins > 1:
             path_to_learned_policy += str(self.k_bins) + "_"
-        self.loaded_model = self._load_model(path_to_learned_policy)
-        self.demo_policy = self.expert_policy
-        self.num_mdps = 1
-    
-    def get_num_actions(self):
-        return len(list(self.gym_env.get_actions()))
-
+        path_to_learned_policy + self.env_name + str(self.seed)
+        
+        return path_to_learned_policy
     def _load_model(self, path_to_learned_policy):
         """
         Args:
@@ -77,7 +88,7 @@ class Policy:
         
         """
         # Load weights into new model
-        loaded_model = keras.models.load_model(path_to_learned_policy + self.env_name + '.h5', compile=False)
+        loaded_model = keras.models.load_model(path_to_learned_policy + '.h5', compile=False)
         
         # return the loaded model
         return loaded_model

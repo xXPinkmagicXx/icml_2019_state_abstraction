@@ -11,7 +11,7 @@ from stable_baselines3 import DQN, PPO, SAC, TD3, DDPG
 class PolicySB:
     __metaclass__ = abc.ABCMeta
 	
-    def __init__(self, gym_env: GymMDP, algo: str, policy_train_episodes: int, experiment_episodes: int, k_bins: int = 1):
+    def __init__(self, gym_env: GymMDP, algo: str, policy_train_episodes: int, experiment_episodes: int, seed: int, k_bins: int = 1):
 		
         # environment 
         self.gym_env = gym_env
@@ -19,6 +19,7 @@ class PolicySB:
         self.algo = algo
         self.policy_train_episodes = policy_train_episodes
         self.k_bins = k_bins
+        self.seed = seed
         # Get the model class based on the algorithm
         self._model_class = self._get_model_class(algo)
         
@@ -51,8 +52,15 @@ class PolicySB:
             os.makedirs(self.params['save_path'])
             print("Created directory: ", self.params['save_path'])
 
-        ## Get current working directory
-        cwd = os.getcwd().split('\\')[-1]
+       
+        path_to_agent = self._get_path_to_agent()
+        self.model = self._load_agent(path_to_agent)
+        self.demo_policy = self.expert_policy
+        self.num_mdps = 1
+    
+    def _get_path_to_agent(self):
+         ## Get current working directory
+        cwd = os.getcwd()
 		
         path_to_trained_agents = './rl-trained-agents/'
         
@@ -63,17 +71,14 @@ class PolicySB:
         elif cwd == "experiments":
             path_to_trained_agents = '../../rl-trained-agents/'
         ## . if called as submodule or .. if called from experiments/
-        path_to_trained_agents += str(policy_train_episodes) + '/'
-        if k_bins > 1:
-            path_to_trained_agents += str(k_bins) + "_"
+        path_to_trained_agents += str(self.policy_train_episodes) + '/'
+        if self.k_bins > 1:
+            path_to_trained_agents += str(self.k_bins) + "_"
+        
+        # print("this is the path to trained agents:", path_to_trained_agents)
+        path_to_agent = path_to_trained_agents + self.algo + '_' + self.env_name + "_" + str(self.seed)
+        return path_to_agent
 
-        print("this is the path to trained agents:", path_to_trained_agents)
-        path_to_agent = path_to_trained_agents + algo + '_' + self.env_name
-
-        self.model = self._load_agent(path_to_agent)
-        self.demo_policy = self.expert_policy
-        self.num_mdps = 1
-    
     def get_num_actions(self):
         return len(list(self.gym_env.get_actions()))
        
