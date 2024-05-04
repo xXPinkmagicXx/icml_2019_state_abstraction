@@ -19,7 +19,7 @@ class GymMDP(MDP):
     ''' Class for Gym MDPs '''
 
 
-    def __init__(self, gym_env, render=False, render_every_n_episodes=0, time_limit_sec=None):
+    def __init__(self, gym_env, render: bool, seed: int, render_every_n_episodes=0, time_limit_sec=None):
         '''
         Args:
             env_name (str)
@@ -32,6 +32,7 @@ class GymMDP(MDP):
         self.episode = 0
         self.env_name = gym_env.spec.id
         self.max_steps = gym_env.spec.max_episode_steps
+        self.seed = seed
         env = gym_env
         self.time_limit_sec = time_limit_sec
         

@@ -126,7 +126,7 @@ def get_mac_policy(gym_env: GymMDP, policy_time_episodes: int, experiment_episod
 
     return NotImplementedError("Policy not implemented for this environment")
 
-def Get_GymMDP(env_name, k: int, time_limit_sec=None, render=False):
+def Get_GymMDP(env_name, k: int, seed: int, time_limit_sec=None, render=False):
     """
     Args:
         :param env_name (str): Name of the environment

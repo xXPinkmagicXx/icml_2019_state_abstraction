@@ -395,7 +395,10 @@ def run_single_agent_on_mdp(agent: Agent, mdp, episodes, steps, experiment: Expe
         # Process experiment info at end of episode.
         if experiment is not None:
             experiment.end_of_episode(agent)
-            # agent.agent.save_q_func("models/icml/q_func.pkl")
+            env_name = mdp.env_name 
+            seed = mdp.seed
+            agent_path = "models/" + "icml/" + env_name + "/" + agent.name + "_" + str(seed)   + ".pkl"
+            agent.agent.save_q_func("models/icml/q_func.pkl")
 
         # Reset the MDP, tell the agent the episode is over.
         mdp.reset()
