@@ -6,7 +6,6 @@ import tensorflow as tf
 # tf.keras.utils.disable_interactive_logging()
 import gymnasium as gym
 from keras import backend as K
-import matplotlib.pyplot as plt
 import time
 import os
 # Import action wrapper
