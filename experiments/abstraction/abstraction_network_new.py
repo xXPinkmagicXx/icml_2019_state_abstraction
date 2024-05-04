@@ -5,6 +5,7 @@ from torch import nn
 from torch.utils.data import DataLoader
 import sys
 import numpy as np
+import keras
 
 class abstraction_network_new():
 	
@@ -20,24 +21,24 @@ class abstraction_network_new():
 		self.activation_output = 'softmax' if self.action_size > 2 else 'softmax'
 		self.output_nodes = num_abstract_states if num_abstract_states > 2 else 2
 		
-		self.optimizer = tf.keras.optimizers.Adam(learning_rate=self.learning_rate)
+		self.optimizer = keras.optimizers.Adam(learning_rate=self.learning_rate)
 		
 		if self.action_size >= 2:
-			self.loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False)
+			self.loss_fn = keras.losses.SparseCategoricalCrossentropy(from_logits=False)
 		else:
-			self.loss_fn = tf.keras.losses.BinaryCrossentropy(from_logits=False)
+			self.loss_fn = keras.losses.BinaryCrossentropy(from_logits=False)
 		
-		self.net = tf.keras.models.Sequential()
+		self.net = keras.models.Sequential()
 		# self.net.add(tf.keras.layers.Flatten(input_shape=(self.obs_size,)))
 		
 		# # hidden layers
-		self.net.add(tf.keras.layers.Dense(self.num_nodes, activation='relu', input_dim=self.obs_size))
+		self.net.add(keras.layers.Dense(self.num_nodes, activation='relu', input_dim=self.obs_size))
 		for _ in range(params['abstraction_network_hidden_layers']-1):
 		
-			self.net.add(tf.keras.layers.Dense(self.num_nodes, activation='relu'))
+			self.net.add(keras.layers.Dense(self.num_nodes, activation='relu'))
 		
 		# output layer
-		self.net.add(tf.keras.layers.Dense(self.output_nodes, activation=self.activation_output))
+		self.net.add(keras.layers.Dense(self.output_nodes, activation=self.activation_output))
 		# compile the model
 		self.net.compile(
 			loss=self.loss_fn,
@@ -58,7 +59,7 @@ class abstraction_network_new():
 		
 		print("Saving abstraction network to disk...")
 		print("This is the save path", self.save_path)
-		tf.keras.models.save_model(self.net, self.save_path, save_format='tf')
+		keras.models.save_model(self.net, self.save_path + ".keras")
 		# self.net.save(self.save_path)	
 		print("Saved abstraction network to disk")
 		with open(self.save_path + "/abstraction_training_time.txt", "w") as f:
@@ -67,5 +68,5 @@ class abstraction_network_new():
 	
 	def load_model(self, path):
 		
-		self.net = tf.keras.models.load_model(path)
+		self.net = keras.models.load_model(path)
 

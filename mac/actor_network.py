@@ -1,10 +1,11 @@
+import keras.layers
+import keras.optimizers
 import numpy as np
 from keras.models import Sequential
-from keras.layers import Dense, Reshape
-from keras.optimizers import Adam
 import sys
 import tensorflow as tf
 import numpy
+import keras
 
 def objective(y_true,y_pred):
     "policy gradient objective"
@@ -25,17 +26,17 @@ class actor:
         '''
         model = Sequential()
         
-        model.add(Dense(units=self.params['actor_h'],
+        model.add(keras.layers.Dense(units=self.params['actor_h'],
                         activation='relu',
                         input_dim=self.params['state_dimension'])
                  )
         
         for _ in range(self.params['actor_num_h']-1):
-            model.add(Dense(units=self.params['actor_h'], activation='relu'))
+            model.add(keras.layers.Dense(units=self.params['actor_h'], activation='relu'))
 
-        model.add(Dense(units=self.params['A'], activation='softmax'))
+        model.add(keras.layers.Dense(units=self.params['A'], activation='softmax'))
         model.compile(loss=objective,
-                      optimizer=Adam(learning_rate=self.params['actor_lr'])
+                      optimizer=keras.optimizers.Adam(learning_rate=self.params['actor_lr'])
                      )
         return model
 

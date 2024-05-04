@@ -9,7 +9,7 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
-from keras.models import model_from_json
+import keras
 
 
 class mac:
@@ -29,12 +29,12 @@ class mac:
 		self.critic=critic(self.params)
 		self.epsilon = params['epsilon']
 		# get current working directory
-		cwd = os.getcwd().split('\\')[-1]
+		cwd = os.getcwd()
 		learned_policy_path = "./learned_policy/"
 		# If called as submodule or .. if called from experiments/
-		if cwd == "icml_2019_state_abstraction":
+		if "icml_2019_state_abstraction" in cwd:
 			learned_policy_path = './mac/learned_policy/'
-		elif cwd == "Bachelor-Project":
+		elif "Bachelor-Project" in cwd:
 			learned_policy_path = './icml_2019_state_abstraction/mac/learned_policy/'	
 		
 		if not os.path.exists(learned_policy_path + str(self.params['episodes'])+'/'):
@@ -210,12 +210,7 @@ class mac:
 
 	def load_model(self) -> None:
 		# load json and create model
-		json_file = open(self.learned_policy_path + ".json", 'r')
-		loaded_model_json = json_file.read()
-		json_file.close()
-		self.actor.network = model_from_json(loaded_model_json)
-		# load weights into new model
-		self.actor.network.load_weights(self.learned_policy_path + ".h5")
+		keras.models.save_model(self.actor.network, self.learned_policy_path + ".h5", save_format='h5')
 		if self.params["verbose"]:
 			print("Loaded model from disk")
 	def reward_shaping(self, current_state, current_reward):

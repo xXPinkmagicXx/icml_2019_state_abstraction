@@ -1,10 +1,11 @@
+import keras.layers
+import keras.optimizers
 import numpy as np
 from keras.models import Sequential
-from keras.layers import Dense
-from keras.optimizers import Adam
 import sys
 import tensorflow as tf
 import numpy, random
+import keras
 
 class critic:        
     def __init__(self,params):
@@ -23,17 +24,17 @@ class critic:
 
         model = Sequential()
         
-        model.add(Dense(units=self.params['critic_h'],
+        model.add(keras.layers.Dense(units=self.params['critic_h'],
                         activation='relu',
                         input_dim=self.params['state_dimension'])
                  )
         
         for _ in range(self.params['critic_num_h']-1):
-            model.add(Dense(units=self.params['critic_h'], activation='relu'))
+            model.add(keras.layers.Dense(units=self.params['critic_h'], activation='relu'))
 
-        model.add(Dense(units=self.params['A'], activation='linear'))
+        model.add(keras.layers.Dense(units=self.params['A'], activation='linear'))
         model.compile(loss='mse',
-                      optimizer=Adam(lr=self.params['critic_lr'])
+                      optimizer=keras.optimizers.Adam(lr=self.params['critic_lr'])
                      )
         return model
 

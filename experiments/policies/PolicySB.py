@@ -5,6 +5,7 @@ import os
 from gymnasium.vector.utils import batch_space
 import numpy as np
 import tensorflow as tf
+import keras
 from stable_baselines3 import DQN, PPO, SAC, TD3, DDPG
 
 class PolicySB:
@@ -165,7 +166,7 @@ class PolicySB:
                 print("Sampled ", n, " samples. out of ", num_samples, " samples.")
 
         # normalize and conver the data
-        x_train = tf.keras.utils.normalize(np.array(x), axis=0)
+        x_train = keras.utils.normalize(x, axis=0)
         y_train = np.array(y)
 
         return x_train, y_train
