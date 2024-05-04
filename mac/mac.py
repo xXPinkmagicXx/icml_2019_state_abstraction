@@ -191,27 +191,24 @@ class mac:
 			returns[t]=rewards[t]+self.params['gamma']*returns[t+1]
 		return returns
 	
-	def makePlotofReturns(self, returns, title="Returns", show=False)->None:
-		plt.plot([i for i in range(len(returns))], returns, 'o')
-		plt.title(title)
-		if show:
-			plt.show()
+	# def makePlotofReturns(self, returns, title="Returns", show=False)->None:
+	# 	plt.plot([i for i in range(len(returns))], returns, 'o')
+	# 	plt.title(title)
+	# 	if show:
+	# 		plt.show()
 
 	def save_model(self) -> None:
 		
 		## Update json file
-		model_json = self.actor.network.to_json()
-		with open(self.learned_policy_path+".json", "w") as json_file:
-			json_file.write(model_json)
 		
 		# serialize weights to HDF5
-		self.actor.network.save_weights(self.learned_policy_path + ".h5")
-
+		keras.models.save_model(self.actor.network, self.learned_policy_path + ".h5", save_format='h5')
+	
 	def load_model(self) -> None:
 		# load json and create model
-		keras.models.save_model(self.actor.network, self.learned_policy_path + ".h5", save_format='h5')
 		if self.params["verbose"]:
 			print("Loaded model from disk")
+		self.actor.network = keras.models.load_model(self.learned_policy_path + ".h5")
 	def reward_shaping(self, current_state, current_reward):
 		'''
 		Here we can define a reward shaping, to be used for every step.

@@ -126,7 +126,7 @@ def get_mac_policy(gym_env: GymMDP, policy_time_episodes: int, experiment_episod
 
     return NotImplementedError("Policy not implemented for this environment")
 
-def Get_GymMDP(env_name, k: int, time_limit_sec=None, render=False):
+def Get_GymMDP(env_name, k: int, seed: int, time_limit_sec=None, render=False):
     """
     Args:
         :param env_name (str): Name of the environment
@@ -144,7 +144,11 @@ def Get_GymMDP(env_name, k: int, time_limit_sec=None, render=False):
     if isinstance(gym_env.env.action_space, gym.spaces.Box):
         gym_env = discretizing_wrapper(gym_env, k)   
     
-    gym_env = GymMDP(gym_env, render=False, time_limit_sec=time_limit_sec)
+    gym_env = GymMDP(
+        gym_env=gym_env,
+        render=render,
+        seed=seed,
+        time_limit_sec=time_limit_sec)
     
     return gym_env
 
@@ -166,13 +170,13 @@ def run_episodes_sb(env_name, policy: PolicySB, episodes=1, steps=500):
                 break
             eval_env.render()
 
-def run_episodes_from_nn(env_name, abstraction_net: NNStateAbstr, episodes=1, steps=500, verbose=True):
+def run_episodes_from_nn(env_name, abstraction_net: NNStateAbstr, seed: int,episodes=1, steps=500, verbose=True):
     """
     Args:
         :param gym_env (GymMDP)
         :param policy (Policy OR PolicySB)
     """
-    eval_env = Get_GymMDP(env_name, k = 20, render=True).env
+    eval_env = Get_GymMDP(env_name, k = 20, seed=seed,  render=True).env
     obs, info = eval_env.reset()
     for e in range(episodes):
         for s in range(steps):
@@ -251,7 +255,6 @@ def get_policy(gym_env: GymMDP, algo: str, policy_train_episodes: int, experimen
     return policy
 
 
-
 def main(
         env_name: str,
         algo: str,
@@ -262,6 +265,7 @@ def main(
         abstraction=True,
         load_model = False,
         run_expiriment=True,
+        load_experiment=False,
         render=True, 
         verbose=False,
         debug=False,
@@ -284,7 +288,7 @@ def main(
         verbose = True
         policy_train_episodes = 3
         
-    gym_env = Get_GymMDP(env_name, k = k_bins, time_limit_sec=time_limit_sec)
+    gym_env = Get_GymMDP(env_name, k = k_bins, seed=seed, time_limit_sec=time_limit_sec)
     ## Set seed
     # gym_env.env.seed(seed)
     random.seed(seed)
@@ -307,21 +311,16 @@ def main(
     else:
         print("No abstraction loaded or created...")
 
-    ## Run one episode of the environment
-    # run_episodes_sb(env_name, policy)
-    # run_episodes_from_nn(env_name, abstraction_net=abstraction_network)
     # Make agents
     ## TODO: LinearQagent and number of features does not wor
-    # num_features = gym_env.get_num_state_feats()
-    # print("this is the number of features: ", num_features)
-    demo_agent = FixedPolicyAgent(policy.demo_policy)
-    ql_agent = QLearningAgent(actions=actions)
+    # demo_agent = FixedPolicyAgent(policy.demo_policy)
     # ql_agent = QLearningAgent(actions)
-    agent_params = {"alpha":policy.params['rl_learning_rate'],"epsilon":0.1,"actions":actions}
+    name_ext = "_phi_" + str(policy.k_bins) + "_" + str(algo) + "_" + str(seed) if k_bins > 1 else "_phi_" + str(algo) + "_" + str(seed) 
+    load_agent_path = "models/icml/" + env_name + "/" + str(5) + "/" "Q-learning" + name_ext
+    agent_params = {"alpha":policy.params['rl_learning_rate'],"epsilon":0.1,"actions":actions,"load": load_experiment ,"load_path":load_agent_path}
     
     if abstraction_network is not None:
         # include k_bins if the action space is discretized
-        name_ext = "_phi_" + str(policy.k_bins) + "_" + str(algo) + "_" + str(seed) if k_bins > 1 else "_phi_" + str(algo) + "_" + str(seed) 
         sa_agent = AbstractionWrapper(QLearningAgent,
                                   agent_params=agent_params,
                                   state_abstr=abstraction_network,
@@ -364,7 +363,7 @@ def main(
             print("Skipping experiment...")
     
     if (run_expiriment or load_model or abstraction) and render:
-       run_episodes_from_nn(env_name, abstraction_network, steps=1000, verbose=verbose) 
+       run_episodes_from_nn(env_name, abstraction_network, seed=seed, steps=1000, verbose=verbose) 
 
 def _read_file_and_get_results(file_path: str, episodes) -> list:
     """

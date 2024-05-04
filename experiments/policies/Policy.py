@@ -48,7 +48,8 @@ class Policy:
             os.makedirs(self.params['save_path'])
             print("Created directory: ", self.params['save_path'])
         
-        self.loaded_model = self._load_model()
+        self.path_to_learned_policy = self._get_path_to_learned_policy()
+        self.loaded_model = self._load_model(self.path_to_learned_policy) 
         self.demo_policy = self.expert_policy
         self.num_mdps = 1
     
@@ -76,7 +77,7 @@ class Policy:
         path_to_learned_policy += str(self.policy_train_episodes) + "/"
         if self.k_bins > 1:
             path_to_learned_policy += str(self.k_bins) + "_"
-        path_to_learned_policy + self.env_name + str(self.seed)
+        path_to_learned_policy = path_to_learned_policy + self.env_name + "_" + str(self.seed)
         
         return path_to_learned_policy
     def _load_model(self, path_to_learned_policy):
@@ -141,7 +142,7 @@ class Policy:
             if verbose and n % 1000 == 0:
                 print("Sampled ", n, " samples. out of ", num_samples, " samples.")
         # normalize and conver the data
-        x_train = tf.keras.utils.normalize(np.array(x), axis=0)
+        x_train = keras.utils.normalize(x, axis=0)
         y_train = np.array(y)
 
         return x_train, y_train
