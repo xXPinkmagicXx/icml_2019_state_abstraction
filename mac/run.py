@@ -66,7 +66,7 @@ def main(
 	## The neural nets are created in version 1 of tensorflow
 	## This is to ensure compatibility and the code runs faster  
 	if config is not None:
-		if config["debug"] == True:
+		if config['debug'] == True:
 			verbose = True
 			episodes = 3
 
