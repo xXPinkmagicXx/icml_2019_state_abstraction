@@ -265,6 +265,7 @@ def main(
         abstraction=True,
         load_model = False,
         run_expiriment=True,
+        load_experiment=False,
         render=True, 
         verbose=False,
         debug=False,
@@ -320,11 +321,12 @@ def main(
     demo_agent = FixedPolicyAgent(policy.demo_policy)
     ql_agent = QLearningAgent(actions=actions)
     # ql_agent = QLearningAgent(actions)
-    agent_params = {"alpha":policy.params['rl_learning_rate'],"epsilon":0.1,"actions":actions}
+    name_ext = "_phi_" + str(policy.k_bins) + "_" + str(algo) + "_" + str(seed) if k_bins > 1 else "_phi_" + str(algo) + "_" + str(seed) 
+    load_agent_path = "models/icml/" + env_name + "/" + str(5) + "/" "Q-learning" + name_ext
+    agent_params = {"alpha":policy.params['rl_learning_rate'],"epsilon":0.1,"actions":actions,"load": load_experiment ,"load_path":load_agent_path}
     
     if abstraction_network is not None:
         # include k_bins if the action space is discretized
-        name_ext = "_phi_" + str(policy.k_bins) + "_" + str(algo) + "_" + str(seed) if k_bins > 1 else "_phi_" + str(algo) + "_" + str(seed) 
         sa_agent = AbstractionWrapper(QLearningAgent,
                                   agent_params=agent_params,
                                   state_abstr=abstraction_network,

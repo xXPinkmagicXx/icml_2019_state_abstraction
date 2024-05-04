@@ -7,7 +7,9 @@ import time
 from collections import defaultdict
 import pickle
 import gzip
+import numpy as np
 import os
+from simple_rl.mdp.StateClass import State
 import json
 # Other imports.
 from simple_rl.agents.AgentClass import Agent
@@ -15,7 +17,7 @@ from simple_rl.agents.AgentClass import Agent
 class QLearningAgent(Agent):
     ''' Implementation for a Q Learning Agent '''
 
-    def __init__(self, actions, name="Q-learning", alpha=0.1, gamma=0.99, epsilon=0.1, explore="uniform", time_limit_sec=None, anneal=False):
+    def __init__(self, actions, name="Q-learning", alpha=0.1, gamma=0.99, epsilon=0.1, explore="uniform", load=False, load_path="Q-learning", time_limit_sec=None, anneal=False):
         '''
         Args:
             actions (list): Contains strings denoting the actions.
@@ -38,7 +40,10 @@ class QLearningAgent(Agent):
         self.explore = explore
 
         # Q Function:
-        self.q_func = defaultdict(lambda : defaultdict(lambda: self.default_q))
+        if load:
+            self.q_func = self.load_q_func(load_path)
+        else:
+            self.q_func = defaultdict(lambda : defaultdict(lambda: self.default_q))
         # Key: state
         # Val: dict
             #   Key: action
@@ -64,9 +69,6 @@ class QLearningAgent(Agent):
     # ---- CENTRAL ACTION METHODS ----
     # --------------------------------
 
-    def _get_q_function_as_dict(self):
-        regular_dict = {str(outer_key.data): dict(inner_dict) for outer_key, inner_dict in self.q_func.items()}
-        return regular_dict
 
     def act(self, state, reward, learning=True):
         '''
@@ -224,6 +226,9 @@ class QLearningAgent(Agent):
         Returns:
             (float): denoting the q value of the (@state, @action) pair.
         '''
+        print("state:", type(state))
+        print("action:", type(action))
+        print("self.q_function:", self.q_func)
         return self.q_func[state][action]
 
     def get_action_distr(self, state, beta=0.2):
@@ -252,6 +257,12 @@ class QLearningAgent(Agent):
         self.q_func = defaultdict(lambda : defaultdict(lambda: self.default_q))
         Agent.reset(self)
 
+    def _get_q_function_as_dict(self):
+        for outer_key, inner_dict in self.q_func.items():
+            print("This is outer key",type(outer_key.get_data()))
+        regular_dict = {int(outer_key.get_data()): dict(inner_dict) for outer_key, inner_dict in self.q_func.items()}
+        return regular_dict
+    
     def save_q_func(self, path):
         regular_dict = self._get_q_function_as_dict()
         with open(path + ".json", 'w') as f:
@@ -259,8 +270,20 @@ class QLearningAgent(Agent):
     
     def load_q_func(self, path):
         
-        with gzip.open(path, 'rb') as f:
-            self.q_func = pickle.load(f)
+        with open(path + ".json", 'r') as f:
+            loaded_q_func = json.load(f)
+        
+        return self._load_q_function_into_defaultdict(loaded_q_func)
+    
+    def _load_q_function_into_defaultdict(self, loaded_q_func):
+        # Convert the loaded dict back into a defaultdict.
+        # If not a default dict it will break the code... i think
+        default_q_func = defaultdict(lambda : defaultdict(lambda: self.default_q))
+        for outer_key, inner_dict in loaded_q_func.items():
+            state = State(data=np.int64(outer_key))
+            for action, q_val in inner_dict.items():
+                default_q_func[state][action] = q_val
+        return default_q_func
 
     def end_of_episode(self):
         '''
