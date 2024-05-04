@@ -215,7 +215,7 @@ def create_abstraction_network(policy, num_samples=10000, x_train=None, verbose=
     
     return StateAbsractionNetwork, abstraction_training_time
 
-def load_agent(env_name: str, algo: str, policy_train_episodes: int, seed: int, verbose=True) -> NNStateAbstr:
+def load_agent(env_name: str, algo: str, policy_train_episodes: int, seed: int, verbose: bool) -> NNStateAbstr:
     """
     Args:
         :param env_name (str): Name of the environment
