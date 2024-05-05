@@ -22,7 +22,7 @@ class PolicySB:
         self.seed = seed
         # Get the model class based on the algorithm
         self._model_class = self._get_model_class(algo)
-        
+
         # Get the parameters for the policy
         self.params = self.get_params()
         self.params['env_name'] = self.env_name
@@ -58,6 +58,15 @@ class PolicySB:
         self.demo_policy = self.expert_policy
         self.num_mdps = 1
     
+    def get_policy_train_time(self):
+        
+        path_to_agent = self._get_path_to_agent()
+        
+        with open(path_to_agent + "_time.txt", "r") as f:
+            policy_trian_time = f.readline().strip()
+        
+        return float(policy_trian_time)
+
     def _get_path_to_agent(self):
          ## Get current working directory
         cwd = os.getcwd()

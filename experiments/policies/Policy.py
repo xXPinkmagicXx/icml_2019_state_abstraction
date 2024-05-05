@@ -56,7 +56,15 @@ class Policy:
     def get_num_actions(self):
         return len(list(self.gym_env.get_actions()))
 
-
+    def get_policy_train_time(self):
+        
+        path_to_learned_policy = self._get_path_to_learned_policy()
+        
+        with open(path_to_learned_policy + "_time.txt", "r") as file:
+            policy_train_time = file.readline().strip()
+        
+        return float(policy_train_time)
+    
     def _load_trained_policy(self):
         
         self.path_to_learned_policy = self._get_path_to_learned_policy()
