@@ -354,7 +354,11 @@ def main(
                             success_reward=1,
                             dir_for_plot=dir_for_plot)
         
-        get_and_save_results(policy, seed, training_time=experiment_times[0]+abstraction_training_time)
+        get_and_save_results(policy=policy,
+                             seed=seed,
+                             experiment_train_time=experiment_times[0],
+                             abstraction_train_time=abstraction_training_time,
+                             verbose=verbose)
     
         
 
@@ -376,7 +380,7 @@ def _read_file_and_get_results(file_path: str, episodes) -> list:
         txt = f.read()
     
     return txt.split(",")[:episodes]
-def get_and_save_results(policy: PolicySB, seed: int, training_time, verbose=True) -> None:
+def get_and_save_results(policy: PolicySB, seed: int, abstraction_train_time: float, experiment_train_time: float, verbose=True) -> None:
     q_learning_agent = "Q-learning"
     env_name = "gym-" + policy.env_name 
     episodes = policy.params['episodes']
@@ -396,9 +400,6 @@ def get_and_save_results(policy: PolicySB, seed: int, training_time, verbose=Tru
     steps = [int(step) for step in steps]
     # steps = [int(step) for step in steps]
     result = pd.DataFrame({"success": successes, "times": times, "rewards": rewards, "steps": steps})
-    # List of successes
-
-    # print("this is the success file txt:\n", "split into", successes)       
 
     ## Create save path
     ABSTRACTION = "icml"
@@ -409,18 +410,29 @@ def get_and_save_results(policy: PolicySB, seed: int, training_time, verbose=Tru
     if not os.path.exists(new_save_folder):
         os.makedirs(new_save_folder)
     
+    # save results
     result.to_csv(new_save_folder + new_save_name + ".csv")
-    
+
     success_rate = np.mean(successes)
+
+    policy_train_time = policy.get_policy_train_time()
+    total_train_time = policy_train_time + abstraction_train_time + experiment_train_time
+    
+    if verbose:
+        print("Total training time", total_train_time)
 
     result_info = pd.DataFrame({
         "agent": [model], 
         "episodes": [episodes],
-        "total_steps": [np.sum(steps)],
         "success_rate": [success_rate],
-        "training_time": [training_time],
+        "policy_train_time": [policy_train_time],
+        "abstraction_train_time": [abstraction_train_time],
+        "experiment_train_time": [experiment_train_time],
+        "total_train_time": [total_train_time],
         "seed": [seed],
+        "total_steps": [np.sum(steps)],
         })
+    
     result_info.to_csv(new_save_folder + new_save_name + "_info.csv")
 
 def Get_Success_Rate(policy, rewards, ) -> list:

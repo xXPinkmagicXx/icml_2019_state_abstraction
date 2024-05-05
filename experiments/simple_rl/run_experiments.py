@@ -272,14 +272,16 @@ def run_agents_on_mdp(agents,
 
     # Learn.
     for agent in agents:
-        print(str(agent) + " is learning.")
+        if verbose:
+            print(str(agent) + " is learning.")
 
         start = time.time()
 
         # For each instance.
         for instance in range(1, instances + 1):
-            print("  Instance " + str(instance) + " of " + str(instances) + ".")
-            sys.stdout.flush()
+            if verbose:
+                print("  Instance " + str(instance) + " of " + str(instances) + ".")
+                sys.stdout.flush()
             run_single_agent_on_mdp(agent, mdp, episodes, steps, experiment, verbose, track_disc_reward, reset_at_terminal=reset_at_terminal)
             if "fixed" in agent.name:
                 break
@@ -293,12 +295,14 @@ def run_agents_on_mdp(agents,
         print()
 
     # Time stuff.
-    print("\n--- TIMES ---")
-    for agent in time_dict.keys():
-        print(str(agent) + " agent took " + str(round(time_dict[agent], 2)) + " seconds.")
-    print("-------------\n")
+    if verbose:
+        print("\n--- TIMES ---")
+        for agent in time_dict.keys():
+            print(str(agent) + " agent took " + str(round(time_dict[agent], 2)) + " seconds.")
+        print("-------------\n")
 
-    experiment.make_plots(open_plot=open_plot)
+        experiment.make_plots(open_plot=open_plot)
+    
     return list(time_dict.values())
 
 def run_single_agent_on_mdp(agent: Agent, mdp, episodes, steps, experiment: Experiment=None, verbose=False, track_disc_reward=False, reset_at_terminal=False, resample_at_terminal=False):
