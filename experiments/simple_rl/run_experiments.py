@@ -369,7 +369,9 @@ def run_single_agent_on_mdp(agent: Agent, mdp, episodes, steps, experiment: Expe
 
             # Execute in MDP.
             reward, next_state = mdp.execute_agent_action(action)
-
+            print("This is the mdp reward: ", reward, "and this is the next state: ", next_state)
+            
+            
             # Track value.
             value_per_episode[episode - 1] += reward * gamma ** step
             cumulative_episodic_reward += reward

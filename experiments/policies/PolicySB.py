@@ -20,6 +20,7 @@ class PolicySB:
         self.policy_train_episodes = policy_train_episodes
         self.k_bins = k_bins
         self.seed = seed
+        
         # Get the model class based on the algorithm
         self._model_class = self._get_model_class(algo)
 
@@ -92,7 +93,7 @@ class PolicySB:
         return len(list(self.gym_env.get_actions()))
        
     def _load_agent(self, path_to_agent):
-
+        
         return self._model_class.load(path_to_agent, env=self.gym_env.env)
 
     @abc.abstractmethod
