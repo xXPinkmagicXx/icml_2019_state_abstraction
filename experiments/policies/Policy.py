@@ -43,7 +43,7 @@ class Policy:
         if k_bins > 1:
             abstract_agent_save_path = abstract_agent_save_path + str(k_bins) + "_"
         # Save path cannot end in /, as it is used to save the model with keras
-        self.params['save_path'] = abstract_agent_save_path + "mac_" + self.env_name 
+        self.params['save_path'] = abstract_agent_save_path + "mac_" + self.env_name + "_" + str(seed)
         if not os.path.exists(self.params['save_path']):
             os.makedirs(self.params['save_path'])
             print("Created directory: ", self.params['save_path'])

@@ -229,7 +229,7 @@ def load_agent(env_name: str, algo: str, policy_train_episodes: int, seed: int, 
     """
 
     save_name = "trained-abstract-agents/"+ str(policy_train_episodes) + '/' + algo + "_" + env_name + "_" + str(seed)
-    load_net =  keras.models.load_model(save_name)
+    load_net =  keras.models.load_model(save_name+".keras")
     nn_sa = NNStateAbstr(load_net)
     # Load training time
     if os.path.exists(save_name + "/abstraction_training_time.txt"):
@@ -316,7 +316,7 @@ def main(
     # demo_agent = FixedPolicyAgent(policy.demo_policy)
     # ql_agent = QLearningAgent(actions)
     name_ext = "_phi_" + str(policy.k_bins) + "_" + str(algo) + "_" + str(seed) if k_bins > 1 else "_phi_" + str(algo) + "_" + str(seed) 
-    load_agent_path = "models/icml/" + env_name + "/" + str(5) + "/" "Q-learning" + name_ext
+    load_agent_path = "models/icml/" + env_name + "/" + str(experiment_episodes) + "/" "Q-learning" + name_ext
     agent_params = {"alpha":policy.params['rl_learning_rate'],"epsilon":0.1,"actions":actions,"load": load_experiment ,"load_path":load_agent_path}
     
     if abstraction_network is not None:
@@ -350,6 +350,7 @@ def main(
                             steps=policy.params['steps'],
                             verbose=True,
                             track_success=True,
+                            reset_at_terminal = True,
                             open_plot=False,
                             success_reward=1,
                             dir_for_plot=dir_for_plot)
@@ -380,6 +381,8 @@ def _read_file_and_get_results(file_path: str, episodes) -> list:
         txt = f.read()
     
     return txt.split(",")[:episodes]
+
+
 def get_and_save_results(policy: PolicySB, seed: int, abstraction_train_time: float, experiment_train_time: float, verbose=True) -> None:
     q_learning_agent = "Q-learning"
     env_name = "gym-" + policy.env_name 
@@ -417,7 +420,8 @@ def get_and_save_results(policy: PolicySB, seed: int, abstraction_train_time: fl
 
     policy_train_time = policy.get_policy_train_time()
     total_train_time = policy_train_time + abstraction_train_time + experiment_train_time
-    
+    print("Training time  Policy : ", round(policy_train_time,4) , " Abstraction : ", round(abstraction_train_time,4) , " Experiment: ", round(experiment_train_time, 4), " Totaltime: ", round(total_train_time,5))
+
     if verbose:
         print("Total training time", total_train_time)
 

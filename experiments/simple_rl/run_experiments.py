@@ -315,7 +315,7 @@ def run_single_agent_on_mdp(agent: Agent, mdp, episodes, steps, experiment: Expe
     '''
     if reset_at_terminal and resample_at_terminal:
         raise ValueError("(simple_rl) ExperimentError: Can't have reset_at_terminal and resample_at_terminal set to True.")
-
+    
     value_per_episode = [0] * episodes
     gamma = mdp.get_gamma()
     time_limit_sec = mdp.get_time_limit()
@@ -369,7 +369,7 @@ def run_single_agent_on_mdp(agent: Agent, mdp, episodes, steps, experiment: Expe
 
             # Execute in MDP.
             reward, next_state = mdp.execute_agent_action(action)
-
+            
             # Track value.
             value_per_episode[episode - 1] += reward * gamma ** step
             cumulative_episodic_reward += reward
@@ -380,12 +380,12 @@ def run_single_agent_on_mdp(agent: Agent, mdp, episodes, steps, experiment: Expe
                 reward_to_track = round(reward_to_track, 5)
 
                 experiment.add_experience(agent, state, action, reward_to_track, next_state, time_taken=time.time() - step_start)
-
             if next_state.is_terminal():
                 if reset_at_terminal:
                     # Reset the MDP.
                     next_state = mdp.get_init_state()
                     mdp.reset()
+                    break # end episode
                 elif resample_at_terminal and step < steps:
                     mdp.reset()
                     return True, step, value_per_episode
@@ -398,7 +398,7 @@ def run_single_agent_on_mdp(agent: Agent, mdp, episodes, steps, experiment: Expe
 
         # Process experiment info at end of episode.
         if experiment is not None:
-            experiment.end_of_episode(agent)
+            experiment.end_of_episode(agent, steps=step)
             
 
     # Reset the MDP, tell the agent the episode is over.
