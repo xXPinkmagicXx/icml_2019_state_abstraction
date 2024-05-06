@@ -242,7 +242,6 @@ class Experiment(object):
             for a in agent:
                 self.rewards[a] += [reward[a]]
             return
-
         # Regular MDP.
         if self.steps_since_added_r % self.count_r_per_n_timestep == 0:
             if self.is_markov_game and self.count_r_per_n_timestep > 1:
@@ -256,7 +255,7 @@ class Experiment(object):
             self.rew_since_count += reward
             self.steps_since_added_r += 1
 
-    def end_of_episode(self, agent, num_times_to_write=1):
+    def end_of_episode(self, agent, num_times_to_write=1, steps=0):
         '''
         Args:
             agent (str)
@@ -268,7 +267,7 @@ class Experiment(object):
             for x in range(num_times_to_write):
                 self.write_datum_to_file(agent, sum(self.rewards[agent]))
                 self.write_datum_to_file(agent, sum(self.times[agent]), extra_dir="times/")
-                self.write_datum_to_file(agent, len(self.rewards[agent]), extra_dir="steps/")
+                self.write_datum_to_file(agent, steps, extra_dir="steps/")
                 if self.track_success:
                     self.write_datum_to_file(agent, int(self.rewards[agent][-1] >= self.success_reward), extra_dir="success/")
         else:

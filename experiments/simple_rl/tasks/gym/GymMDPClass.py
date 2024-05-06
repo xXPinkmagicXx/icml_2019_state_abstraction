@@ -73,7 +73,8 @@ class GymMDP(MDP):
         
         if self.render and (self.render_every_n_episodes == 0 or self.episode % self.render_every_n_episodes == 0):
             self.env.render()
-
+        is_terminal = terminated or truncated
+        print("terminated: ", terminated, "truncated: ", truncated, "is_terminal", is_terminal , "reward: ", reward)
         self.next_state = GymState(obs, is_terminal=(terminated or truncated))
 
         return reward

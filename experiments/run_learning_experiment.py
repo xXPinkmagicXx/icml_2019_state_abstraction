@@ -350,6 +350,7 @@ def main(
                             steps=policy.params['steps'],
                             verbose=True,
                             track_success=True,
+                            reset_at_terminal = True,
                             open_plot=False,
                             success_reward=1,
                             dir_for_plot=dir_for_plot)
