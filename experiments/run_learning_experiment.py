@@ -420,7 +420,8 @@ def get_and_save_results(policy: PolicySB, seed: int, abstraction_train_time: fl
 
     policy_train_time = policy.get_policy_train_time()
     total_train_time = policy_train_time + abstraction_train_time + experiment_train_time
-    
+    print("Training time  Policy : ", round(policy_train_time,4) , " Abstraction : ", round(abstraction_train_time,4) , " Experiment: ", round(experiment_train_time, 4), " Totaltime: ", round(total_train_time,5))
+
     if verbose:
         print("Total training time", total_train_time)
 
