@@ -229,7 +229,7 @@ def load_agent(env_name: str, algo: str, policy_train_episodes: int, seed: int, 
     """
 
     save_name = "trained-abstract-agents/"+ str(policy_train_episodes) + '/' + algo + "_" + env_name + "_" + str(seed)
-    load_net =  keras.models.load_model(save_name)
+    load_net =  keras.models.load_model(save_name+".keras")
     nn_sa = NNStateAbstr(load_net)
     # Load training time
     if os.path.exists(save_name + "/abstraction_training_time.txt"):
@@ -316,7 +316,7 @@ def main(
     # demo_agent = FixedPolicyAgent(policy.demo_policy)
     # ql_agent = QLearningAgent(actions)
     name_ext = "_phi_" + str(policy.k_bins) + "_" + str(algo) + "_" + str(seed) if k_bins > 1 else "_phi_" + str(algo) + "_" + str(seed) 
-    load_agent_path = "models/icml/" + env_name + "/" + str(5) + "/" "Q-learning" + name_ext
+    load_agent_path = "models/icml/" + env_name + "/" + str(experiment_episodes) + "/" "Q-learning" + name_ext
     agent_params = {"alpha":policy.params['rl_learning_rate'],"epsilon":0.1,"actions":actions,"load": load_experiment ,"load_path":load_agent_path}
     
     if abstraction_network is not None:

@@ -48,7 +48,7 @@ class PolicySB:
         if k_bins > 1:
             abstract_agent_save_path = abstract_agent_save_path + str(k_bins) + "_"
         
-        self.params['save_path'] = abstract_agent_save_path + self.params['algo'] + '_' + self.params['env_name'] 
+        self.params['save_path'] = abstract_agent_save_path + self.params['algo'] + '_' + self.params['env_name'] + "_" + str(seed)
         if not os.path.exists(self.params['save_path']):
             os.makedirs(self.params['save_path'])
             print("Created directory: ", self.params['save_path'])
