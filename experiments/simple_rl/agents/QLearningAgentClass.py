@@ -255,7 +255,11 @@ class QLearningAgent(Agent):
         Agent.reset(self)
 
     def _get_q_function_as_dict(self):
-        regular_dict = {int(outer_key.get_data()): dict(inner_dict) for outer_key, inner_dict in self.q_func.items()}
+        regular_dict = {}
+        for outer_key, inner_dict in self.q_func.items():
+            print("This is the type of outer_key: ", type(outer_key.get_data()))
+            regular_dict[int(outer_key.get_data())] = dict(inner_dict)
+
         return regular_dict
     
     def save_q_func(self, path):

@@ -392,7 +392,9 @@ def run_single_agent_on_mdp(agent: Agent, mdp, episodes, steps, experiment: Expe
 
             # Update pointer.
             state = next_state
-
+        
+        if verbose:
+            print("Episode: ", episode, "with steps", step  , "acc reward: ", cumulative_episodic_reward)
         # A final update.
         action = agent.act(state, reward)
 

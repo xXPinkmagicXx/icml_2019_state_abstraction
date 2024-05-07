@@ -334,6 +334,7 @@ def main(
     agent_list = [sa_agent]
     if debug:
         policy.params['episodes'] = 5
+    
     # Timestamp for saving the experiment
     # Run the experiment
     if run_expiriment:
@@ -348,7 +349,7 @@ def main(
                             instances=1,
                             episodes=policy.params['episodes'],
                             steps=policy.params['steps'],
-                            verbose=True,
+                            verbose=verbose,
                             track_success=True,
                             reset_at_terminal = True,
                             open_plot=False,
