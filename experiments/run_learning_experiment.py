@@ -293,7 +293,6 @@ def load_agent_pytorch(env_name: str, algo: str, policy_train_episodes: int, see
     """
 
     save_name = "trained-abstract-agents/"+ str(policy_train_episodes) + '/' + algo + "_" + env_name + "_" + str(seed)
-    abstraction_network = abstraction_network_pytorch(policy.params)
     load_net =  torch.load(save_name+".pth")
     print("This is type of load net", type(load_net))
     
