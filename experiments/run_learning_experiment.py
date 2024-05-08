@@ -230,8 +230,10 @@ def create_abstraction_network(policy, num_samples=10000, x_train=None, verbose=
             Xbatch = X[i:i+batch_size]
             y_pred = abstraction_network(Xbatch)
             ybatch = y[i:i+batch_size]
-            # print("Xbatch", Xbatch, "ybatch", ybatch)
-            y_pred = y_pred.reshape((-1,))
+
+            # Reshape [32, 1] to [32] as this expected by the binary cross entropy
+            if abstraction_network.is_binary:
+                y_pred = y_pred.reshape((-1,))
             
             loss = abstraction_network.loss_fn(y_pred, ybatch)
             # print("Epoch:", epoch,"y_pred", y_pred,"ybatch", ybatch ,"Loss:", loss.item())
