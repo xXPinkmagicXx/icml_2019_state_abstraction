@@ -219,11 +219,10 @@ def create_abstraction_network(policy, num_samples=10000, x_train=None, verbose=
     n_epochs = policy.params['num_iterations_for_abstraction_learning']
     batch_size = 1
     X = torch.Tensor(X)
-    # is expected by the CrossEntropy
-    y = torch.LongTensor(y)
+    # Long is expected by the CrossEntropy and Float by the BinaryCrossEntropy
+    y = torch.Tensor(y) if abstraction_network.is_binary else torch.LongTensor(y)  
     # print("type of X:", type(X), X[:10])
     # print("type of y:", type(y), y[:10])
-
     start_time = time.time()
     batch_size = 32 
     for epoch in range(n_epochs):
@@ -232,7 +231,8 @@ def create_abstraction_network(policy, num_samples=10000, x_train=None, verbose=
             y_pred = abstraction_network(Xbatch)
             ybatch = y[i:i+batch_size]
             # print("Xbatch", Xbatch, "ybatch", ybatch)
-            # print("y_pred:", y_pred, "ybatch", ybatch)s
+            y_pred = y_pred.reshape((-1,))
+            
             loss = abstraction_network.loss_fn(y_pred, ybatch)
             # print("Epoch:", epoch,"y_pred", y_pred,"ybatch", ybatch ,"Loss:", loss.item())
             abstraction_network.optimizer.zero_grad()
