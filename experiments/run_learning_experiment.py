@@ -253,7 +253,7 @@ def create_abstraction_network(policy, num_samples=10000, x_train=None, verbose=
     with open(policy.params['save_path'] + "/abstraction_training_time.txt", "w") as f:
         f.write(str(abstraction_training_time))
     # abstraction_net, abstraction_training_time = make_nn_sa_3(policy.params, x_train, y_train)
-    
+    print("created abstraction network...")
     return StateAbsractionNetwork, abstraction_training_time
 
 def load_agent(env_name: str, algo: str, policy_train_episodes: int, seed: int, verbose: bool) -> NNStateAbstr:

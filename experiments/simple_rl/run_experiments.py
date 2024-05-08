@@ -269,6 +269,9 @@ def run_agents_on_mdp(agents,
     # Record how long each agent spends learning.
     if verbose:
         print("Running experiment: \n" + str(experiment))
+    else:
+        print("Running experiment:\n")
+    
     time_dict = defaultdict(float)
 
     # Learn.
