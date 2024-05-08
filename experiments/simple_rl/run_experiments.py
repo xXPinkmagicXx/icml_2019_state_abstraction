@@ -399,8 +399,7 @@ def run_single_agent_on_mdp(agent: Agent, mdp, episodes, steps, experiment: Expe
         # Process experiment info at end of episode.
         if experiment is not None:
             experiment.end_of_episode(agent, steps=step)
-            
-
+    
     # Reset the MDP, tell the agent the episode is over.
     mdp.reset()
     env_name = mdp.env_name 
@@ -421,6 +420,7 @@ def run_single_agent_on_mdp(agent: Agent, mdp, episodes, steps, experiment: Expe
     if steps >= 2000:
         print("\tLast episode reward:", cumulative_episodic_reward)
 
+    print("Experiement for environment: ", env_name, "for episodes: ", episodes, "completed")    
     return False, steps, value_per_episode
 
 def run_single_belief_agent_on_pomdp(belief_agent, pomdp, episodes, steps, experiment=None, verbose=False,

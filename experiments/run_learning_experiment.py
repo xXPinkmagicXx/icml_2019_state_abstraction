@@ -43,9 +43,12 @@ import pandas as pd
 from .abstraction.NNStateAbstrClass import NNStateAbstr
 from .utils.experiment_utils import make_nn_sa, make_nn_sa_2, make_nn_sa_3
 from .abstraction.abstraction_network_new import abstraction_network_new
+from .abstraction.abstraction_network_pytorch import abstraction_network_pytorch 
 
 import tensorflow as tf
 import keras
+import torch
+
 tf.compat.v1.enable_v2_behavior()
 tf.compat.v1.enable_eager_execution()
 # To make code compatible with old code implemented in tensorflow 1.x
@@ -203,7 +206,7 @@ def create_abstraction_network(policy, num_samples=10000, x_train=None, verbose=
         NNStateAbstr object
     """
     start_time = time.time()
-    x_train, y_train = policy.sample_training_data(num_samples, verbose)
+    X, y = policy.sample_training_data(num_samples, verbose)
     end_time = time.time()
     if verbose:
         print("this is the time it took to sample the data", end_time - start_time)
@@ -212,10 +215,47 @@ def create_abstraction_network(policy, num_samples=10000, x_train=None, verbose=
     # print("this is the max and min value", max_value, min_value)
     # print("this si the shape of x_train", x_train[:2])
     # print("this is the shape of y_train", y_train.shape, "with unique values", np.unique(y_train, return_counts=True))
+    abstraction_network = abstraction_network_pytorch(policy.params)
+    n_epochs = policy.params['num_iterations_for_abstraction_learning']
+    batch_size = 1
+    X = torch.Tensor(X)
+    # is expected by the CrossEntropy
+    y = torch.LongTensor(y)
+    # print("type of X:", type(X), X[:10])
+    # print("type of y:", type(y), y[:10])
+
+    start_time = time.time()
+    batch_size = 32 
+    for epoch in range(n_epochs):
+        for i in range(0, len(X), batch_size):
+            Xbatch = X[i:i+batch_size]
+            y_pred = abstraction_network(Xbatch)
+            ybatch = y[i:i+batch_size]
+            # print("Xbatch", Xbatch, "ybatch", ybatch)
+            # print("y_pred:", y_pred, "ybatch", ybatch)s
+            loss = abstraction_network.loss_fn(y_pred, ybatch)
+            # print("Epoch:", epoch,"y_pred", y_pred,"ybatch", ybatch ,"Loss:", loss.item())
+            abstraction_network.optimizer.zero_grad()
+            loss.backward()
+            abstraction_network.optimizer.step()
+        print("Epoch: ", epoch)
+
+
+    torch.save(abstraction_network, policy.params['save_path'] + ".pth")
+    with torch.no_grad():
+        pred = abstraction_network(Xbatch)
+        print("this is a prediction", pred)
+
+    end_time = time.time()
+    StateAbsractionNetwork = NNStateAbstr(abstraction_network)
+    abstraction_training_time = end_time - start_time
     
-    abstraction_net, abstraction_training_time = make_nn_sa_3(policy.params, x_train, y_train)
+    # self.net.save(self.save_path)	
+    with open(policy.params['save_path'] + "/abstraction_training_time.txt", "w") as f:
+        f.write(str(abstraction_training_time))
+    # abstraction_net, abstraction_training_time = make_nn_sa_3(policy.params, x_train, y_train)
     
-    StateAbsractionNetwork = NNStateAbstr(abstraction_net)
+    # StateAbsractionNetwork = NNStateAbstr(abstraction_net)
     
     return StateAbsractionNetwork, abstraction_training_time
 
@@ -243,6 +283,34 @@ def load_agent(env_name: str, algo: str, policy_train_episodes: int, seed: int, 
         print("loading complete...")
     return nn_sa, float(abstraction_training_time)
 
+def load_agent_pytorch(env_name: str, algo: str, policy_train_episodes: int, seed: int, verbose: bool, policy) -> NNStateAbstr:
+    """
+    Args:
+        :param env_name (str): Name of the environment
+        :param algo (str): Name of the algorithm
+    Returns:
+        NNStateAbstr object
+    """
+
+    save_name = "trained-abstract-agents/"+ str(policy_train_episodes) + '/' + algo + "_" + env_name + "_" + str(seed)
+    load_net =  torch.load(save_name+".pth")
+    print("This is type of load net", type(load_net))
+    
+    nn_sa = NNStateAbstr(load_net)
+    
+    # Load training time
+    if os.path.exists(save_name + "/abstraction_training_time.txt"):
+        with open(save_name + "/abstraction_training_time.txt", "r") as f:
+            abstraction_training_time = f.read()
+    else:
+        if verbose:
+            print("No training time found...")
+        abstraction_training_time = 0
+    
+    if verbose:
+        print("loading complete...")
+    
+    return nn_sa, float(abstraction_training_time)
 
 def get_policy(gym_env: GymMDP, algo: str, policy_train_episodes: int, experiment_episodes: int, k_bins: int, seed: int):
     if algo == "mac":
@@ -299,9 +367,8 @@ def main(
     ## Get policies
     policy = get_policy(gym_env, algo, policy_train_episodes, experiment_episodes, k_bins, seed)
 
-    ## Get abstraction networks (can be none)
     if load_model:
-        abstraction_network, abstraction_training_time = load_agent(env_name, algo, policy_train_episodes, seed, verbose)
+        abstraction_network, abstraction_training_time = load_agent_pytorch(env_name, algo, policy_train_episodes, seed, verbose, policy)
     elif abstraction:
         if debug:
             policy.params["num_samples_from_demonstrator"] = 100
