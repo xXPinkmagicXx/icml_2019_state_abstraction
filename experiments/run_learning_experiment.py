@@ -219,11 +219,10 @@ def create_abstraction_network(policy, num_samples=10000, x_train=None, verbose=
     n_epochs = policy.params['num_iterations_for_abstraction_learning']
     batch_size = 1
     X = torch.Tensor(X)
-    # is expected by the CrossEntropy
-    y = torch.LongTensor(y)
+    # Long is expected by the CrossEntropy and Float by the BinaryCrossEntropy
+    y = torch.Tensor(y) if abstraction_network.is_binary else torch.LongTensor(y)  
     # print("type of X:", type(X), X[:10])
     # print("type of y:", type(y), y[:10])
-
     start_time = time.time()
     batch_size = 32 
     for epoch in range(n_epochs):
@@ -231,20 +230,22 @@ def create_abstraction_network(policy, num_samples=10000, x_train=None, verbose=
             Xbatch = X[i:i+batch_size]
             y_pred = abstraction_network(Xbatch)
             ybatch = y[i:i+batch_size]
-            # print("Xbatch", Xbatch, "ybatch", ybatch)
-            # print("y_pred:", y_pred, "ybatch", ybatch)s
+
+            # Reshape [32, 1] to [32] as this expected by the binary cross entropy
+            if abstraction_network.is_binary:
+                y_pred = y_pred.reshape((-1,))
+            
             loss = abstraction_network.loss_fn(y_pred, ybatch)
             # print("Epoch:", epoch,"y_pred", y_pred,"ybatch", ybatch ,"Loss:", loss.item())
             abstraction_network.optimizer.zero_grad()
             loss.backward()
             abstraction_network.optimizer.step()
-        print("Epoch: ", epoch)
-
 
     torch.save(abstraction_network, policy.params['save_path'] + ".pth")
-    with torch.no_grad():
-        pred = abstraction_network(Xbatch)
-        print("this is a prediction", pred)
+    if verbose:
+        with torch.no_grad():
+            pred = abstraction_network(Xbatch)
+            print("This is a prediction", pred)
 
     end_time = time.time()
     StateAbsractionNetwork = NNStateAbstr(abstraction_network)
@@ -254,9 +255,7 @@ def create_abstraction_network(policy, num_samples=10000, x_train=None, verbose=
     with open(policy.params['save_path'] + "/abstraction_training_time.txt", "w") as f:
         f.write(str(abstraction_training_time))
     # abstraction_net, abstraction_training_time = make_nn_sa_3(policy.params, x_train, y_train)
-    
-    # StateAbsractionNetwork = NNStateAbstr(abstraction_net)
-    
+    print("created abstraction network...")
     return StateAbsractionNetwork, abstraction_training_time
 
 def load_agent(env_name: str, algo: str, policy_train_episodes: int, seed: int, verbose: bool) -> NNStateAbstr:
@@ -415,7 +414,7 @@ def main(
                             instances=1,
                             episodes=policy.params['episodes'],
                             steps=policy.params['steps'],
-                            verbose=True,
+                            verbose=verbose,
                             track_success=True,
                             reset_at_terminal = True,
                             open_plot=False,

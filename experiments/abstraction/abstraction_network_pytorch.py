@@ -39,7 +39,10 @@ class abstraction_network_pytorch(nn.Module):
 		x = self.act1(self.hidden1(x))
 		# hidden 2
 		x = self.act2(self.hidden2(x))
-		x = self.output(x)
+		if self.is_binary:
+			x = self.act_output(self.output(x))
+		else:
+			x = self.output(x)
 		return x
 		# self.activation_output = 'softmax' if self.action_size > 2 else 'softmax'
 		# self.output_nodes = num_abstract_states if num_abstract_states > 2 else 2
