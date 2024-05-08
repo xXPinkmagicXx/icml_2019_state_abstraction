@@ -206,6 +206,7 @@ def create_abstraction_network(policy, num_samples=10000, x_train=None, verbose=
         NNStateAbstr object
     """
     start_time = time.time()
+    num_samples = 1000
     X, y = policy.sample_training_data(num_samples, verbose)
     end_time = time.time()
     if verbose:
@@ -215,22 +216,36 @@ def create_abstraction_network(policy, num_samples=10000, x_train=None, verbose=
     # print("this is the max and min value", max_value, min_value)
     # print("this si the shape of x_train", x_train[:2])
     # print("this is the shape of y_train", y_train.shape, "with unique values", np.unique(y_train, return_counts=True))
-    abstraction_network = abstraction_network_pytorch()
+    abstraction_network = abstraction_network_pytorch(policy.params)
     n_epochs = policy.params['num_iterations_for_abstraction_learning']
     batch_size = 1
+    X = torch.Tensor(X)
+    # is expected by the CrossEntropy
+    y = torch.LongTensor(y)
+    # print("type of X:", type(X), X[:10])
+    # print("type of y:", type(y), y[:10])
+
     start_time = time.time()
+    batch_size = 10 
     for epoch in range(n_epochs):
-        for i in range(0, len(X), 1):
+        for i in range(0, len(X), batch_size):
             Xbatch = X[i:i+batch_size]
             y_pred = abstraction_network(Xbatch)
             ybatch = y[i:i+batch_size]
+            # print("Xbatch", Xbatch, "ybatch", ybatch)
+            # print("y_pred:", y_pred, "ybatch", ybatch)s
             loss = abstraction_network.loss_fn(y_pred, ybatch)
-            print("Epoch:", epoch, "Loss:", loss.item())
+            # print("Epoch:", epoch,"y_pred", y_pred,"ybatch", ybatch ,"Loss:", loss.item())
             abstraction_network.optimizer.zero_grad()
             loss.backward()
             abstraction_network.optimizer.step()
-    end_time = time.time()
+        print("Epoch: ", epoch)
     
+    with torch.no_grad():
+        pred = abstraction_network(Xbatch)
+        print("this is a prediction", pred)
+        
+    end_time = time.time()
     StateAbsractionNetwork = NNStateAbstr(abstraction_network)
     abstraction_training_time = end_time - start_time
     # abstraction_net, abstraction_training_time = make_nn_sa_3(policy.params, x_train, y_train)
@@ -318,22 +333,6 @@ def main(
 
     ## Get policies
     policy = get_policy(gym_env, algo, policy_train_episodes, experiment_episodes, k_bins, seed)
-
-    # load the dataset, split into input (X) and output (y) variables
-    dataset = np.loadtxt('pima-indians.csv', delimiter=',')
-    X = dataset[:,0:8]
-    y = dataset[:,8]
-    
-    X = torch.tensor(X, dtype=torch.float32)
-    y = torch.tensor(y, dtype=torch.float32).reshape(-1, 1)
-    ## Get abstraction networks (can be none)
-    abstraction_network = abstraction_network_pytorch()
-    # train the model
-    
-    n_epochs = 100
-    batch_size = 10
-    
-    
 
     if load_model:
         abstraction_network, abstraction_training_time = load_agent(env_name, algo, policy_train_episodes, seed, verbose)

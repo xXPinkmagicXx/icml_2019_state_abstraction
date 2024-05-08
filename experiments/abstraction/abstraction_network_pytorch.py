@@ -10,24 +10,28 @@ import torch.optim as optim
 
 class abstraction_network_pytorch(nn.Module):
 	
-	def __init__(self):
+	def __init__(self, params):
 		# self.save_path = params['save_path']
 		# self.policy_train_episodes = params['policy_train_episodes'] # the number of steps the pre-trained policy is trained for
-		# self.obs_size = params['obs_size']
-		# self.action_size = params['size_a'] 
-		# self.num_nodes = params['abstraction_network_hidden_nodes']
+		self.obs_size = params['obs_size']
+		self.action_size = params['size_a'] 
+		self.num_nodes = params['abstraction_network_hidden_nodes']
+		self.is_binary = self.action_size == 2
+
+		self.output_size = 1 if self.is_binary else self.action_size
+		print("this is the action size:", self.action_size)
 		# self.learning_rate = params['learning_rate_for_abstraction_learning']
 		self.learning_rate = 0.001
 		super().__init__()
 
-		self.hidden1 = nn.Linear(8, 12)
+		self.hidden1 = nn.Linear(self.obs_size, self.num_nodes)
 		self.act1 = nn.ReLU()
-		self.hidden2 = nn.Linear(12, 8)
+		self.hidden2 = nn.Linear(self.num_nodes, self.num_nodes)
 		self.act2 = nn.ReLU()
-		self.output = nn.Linear(8, 1)
-		self.act_output = nn.Sigmoid()
-
-		self.loss_fn = nn.BCELoss()
+		self.output = nn.Linear(self.num_nodes, self.output_size)
+		self.act_output = nn.Sigmoid() if self.is_binary else nn.Softmax()
+		# Sparce catagorical
+		self.loss_fn = nn.BCELoss() if self.is_binary else nn.CrossEntropyLoss()
 		self.optimizer = optim.Adam(self.parameters(), lr=self.learning_rate)
 	
 	def forward(self, x):
@@ -35,7 +39,7 @@ class abstraction_network_pytorch(nn.Module):
 		x = self.act1(self.hidden1(x))
 		# hidden 2
 		x = self.act2(self.hidden2(x))
-		x = self.act_output(self.output(x))
+		x = self.output(x)
 		return x
 		# self.activation_output = 'softmax' if self.action_size > 2 else 'softmax'
 		# self.output_nodes = num_abstract_states if num_abstract_states > 2 else 2
@@ -66,12 +70,12 @@ class abstraction_network_pytorch(nn.Module):
 		# # output summary in console
 		# self.net.summary()
 		# print("Created network with loss function", self.loss_fn, "and optimizer", self.optimizer, "and activation function", self.activation_output, "and output nodes", self.output_nodes)
-	def predict(self, x):
+	# def predict(self, x):
 		
-		x = np.array(x).reshape(1, self.obs_size)
-		li = self.net.predict(x)
+	# 	x = np.array(x).reshape(1, self.obs_size)
+	# 	li = self.predict(x)
 		
-		return li
+	# 	return li
 	
 	def save_model(self, abstraction_net_training_time):
 		

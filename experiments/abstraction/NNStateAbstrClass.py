@@ -6,6 +6,7 @@ import tensorflow as tf
 from simple_rl.mdp import State
 from simple_rl.abstraction.state_abs.StateAbstractionClass import StateAbstraction
 import numpy
+import torch
 
 # TODO:
     # Consider putting different MDP state abstractions into different directories in sa_models.
@@ -28,15 +29,15 @@ class NNStateAbstr(StateAbstraction):
         Returns:
             state (simple_rl.State)
         '''
-        pred = self.abstraction_net.predict(state.features().reshape(1, -1))
-        pr_z_given_s = list(pred)
+        state_tensor = torch.Tensor(state.features())
+        pred = self.abstraction_net(state_tensor)
         # print("this is the pred", pred, "and the list", pr_z_given_s)
         
         if self.binary_classification:
             # print("this is the pred", pred)
             abstr_state_index = float(pred > 0.5)
         else:
-            abstr_state_index = np.argmax(pr_z_given_s)
+            abstr_state_index = torch.argmax(pred)
         # abstr_state_index = float(pred > 0.5)
         # print("best abstract index", abstr_state_index)
         return State(abstr_state_index)

@@ -181,10 +181,7 @@ class PolicySB:
                 print("Sampled ", n, " samples. out of ", num_samples, " samples.")
 
         # normalize and conver the data
-        x_train = keras.utils.normalize(x, axis=0)
-        y_train = np.array(y)
-
-        return x_train, y_train
+        return np.array(x), np.array(y)
     
     def _get_model_class(self, algo_name: str):
         if algo_name == 'ppo':
