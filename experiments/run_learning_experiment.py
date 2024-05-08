@@ -43,9 +43,12 @@ import pandas as pd
 from .abstraction.NNStateAbstrClass import NNStateAbstr
 from .utils.experiment_utils import make_nn_sa, make_nn_sa_2, make_nn_sa_3
 from .abstraction.abstraction_network_new import abstraction_network_new
+from .abstraction.abstraction_network_pytorch import abstraction_network_pytorch 
 
 import tensorflow as tf
 import keras
+import torch
+
 tf.compat.v1.enable_v2_behavior()
 tf.compat.v1.enable_eager_execution()
 # To make code compatible with old code implemented in tensorflow 1.x
@@ -203,7 +206,7 @@ def create_abstraction_network(policy, num_samples=10000, x_train=None, verbose=
         NNStateAbstr object
     """
     start_time = time.time()
-    x_train, y_train = policy.sample_training_data(num_samples, verbose)
+    X, y = policy.sample_training_data(num_samples, verbose)
     end_time = time.time()
     if verbose:
         print("this is the time it took to sample the data", end_time - start_time)
@@ -212,10 +215,27 @@ def create_abstraction_network(policy, num_samples=10000, x_train=None, verbose=
     # print("this is the max and min value", max_value, min_value)
     # print("this si the shape of x_train", x_train[:2])
     # print("this is the shape of y_train", y_train.shape, "with unique values", np.unique(y_train, return_counts=True))
+    abstraction_network = abstraction_network_pytorch()
+    n_epochs = policy.params['num_iterations_for_abstraction_learning']
+    batch_size = 1
+    start_time = time.time()
+    for epoch in range(n_epochs):
+        for i in range(0, len(X), 1):
+            Xbatch = X[i:i+batch_size]
+            y_pred = abstraction_network(Xbatch)
+            ybatch = y[i:i+batch_size]
+            loss = abstraction_network.loss_fn(y_pred, ybatch)
+            print("Epoch:", epoch, "Loss:", loss.item())
+            abstraction_network.optimizer.zero_grad()
+            loss.backward()
+            abstraction_network.optimizer.step()
+    end_time = time.time()
     
-    abstraction_net, abstraction_training_time = make_nn_sa_3(policy.params, x_train, y_train)
+    StateAbsractionNetwork = NNStateAbstr(abstraction_network)
+    abstraction_training_time = end_time - start_time
+    # abstraction_net, abstraction_training_time = make_nn_sa_3(policy.params, x_train, y_train)
     
-    StateAbsractionNetwork = NNStateAbstr(abstraction_net)
+    # StateAbsractionNetwork = NNStateAbstr(abstraction_net)
     
     return StateAbsractionNetwork, abstraction_training_time
 
@@ -299,7 +319,22 @@ def main(
     ## Get policies
     policy = get_policy(gym_env, algo, policy_train_episodes, experiment_episodes, k_bins, seed)
 
+    # load the dataset, split into input (X) and output (y) variables
+    dataset = np.loadtxt('pima-indians.csv', delimiter=',')
+    X = dataset[:,0:8]
+    y = dataset[:,8]
+    
+    X = torch.tensor(X, dtype=torch.float32)
+    y = torch.tensor(y, dtype=torch.float32).reshape(-1, 1)
     ## Get abstraction networks (can be none)
+    abstraction_network = abstraction_network_pytorch()
+    # train the model
+    
+    n_epochs = 100
+    batch_size = 10
+    
+    
+
     if load_model:
         abstraction_network, abstraction_training_time = load_agent(env_name, algo, policy_train_episodes, seed, verbose)
     elif abstraction:
