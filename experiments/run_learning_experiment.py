@@ -206,7 +206,6 @@ def create_abstraction_network(policy, num_samples=10000, x_train=None, verbose=
         NNStateAbstr object
     """
     start_time = time.time()
-    num_samples = 1000
     X, y = policy.sample_training_data(num_samples, verbose)
     end_time = time.time()
     if verbose:
@@ -226,7 +225,7 @@ def create_abstraction_network(policy, num_samples=10000, x_train=None, verbose=
     # print("type of y:", type(y), y[:10])
 
     start_time = time.time()
-    batch_size = 10 
+    batch_size = 32 
     for epoch in range(n_epochs):
         for i in range(0, len(X), batch_size):
             Xbatch = X[i:i+batch_size]
@@ -244,7 +243,7 @@ def create_abstraction_network(policy, num_samples=10000, x_train=None, verbose=
     with torch.no_grad():
         pred = abstraction_network(Xbatch)
         print("this is a prediction", pred)
-        
+
     end_time = time.time()
     StateAbsractionNetwork = NNStateAbstr(abstraction_network)
     abstraction_training_time = end_time - start_time

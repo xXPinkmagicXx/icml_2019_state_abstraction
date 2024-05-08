@@ -399,7 +399,7 @@ def run_single_agent_on_mdp(agent: Agent, mdp, episodes, steps, experiment: Expe
         # Process experiment info at end of episode.
         if experiment is not None:
             experiment.end_of_episode(agent, steps=step)
-            
+        print("Episode: ", episode, " steps: ", step, "with acc reward:", cumulative_episodic_reward)    
 
     # Reset the MDP, tell the agent the episode is over.
     mdp.reset()
