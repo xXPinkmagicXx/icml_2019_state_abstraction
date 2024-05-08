@@ -129,10 +129,6 @@ class GymMDP(MDP):
             Reward shaping for when the agent reaches the goal.
             If no reward shaping is necessary, return 0 (default).
         '''
-        if self.env_name == "CartPole-v1":
-            # if terminated and pole angle is more than 12 degrees or out of bounds
-            if terminated:
-                return -1000
         if self.env_name == "MountainCar-v1":
             return 1000
         if self.env_name == "Acrobot-v1" and terminated:
