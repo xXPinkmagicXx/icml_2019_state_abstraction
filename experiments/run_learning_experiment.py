@@ -238,13 +238,12 @@ def create_abstraction_network(policy, num_samples=10000, x_train=None, verbose=
             abstraction_network.optimizer.zero_grad()
             loss.backward()
             abstraction_network.optimizer.step()
-        print("Epoch: ", epoch)
-
 
     torch.save(abstraction_network, policy.params['save_path'] + ".pth")
-    with torch.no_grad():
-        pred = abstraction_network(Xbatch)
-        print("this is a prediction", pred)
+    if verbose:
+        with torch.no_grad():
+            pred = abstraction_network(Xbatch)
+            print("This is a prediction", pred)
 
     end_time = time.time()
     StateAbsractionNetwork = NNStateAbstr(abstraction_network)
@@ -254,8 +253,6 @@ def create_abstraction_network(policy, num_samples=10000, x_train=None, verbose=
     with open(policy.params['save_path'] + "/abstraction_training_time.txt", "w") as f:
         f.write(str(abstraction_training_time))
     # abstraction_net, abstraction_training_time = make_nn_sa_3(policy.params, x_train, y_train)
-    
-    # StateAbsractionNetwork = NNStateAbstr(abstraction_net)
     
     return StateAbsractionNetwork, abstraction_training_time
 
@@ -415,7 +412,7 @@ def main(
                             instances=1,
                             episodes=policy.params['episodes'],
                             steps=policy.params['steps'],
-                            verbose=True,
+                            verbose=verbose,
                             track_success=True,
                             reset_at_terminal = True,
                             open_plot=False,
