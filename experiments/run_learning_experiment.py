@@ -196,8 +196,6 @@ def render_q_function(policy: PolicySB, actions, n_episodes=2, steps=1000):
                 break
             eval_env.render()
 
-
-
 def run_episodes_from_nn(env_name, abstraction_net: NNStateAbstr, seed: int,episodes=1, steps=500, verbose=True):
     """
     Args:
@@ -256,7 +254,6 @@ def create_abstraction_network(policy, num_samples=10000, x_train=None, verbose=
 
     start_time = time.time()
     batch_size = 32 
-    n_epochs = 100
     for epoch in range(n_epochs):
         for i in range(0, len(X), batch_size):
             Xbatch = X[i:i+batch_size]
