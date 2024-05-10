@@ -323,6 +323,8 @@ def run_single_agent_on_mdp(agent: Agent, mdp, episodes, steps, experiment: Expe
     value_per_episode = [0] * episodes
     gamma = mdp.get_gamma()
     time_limit_sec = mdp.get_time_limit()
+    total_accumulated_reward = 0
+
     if time_limit_sec is not None:
         start_time = time.time()
     # For each episode.
@@ -399,7 +401,7 @@ def run_single_agent_on_mdp(agent: Agent, mdp, episodes, steps, experiment: Expe
 
         # A final update.
         action = agent.act(state, reward)
-
+        total_accumulated_reward += cumulative_episodic_reward
         # Process experiment info at end of episode.
         if experiment is not None:
             experiment.end_of_episode(agent, steps=step)
@@ -424,7 +426,7 @@ def run_single_agent_on_mdp(agent: Agent, mdp, episodes, steps, experiment: Expe
     if steps >= 2000:
         print("\tLast episode reward:", cumulative_episodic_reward)
 
-    print("Experiement for environment: ", env_name, "for episodes: ", episodes, "completed")    
+    print("Experiement for environment: ", env_name, "for episodes: ", episodes, "completed with accumulated reward: ", total_accumulated_reward, "reward pr ep:", total_accumulated_reward/episodes)    
     return False, steps, value_per_episode
 
 def run_single_belief_agent_on_pomdp(belief_agent, pomdp, episodes, steps, experiment=None, verbose=False,
