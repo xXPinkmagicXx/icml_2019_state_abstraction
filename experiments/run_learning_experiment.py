@@ -229,7 +229,7 @@ def create_abstraction_network(policy, num_samples=10000, x_train=None, verbose=
         NNStateAbstr object
     """
     start_time = time.time()
-    X, y = policy.sample_training_data(5000, verbose)
+    X, y = policy.sample_training_data(num_samples, verbose)
     end_time = time.time()
     if verbose:
         print("this is the time it took to sample the data", end_time - start_time)
