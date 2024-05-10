@@ -18,6 +18,7 @@ class PolicySB:
         self.env_name = gym_env.env_name
         self.algo = algo
         self.policy_train_episodes = policy_train_episodes
+        self.experiment_episodes = experiment_episodes
         self.k_bins = k_bins
         self.seed = seed
         

@@ -25,14 +25,13 @@ class AcrobotPolicySB(PolicySB):
 		learning_rate = 0.005
 		## Env
 		params['env_name']= "Acrobot-v1"
-		params['multitask']=False
-		params['obs_size']=6
+		params['obs_size'] = 6
 		## Abstraction
-		params['num_iterations_for_abstraction_learning']= 100
+		params['num_iterations_for_abstraction_learning']= 500
 		params['learning_rate_for_abstraction_learning']=learning_rate
-		params['abstraction_network_hidden_layers']=2
-		params['abstraction_network_hidden_nodes']=200
-		params['num_samples_from_demonstrator']=15000
+		params['abstraction_network_hidden_layers'] = 2
+		params['abstraction_network_hidden_nodes'] = 200
+		params['num_samples_from_demonstrator'] = 20000
 		
 		params['steps']=steps
 		params['num_instances']=1
