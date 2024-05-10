@@ -474,7 +474,8 @@ def main(
                              verbose=verbose)
         
         # Render the q-function
-        render_q_function(policy=policy, actions=actions)
+        if render:
+            render_q_function(policy=policy, actions=actions)
     
         
 
