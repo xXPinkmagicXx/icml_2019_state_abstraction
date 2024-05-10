@@ -28,7 +28,7 @@ class LunarLanderPolicySB(PolicySB):
 		params['learning_rate_for_abstraction_learning'] = 0.005
 		params['abstraction_network_hidden_layers'] = 2
 		params['abstraction_network_hidden_nodes'] = 200
-		params['num_samples_from_demonstrator'] = 10000
+		params['num_samples_from_demonstrator'] = 20000
 		params['rl_learning_rate']=0.005
 
 		return params

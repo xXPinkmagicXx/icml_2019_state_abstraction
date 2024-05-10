@@ -173,6 +173,31 @@ def run_episodes_sb(env_name, policy: PolicySB, episodes=1, steps=500):
                 break
             eval_env.render()
 
+def render_q_function(policy: PolicySB, actions, n_episodes=2, steps=1000):
+
+    agent_name = "Q-learning_phi_" + str(policy.k_bins) + "_" + policy.algo + "_" + str(policy.seed) if policy.k_bins > 1 else "Q-learning_phi_" + policy.algo + "_" + str(policy.seed)
+    path_to_q_function = "models/" + "icml/" + policy.env_name + "/"+ str(policy.experiment_episodes) + "/" + agent_name 
+
+    agent_params = {"alpha":policy.params['rl_learning_rate'],"epsilon":0.1,"actions": actions,"load": True ,"load_path": path_to_q_function}
+    q_agent = QLearningAgent(**agent_params)
+    # read json
+    print("Now running", n_episodes,"episodes of", policy.env_name, "Q-learning polic...")
+    
+    # Get gym environment
+    eval_env = Get_GymMDP(env_name=policy.env_name, k=policy.k_bins, render=True, seed=policy.seed).env
+    obs, info = eval_env.reset()
+    # Render 
+    for e in range(n_episodes):
+        for _ in range(steps):
+            action = policy.expert_policy(obs)
+            obs, reward, terminated, truncated, info = eval_env.step(action)
+            if terminated or truncated:
+                obs, info = eval_env.reset()
+                break
+            eval_env.render()
+
+
+
 def run_episodes_from_nn(env_name, abstraction_net: NNStateAbstr, seed: int,episodes=1, steps=500, verbose=True):
     """
     Args:
@@ -206,7 +231,7 @@ def create_abstraction_network(policy, num_samples=10000, x_train=None, verbose=
         NNStateAbstr object
     """
     start_time = time.time()
-    X, y = policy.sample_training_data(num_samples, verbose)
+    X, y = policy.sample_training_data(5000, verbose)
     end_time = time.time()
     if verbose:
         print("this is the time it took to sample the data", end_time - start_time)
@@ -217,14 +242,21 @@ def create_abstraction_network(policy, num_samples=10000, x_train=None, verbose=
     # print("this is the shape of y_train", y_train.shape, "with unique values", np.unique(y_train, return_counts=True))
     abstraction_network = abstraction_network_pytorch(policy.params)
     n_epochs = policy.params['num_iterations_for_abstraction_learning']
-    batch_size = 1
     X = torch.Tensor(X)
     # Long is expected by the CrossEntropy and Float by the BinaryCrossEntropy
     y = torch.Tensor(y) if abstraction_network.is_binary else torch.LongTensor(y)  
+    
     # print("type of X:", type(X), X[:10])
     # print("type of y:", type(y), y[:10])
+    # if torch.cuda.is_available():
+    #     X = X.to("cuda") 
+    #     y = y.to("cuda")
+    # print("type of X:", type(X), X[:10])
+    # print("type of y:", type(y), y[:10])
+
     start_time = time.time()
     batch_size = 32 
+    n_epochs = 100
     for epoch in range(n_epochs):
         for i in range(0, len(X), batch_size):
             Xbatch = X[i:i+batch_size]
@@ -234,18 +266,32 @@ def create_abstraction_network(policy, num_samples=10000, x_train=None, verbose=
             # Reshape [32, 1] to [32] as this expected by the binary cross entropy
             if abstraction_network.is_binary:
                 y_pred = y_pred.reshape((-1,))
-            
+            # print("type y_pred:", type(y_pred), "type ybatch:", type(ybatch))
             loss = abstraction_network.loss_fn(y_pred, ybatch)
             # print("Epoch:", epoch,"y_pred", y_pred,"ybatch", ybatch ,"Loss:", loss.item())
             abstraction_network.optimizer.zero_grad()
             loss.backward()
             abstraction_network.optimizer.step()
+        if epoch % 10 == 0:
+            print("Epoch:", epoch, "Loss:", loss.item(), "time taken so far: ", time.time()-start_time)
+    
+    with torch.no_grad():
+        X_test, y_test = policy.sample_training_data(num_samples=1000, verbose=verbose)
+        X_test = torch.Tensor(X_test)
+        # Long is expected by the CrossEntropy and Float by the BinaryCrossEntropy
+        y_test = torch.Tensor(y_test) if abstraction_network.is_binary else torch.LongTensor(y_test) 
+        abstraction_network.eval()
+        y_pred = abstraction_network(X_test)
+        if abstraction_network.is_binary:
+                y_pred = y_pred.reshape((-1,))
+        test_loss = abstraction_network.loss_fn(y_pred, y_test)
+        print("Test loss is: ", test_loss)
 
     torch.save(abstraction_network, policy.params['save_path'] + ".pth")
     if verbose:
         with torch.no_grad():
             pred = abstraction_network(Xbatch)
-            print("This is a prediction", pred)
+            # print("This is a prediction", pred)
 
     end_time = time.time()
     StateAbsractionNetwork = NNStateAbstr(abstraction_network)
@@ -354,7 +400,6 @@ def main(
     if debug:
         verbose = True
         policy_train_episodes = 3
-        
     gym_env = Get_GymMDP(env_name, k = k_bins, seed=seed, time_limit_sec=time_limit_sec)
     ## Set seed
     # gym_env.env.seed(seed)
@@ -421,11 +466,16 @@ def main(
                             success_reward=1,
                             dir_for_plot=dir_for_plot)
         
+        # Move the files to our save format
         get_and_save_results(policy=policy,
                              seed=seed,
                              experiment_train_time=experiment_times[0],
                              abstraction_train_time=abstraction_training_time,
                              verbose=verbose)
+        
+        # Render the q-function
+        if render:
+            render_q_function(policy=policy, actions=actions)
     
         
 
@@ -433,8 +483,8 @@ def main(
         if verbose:
             print("Skipping experiment...")
     
-    if (run_expiriment or load_model or abstraction) and render:
-       run_episodes_from_nn(env_name, abstraction_network, seed=seed, steps=1000, verbose=verbose) 
+    # if (run_expiriment or load_model or abstraction) and render:
+    #    run_episodes_from_nn(env_name, abstraction_network, seed=seed, steps=1000, verbose=verbose) 
 
 def _read_file_and_get_results(file_path: str, episodes) -> list:
     """
