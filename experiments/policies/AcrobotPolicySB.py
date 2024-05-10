@@ -34,7 +34,6 @@ class AcrobotPolicySB(PolicySB):
 		params['num_samples_from_demonstrator'] = 20000
 		
 		params['steps']=steps
-		params['num_instances']=1
 		params['rl_learning_rate']=learning_rate
 
 		return params

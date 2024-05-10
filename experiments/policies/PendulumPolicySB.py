@@ -23,11 +23,11 @@ class PendulumPolicySB(PolicySB):
 		params['env_name'] = "Pendulum-v1"
 		params['obs_size'] = 3
 		
-		params['num_iterations_for_abstraction_learning'] = 200
+		params['num_iterations_for_abstraction_learning'] = 300
 		params['learning_rate_for_abstraction_learning'] = 0.005
 		params['abstraction_network_hidden_layers'] = 2
-		params['abstraction_network_hidden_nodes'] = 200
-		params['num_samples_from_demonstrator'] = 10000
+		params['abstraction_network_hidden_nodes'] = 128
+		params['num_samples_from_demonstrator'] = 20_000
 		
 		params['rl_learning_rate']=0.005
 

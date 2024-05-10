@@ -25,11 +25,11 @@ class MountainCarPolicySB(PolicySB):
         params={}
         params['env_name']="MountainCar-v0"
         params['obs_size']=self.gym_env.env.observation_space.shape[0]
-        params['num_iterations_for_abstraction_learning'] = 200
+        params['num_iterations_for_abstraction_learning'] = 300
         params['learning_rate_for_abstraction_learning'] = 0.001
         params['abstraction_network_hidden_layers'] = 2
-        params['abstraction_network_hidden_nodes'] = 64
-        params['num_samples_from_demonstrator'] = 100
+        params['abstraction_network_hidden_nodes'] = 128
+        params['num_samples_from_demonstrator'] = 20_000
         params['rl_learning_rate']=0.001
     
         return params
