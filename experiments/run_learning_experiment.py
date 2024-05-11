@@ -15,6 +15,7 @@ from simple_rl.run_experiments import run_agents_on_mdp, run_agents_lifelong, ev
 from simple_rl.mdp import MDPDistribution
 from simple_rl.mdp.StateClass import State
 from ..mac.ActionWrapper import discretizing_wrapper
+from .utils import name_utils
 # Local imports.
 # Import policies
 import policies.Policy as Policy
@@ -518,13 +519,9 @@ def get_and_save_results(policy: PolicySB, seed: int, abstraction_train_time: fl
     result = pd.DataFrame({"success": successes, "times": times, "rewards": rewards, "steps": steps})
 
     ## Create save path
-    ABSTRACTION = "icml"
-    new_save_folder = "results/" + ABSTRACTION + "/" + policy.env_name + "/" 
-    
-    model = ABSTRACTION + "_" + str(policy.policy_train_episodes) + "_" + policy.algo
-    new_save_name = model + "_" + str(episodes) + "_" + str(seed)
-    if not os.path.exists(new_save_folder):
-        os.makedirs(new_save_folder)
+    new_save_folder = name_utils.get_new_save_folder(policy)
+    model = name_utils.get_agent_name(policy)
+    new_save_name = name_utils.get_new_results_file_name(policy)
     
     # save results
     result.to_csv(new_save_folder + new_save_name + ".csv")
