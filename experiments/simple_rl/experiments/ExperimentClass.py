@@ -270,7 +270,7 @@ class Experiment(object):
                 self.write_datum_to_file(agent, steps, extra_dir="steps/")
                 if self.track_success:
                     # self.write_datum_to_file(agent, int(self.rewards[agent][-1] >= self.success_reward), extra_dir="success/")
-                    self.write_datum_to_file(agent, success, extra_dir="success/")
+                    self.write_datum_to_file(agent, int(success), extra_dir="success/")
         else:
             for x in range(num_times_to_write):
                 for step_reward in self.rewards[agent]:

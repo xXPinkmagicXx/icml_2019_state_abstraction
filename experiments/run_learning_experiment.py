@@ -536,7 +536,7 @@ def get_and_save_results(policy: PolicySB, seed: int, abstraction_train_time: fl
     rewards = _read_file_and_get_results(retrieve_folder + file_name, policy.params['episodes'])
     steps = _read_file_and_get_results(retrieve_folder + "steps/" + file_name, policy.params['episodes'])
     
-    successes = [int(bool(success)) for success in successes]
+    successes = [int(success) for success in successes]
     steps = [int(step) for step in steps]
     # steps = [int(step) for step in steps]
     result = pd.DataFrame({"success": successes, "times": times, "rewards": rewards, "steps": steps})
