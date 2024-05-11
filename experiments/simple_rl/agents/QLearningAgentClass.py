@@ -264,7 +264,7 @@ class QLearningAgent(Agent):
             json.dump(regular_dict, f)
     
     def load_q_func(self, path):
-        
+        print(f"Loading q-functino from path {path}")
         with open(path + ".json", 'r') as f:
             loaded_q_func = json.load(f)
         
