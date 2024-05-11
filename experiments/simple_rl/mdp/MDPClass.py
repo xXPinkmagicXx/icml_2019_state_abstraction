@@ -89,11 +89,11 @@ class MDP(object):
             Core method of all of simple_rl. Facilitates interaction
             between the MDP and an agent.
         '''
-        reward = self.reward_func(self.cur_state, action)
+        reward, is_success = self.reward_func(self.cur_state, action)
         next_state = self.transition_func(self.cur_state, action)
         self.cur_state = next_state
 
-        return reward, next_state
+        return reward, next_state, is_success
 
     def reset(self):
         self.cur_state = copy.deepcopy(self.init_state)

@@ -66,17 +66,51 @@ class GymMDP(MDP):
         obs, reward, terminated, truncated, info = self.env.step(action)
         
         reward = self._reward_shaping(state, reward)
-        
+        is_success = False
         # Reward shaping end of episode
         if terminated or truncated:
             reward = self._reward_shaping_end(state, terminated, truncated)
-        
+            is_success = self._is_success(state, reward, truncated, terminated)
+
         if self.render and (self.render_every_n_episodes == 0 or self.episode % self.render_every_n_episodes == 0):
             self.env.render()
         is_terminal = terminated or truncated
         self.next_state = GymState(obs, is_terminal=(terminated or truncated))
 
-        return reward
+        return reward, is_success
+
+    def _is_success(self, state, reward, truncated, terminated):
+        '''
+        Args:
+            state (AtariState)
+            truncated (bool)
+            terminated (bool)
+
+        Returns
+            (bool)
+        '''
+        if self.env_name == "MountainCar-v0":
+            return terminated and not truncated
+        
+        if self.env_name == "MountainCarContinuous-v0":
+            return terminated and not truncated
+
+        if self.env_name == "Acrobot-v1":
+            # if terminated then success
+            return terminated
+        
+        if self.env_name == "CartPole-v1":
+            return truncated and not terminated
+        
+        if self.env_name == "Pendulum-v1":
+            x, y, velocity = state.data
+            return abs(y) < 0.1 and x > 0 and abs(velocity) < 0.1
+        
+        if self.env_name == "LunarLander-v2":
+            return reward >= 200
+
+
+        return False
 
     def _transition_func(self, state, action):
         '''
@@ -143,8 +177,9 @@ class GymMDP(MDP):
         return 0
 
     def reset(self):
-        self.env.reset()
+        obs, info = self.env.reset()
         self.episode += 1
+        return GymState(obs), info
 
     def __str__(self):
         return "gym-" + str(self.env_name)
