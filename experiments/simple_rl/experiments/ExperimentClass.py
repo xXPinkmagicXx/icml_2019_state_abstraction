@@ -255,7 +255,7 @@ class Experiment(object):
             self.rew_since_count += reward
             self.steps_since_added_r += 1
 
-    def end_of_episode(self, agent, num_times_to_write=1, steps=0):
+    def end_of_episode(self, agent, num_times_to_write=1, steps=0, success=False):
         '''
         Args:
             agent (str)
@@ -269,7 +269,8 @@ class Experiment(object):
                 self.write_datum_to_file(agent, sum(self.times[agent]), extra_dir="times/")
                 self.write_datum_to_file(agent, steps, extra_dir="steps/")
                 if self.track_success:
-                    self.write_datum_to_file(agent, int(self.rewards[agent][-1] >= self.success_reward), extra_dir="success/")
+                    # self.write_datum_to_file(agent, int(self.rewards[agent][-1] >= self.success_reward), extra_dir="success/")
+                    self.write_datum_to_file(agent, int(success), extra_dir="success/")
         else:
             for x in range(num_times_to_write):
                 for step_reward in self.rewards[agent]:

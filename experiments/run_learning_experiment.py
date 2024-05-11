@@ -174,28 +174,50 @@ def run_episodes_sb(env_name, policy: PolicySB, episodes=1, steps=500):
                 break
             eval_env.render()
 
-def render_q_function(policy: PolicySB, actions, n_episodes=2, steps=1000):
+def run_one_episode_q_function(gym_env: GymMDP, sa_agent: AbstractionWrapper, steps=1000, render=False):
+    """
+    Args:
+        :param gym_env (GymMDP)
+        :param agent (AbstractionWrapper)
+    """
+    acc_reward = 0
+    reward = 0
+    obs, info = gym_env.reset()
+    for step in range(steps):
+        action = sa_agent.act(obs, reward, learning=False)
+        reward, next_state, is_success = gym_env.execute_agent_action(action)
+        acc_reward += reward
+        if next_state.is_terminal():
+            obs, info = gym_env.reset()
+            break
+
+        if render:
+            gym_env.env.render()
+    
+    return acc_reward, step, is_success
+
+
+
+def render_q_function(policy: PolicySB,actions, abstraction_network: NNStateAbstr=None, n_episodes=2, steps=1000):
 
     agent_name = "Q-learning_phi_" + str(policy.k_bins) + "_" + policy.algo + "_" + str(policy.seed) if policy.k_bins > 1 else "Q-learning_phi_" + policy.algo + "_" + str(policy.seed)
     path_to_q_function = "models/" + "icml/" + policy.env_name + "/"+ str(policy.experiment_episodes) + "/" + agent_name 
+    if abstraction_network is None:
+        abstraction_network = load_agent_pytorch(policy, verbose=False)
 
     agent_params = {"alpha":policy.params['rl_learning_rate'],"epsilon":0.1,"actions": actions,"load": True ,"load_path": path_to_q_function}
-    q_agent = QLearningAgent(**agent_params)
+    sa_agent = AbstractionWrapper(QLearningAgent,
+                                  agent_params=agent_params,
+                                  state_abstr=abstraction_network)
     # read json
     print("Now running", n_episodes,"episodes of", policy.env_name, "Q-learning polic...")
     
     # Get gym environment
-    eval_env = Get_GymMDP(env_name=policy.env_name, k=policy.k_bins, render=True, seed=policy.seed).env
+    eval_env = Get_GymMDP(env_name=policy.env_name, k=policy.k_bins, render=True, seed=policy.seed)
     obs, info = eval_env.reset()
     # Render 
     for e in range(n_episodes):
-        for _ in range(steps):
-            action = policy.expert_policy(obs)
-            obs, reward, terminated, truncated, info = eval_env.step(action)
-            if terminated or truncated:
-                obs, info = eval_env.reset()
-                break
-            eval_env.render()
+        reward, step, is_success = run_one_episode_q_function(gym_env=eval_env, sa_agent=sa_agent, render=True)
 
 def run_episodes_from_nn(env_name, abstraction_net: NNStateAbstr, seed: int,episodes=1, steps=500, verbose=True):
     """
@@ -326,7 +348,7 @@ def load_agent(env_name: str, algo: str, policy_train_episodes: int, seed: int, 
         print("loading complete...")
     return nn_sa, float(abstraction_training_time)
 
-def load_agent_pytorch(env_name: str, algo: str, policy_train_episodes: int, seed: int, verbose: bool, policy) -> NNStateAbstr:
+def load_agent_pytorch(policy: PolicySB, verbose: bool) -> NNStateAbstr:
     """
     Args:
         :param env_name (str): Name of the environment
@@ -334,10 +356,11 @@ def load_agent_pytorch(env_name: str, algo: str, policy_train_episodes: int, see
     Returns:
         NNStateAbstr object
     """
-
-    save_name = "trained-abstract-agents/"+ str(policy_train_episodes) + '/' + algo + "_" + env_name + "_" + str(seed)
+    save_name = name_utils.get_abstract_agent_name(policy)
+    # save_name = "trained-abstract-agents/"+ str(policy_train_episodes) + '/' + algo + "_" + env_name + "_" + str(seed)
     load_net =  torch.load(save_name+".pth")
-    print("This is type of load net", type(load_net))
+    if verbose:
+        print("This is type of load net", type(load_net))
     
     nn_sa = NNStateAbstr(load_net)
     
@@ -410,7 +433,7 @@ def main(
     policy = get_policy(gym_env, algo, policy_train_episodes, experiment_episodes, k_bins, seed)
 
     if load_model:
-        abstraction_network, abstraction_training_time = load_agent_pytorch(env_name, algo, policy_train_episodes, seed, verbose, policy)
+        abstraction_network, abstraction_training_time = load_agent_pytorch(policy, verbose)
     elif abstraction:
         if debug:
             policy.params["num_samples_from_demonstrator"] = 100
@@ -473,7 +496,7 @@ def main(
         
         # Render the q-function
         if render:
-            render_q_function(policy=policy, actions=actions)
+            render_q_function(policy=policy, actions=actions, abstraction_network=abstraction_network)
     
         
 

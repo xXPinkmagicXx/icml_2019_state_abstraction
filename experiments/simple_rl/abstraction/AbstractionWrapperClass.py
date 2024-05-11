@@ -32,7 +32,7 @@ class AbstractionWrapper(Agent):
         
         Agent.__init__(self, name=self.agent.name + name_ext, actions=all_actions)
 
-    def act(self, ground_state, reward):
+    def act(self, ground_state, reward, learning=True):
         '''
         Args:
             ground_state (State)
@@ -47,11 +47,10 @@ class AbstractionWrapper(Agent):
         else:
             abstr_state = ground_state
 
-
         if self.action_abstr is not None:
             ground_action = self.action_abstr.act(self.agent, abstr_state, ground_state, reward)
         else:
-            ground_action = self.agent.act(abstr_state, reward)
+            ground_action = self.agent.act(abstr_state, reward, learning)
 
         return ground_action
 

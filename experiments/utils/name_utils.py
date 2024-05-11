@@ -25,6 +25,15 @@ def get_agent_name(policy: PolicySB):
     
     return model
 
+def get_abstract_agent_name(policy: PolicySB):
+
+    if policy.k_bins > 1:
+        save_name = f"trained-abstract-agents/{policy.policy_train_episodes}/{policy.k_bins}_{policy.algo}_{policy.env_name}_{policy.seed}"
+    else:
+        save_name = f"trained-abstract-agents/{policy.policy_train_episodes}/{policy.algo}_{policy.env_name}_{policy.seed}"
+    
+    return save_name
+
 def get_new_results_file_name(policy: PolicySB):
 
     new_save_folder = "results/" + ABSTRACTION + "/" + policy.env_name + "/" 

@@ -22,7 +22,7 @@ class AcrobotPolicySB(PolicySB):
 		params={}
 		## steps in acrobot above 500 is truncated
 		steps = 500
-		learning_rate = 0.005
+		learning_rate = 0.05
 		## Env
 		params['env_name']= "Acrobot-v1"
 		params['obs_size'] = 6

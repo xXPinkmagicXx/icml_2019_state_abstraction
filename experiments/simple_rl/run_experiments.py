@@ -324,7 +324,7 @@ def run_single_agent_on_mdp(agent: Agent, mdp, episodes, steps, experiment: Expe
     gamma = mdp.get_gamma()
     time_limit_sec = mdp.get_time_limit()
     total_accumulated_reward = 0
-
+    n_successes = 0
     if time_limit_sec is not None:
         start_time = time.time()
     # For each episode.
@@ -344,7 +344,7 @@ def run_single_agent_on_mdp(agent: Agent, mdp, episodes, steps, experiment: Expe
         # Compute initial state/reward.
         state = mdp.get_init_state()
         reward = 0
-
+        is_success = False
         # Extra printing if verbose.
         # if verbose:
             # print()
@@ -374,7 +374,7 @@ def run_single_agent_on_mdp(agent: Agent, mdp, episodes, steps, experiment: Expe
                 break
 
             # Execute in MDP.
-            reward, next_state = mdp.execute_agent_action(action)
+            reward, next_state, is_success = mdp.execute_agent_action(action)
             
             # Track value.
             value_per_episode[episode - 1] += reward * gamma ** step
@@ -402,9 +402,12 @@ def run_single_agent_on_mdp(agent: Agent, mdp, episodes, steps, experiment: Expe
         # A final update.
         action = agent.act(state, reward)
         total_accumulated_reward += cumulative_episodic_reward
+        n_successes += is_success
         # Process experiment info at end of episode.
         if experiment is not None:
-            experiment.end_of_episode(agent, steps=step)
+            if verbose:
+                print("End of episode: ", episode, "success: ", is_success, "acc reward:", cumulative_episodic_reward )
+            experiment.end_of_episode(agent, steps=step, success=is_success)
     
     # Reset the MDP, tell the agent the episode is over.
     mdp.reset()
@@ -426,7 +429,7 @@ def run_single_agent_on_mdp(agent: Agent, mdp, episodes, steps, experiment: Expe
     if steps >= 2000:
         print("\tLast episode reward:", cumulative_episodic_reward)
 
-    print("Experiement for environment: ", env_name, "for episodes: ", episodes, "completed with accumulated reward: ", total_accumulated_reward, "reward pr ep:", total_accumulated_reward/episodes)    
+    print("Environment: ", env_name, " episodes: ", episodes, " accumulated reward: ", total_accumulated_reward,"Number of successes: ", n_successes, " reward pr ep: ", total_accumulated_reward/episodes)    
     return False, steps, value_per_episode
 
 def run_single_belief_agent_on_pomdp(belief_agent, pomdp, episodes, steps, experiment=None, verbose=False,
